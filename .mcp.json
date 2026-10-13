@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "godot-docs": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["--bun", "@nuskey8/godot-docs-mcp@latest"],
+      "env": {}
+    }
+  }
+}

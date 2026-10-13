@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StylePreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/style/style_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Bold"
+background = Color(0.06275, 0.07843, 0.09412, 1)
+surface = Color(0.1216, 0.149, 0.1804, 1)
+accent = Color(1, 0.702, 0.2784, 1)
+text = Color(0.9608, 0.9608, 0.9608, 1)
+font_scale = 1.15
+motion = 0
+corner_radius = 12
+tile_min_size = 180

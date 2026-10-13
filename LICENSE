@@ -1,0 +1,21 @@
+Jessie is dual-licensed under either of
+
+  * Apache License, Version 2.0 — see LICENSE-APACHE
+    (also at https://www.apache.org/licenses/LICENSE-2.0)
+  * MIT License — see LICENSE-MIT
+    (also at https://opensource.org/licenses/MIT)
+
+at your option.
+
+WHY BOTH. This is the Rust ecosystem's convention and it exists because the two licenses cover
+different worries. MIT is short and universally understood. Apache-2.0 adds an explicit patent
+grant and a patent-retaliation clause, which some organizations require before they will take a
+dependency. Offering both means neither preference blocks adoption.
+
+CONTRIBUTIONS. Unless you state otherwise, any contribution you intentionally submit for inclusion
+in this work — as defined in the Apache-2.0 license — shall be dual-licensed as above, with no
+additional terms or conditions. Inbound equals outbound; there is no CLA.
+
+THIRD-PARTY CODE. This repository ships nothing beyond its own sources and the Godot engine, which is
+MIT-licensed (https://godotengine.org/license). A dependency added later is listed in THIRD_PARTY.md
+with its license, in the same commit.

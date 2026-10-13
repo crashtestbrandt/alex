@@ -1,0 +1,60 @@
+; Engine configuration file.
+; Comment this file with `;` only. Godot's parser swallows a `#` block into the next key's name, and the setting
+; under it silently never applies.
+
+config_version=5
+
+[application]
+
+config/name="Jessie"
+config/description="A configurable companion for children who acquire language in gestalts."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+; No engine logo. The app opens on the active style's background, and the first frame matches it.
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0.97, 0.96, 0.93, 1)
+config/icon="res://icon.svg"
+
+[audio]
+
+; The microphone, for the caregiver's recording flow (Recorder). Off by default in Godot.
+driver/enable_input=true
+; Text to speech is the fallback voice for a gestalt with no recording. The OS voice is never the goal; a
+; familiar adult's recording is. Off by default in Godot, so it is pinned on here.
+general/text_to_speech=true
+
+[autoload]
+
+App="*res://scripts/app.gd"
+Style="*res://scripts/style/style.gd"
+ProfileStore="*res://scripts/profiles/profile_store.gd"
+
+[debug]
+
+; Strict typing, promoted to errors. Every var, parameter and return carries a type; see CLAUDE.md.
+gdscript/warnings/untyped_declaration=2
+gdscript/warnings/unsafe_method_access=2
+gdscript/warnings/unsafe_cast=2
+gdscript/warnings/unsafe_call_argument=2
+; Vendored code under addons/ is held to its own standard, first-party code to this one.
+gdscript/warnings/exclude_addons=true
+
+[display]
+
+; Landscape tablet is the primary device. The canvas scales to whatever the device is.
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[input_devices]
+
+; Touch is the real input. Mouse emulates it on a desktop so the app is developed on one.
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+; Mobile renderer on every platform: 3D and motion graphics stay available, and a tablet is the target.
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"

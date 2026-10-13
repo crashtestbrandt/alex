@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "id": "home_routines",
+  "title": "Home",
+  "description": "A room to explore: a door, a light, a ball, a cup. Everyday phrases, each one in chunks an adult can recombine. Replace the words with the ones your child already uses.",
+  "gestalts": [
+    {"id": "lets_go_outside", "text": "Let's go | outside", "function": "routine"},
+    {"id": "lets_go_inside", "text": "Let's go | inside", "function": "routine"},
+    {"id": "lights_on", "text": "Lights | on", "function": "routine"},
+    {"id": "lights_off", "text": "Lights | off", "function": "routine"},
+    {"id": "look_outside", "text": "Look | outside", "function": "comment"},
+    {"id": "lets_play_ball", "text": "Let's play | ball", "function": "request"},
+    {"id": "time_for_a_snack", "text": "It's time for | a snack", "function": "routine"},
+    {"id": "time_for_a_bath", "text": "It's time for | a bath", "function": "routine"},
+    {"id": "time_for_bed", "text": "It's time for | bed", "function": "routine"},
+    {"id": "lets_get_shoes", "text": "Let's get | your shoes", "function": "routine"},
+    {"id": "lets_go_in_the_car", "text": "Let's go | in the car", "function": "routine"},
+    {"id": "all_done", "text": "All done", "function": "protest"},
+    {"id": "want_more", "text": "I want | more", "function": "request"},
+    {"id": "its_okay", "text": "It's okay", "function": "regulation"},
+    {"id": "that_was_loud", "text": "That was | loud", "function": "comment"},
+    {"id": "see_you_later", "text": "See you | later", "function": "greeting"}
+  ],
+  "rooms": [
+    {
+      "id": "home",
+      "title": "Home",
+      "spots": [
+        {"id": "door", "kind": "door", "reaction": "open", "x": 0.11, "y": 0.52, "size": 0.34, "gestalt": "lets_go_outside", "alt_gestalt": "lets_go_inside"},
+        {"id": "light", "kind": "light", "reaction": "glow", "x": 0.47, "y": 0.2, "size": 0.2, "gestalt": "lights_on", "alt_gestalt": "lights_off"},
+        {"id": "window", "kind": "window", "reaction": "glow", "x": 0.8, "y": 0.28, "size": 0.26, "gestalt": "look_outside"},
+        {"id": "ball", "kind": "ball", "reaction": "bounce", "x": 0.36, "y": 0.7, "size": 0.15, "gestalt": "lets_play_ball"},
+        {"id": "cup", "kind": "cup", "reaction": "wobble", "x": 0.56, "y": 0.62, "size": 0.15, "gestalt": "time_for_a_snack"},
+        {"id": "shoes", "kind": "shoes", "reaction": "bounce", "x": 0.3, "y": 0.88, "size": 0.15, "gestalt": "lets_get_shoes"},
+        {"id": "bed", "kind": "bed", "reaction": "grow", "x": 0.83, "y": 0.68, "size": 0.26, "gestalt": "time_for_bed"},
+        {"id": "tub", "kind": "tub", "reaction": "wobble", "x": 0.6, "y": 0.87, "size": 0.2, "gestalt": "time_for_a_bath"}
+      ]
+    }
+  ],
+  "boards": [
+    {"id": "words", "title": "Words", "gestalts": ["all_done", "want_more", "its_okay", "that_was_loud", "see_you_later", "lets_go_in_the_car"]}
+  ]
+}

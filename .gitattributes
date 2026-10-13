@@ -1,0 +1,28 @@
+# LF for text everywhere, so a Windows checkout does not turn every shell script into CRLF.
+* text=auto eol=lf
+*.sh      text eol=lf
+*.gd      text eol=lf
+*.tscn    text eol=lf
+*.tres    text eol=lf
+*.cfg     text eol=lf
+*.godot   text eol=lf
+*.md      text eol=lf
+*.json    text eol=lf
+*.yml     text eol=lf
+justfile  text eol=lf
+
+# Binary media the repository ships (placeholder art, demo recordings) goes through Git LFS. Text formats
+# Godot diffs and merges (.tscn/.tres/.import/.gd/.svg) stay text-tracked above. A family's own recordings
+# never enter the repository; they live under user:// on the device (docs/profiles.md).
+*.png     filter=lfs diff=lfs merge=lfs -text
+*.jpg     filter=lfs diff=lfs merge=lfs -text
+*.jpeg    filter=lfs diff=lfs merge=lfs -text
+*.webp    filter=lfs diff=lfs merge=lfs -text
+*.wav     filter=lfs diff=lfs merge=lfs -text
+*.ogg     filter=lfs diff=lfs merge=lfs -text
+*.mp3     filter=lfs diff=lfs merge=lfs -text
+*.ttf     filter=lfs diff=lfs merge=lfs -text
+*.otf     filter=lfs diff=lfs merge=lfs -text
+*.glb     filter=lfs diff=lfs merge=lfs -text
+*.gltf    filter=lfs diff=lfs merge=lfs -text
+*.blend   filter=lfs diff=lfs merge=lfs -text

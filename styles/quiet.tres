@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StylePreset" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/style/style_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Quiet"
+background = Color(0.9686, 0.9686, 0.9686, 1)
+surface = Color(1, 1, 1, 1)
+accent = Color(0.3333, 0.3333, 0.3333, 1)
+text = Color(0.1333, 0.1333, 0.1333, 1)
+font_scale = 1.1
+motion = 2
+corner_radius = 24
+tile_min_size = 200

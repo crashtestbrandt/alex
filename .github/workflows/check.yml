@@ -1,0 +1,59 @@
+name: check
+
+# The PR gate: doc caps, GDScript lint, unit suites. GitHub-hosted runners, so a fork PR never reaches a
+# machine of ours. `pull_request` rather than `pull_request_target`, so a fork PR gets no secrets.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Doc size caps
+        run: tools/check-doc-size.sh
+
+  godot:
+    runs-on: ubuntu-latest
+    needs: [docs]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache the Godot binary
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
+
+      - name: Install Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot
+          zip="Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -fsSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/${zip}" -o /tmp/godot.zip
+          unzip -q -o /tmp/godot.zip -d /tmp/godot
+          install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" ~/godot/godot
+
+      - name: Put Godot on PATH
+        run: echo "$HOME/godot" >> "$GITHUB_PATH"
+
+      - name: Lint
+        run: tools/lint-gdscript.sh
+
+      - name: Unit suites
+        run: godot --headless --path . --script tests/run_unit_tests.gd

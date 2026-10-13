@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/child/home.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/hold_button.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/speech/speaker.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/child/room_view.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/record_overlay.tscn" id="5"]
+
+[node name="ChildHome" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Speaker" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("3")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+text = "Profile"
+
+[node name="PlaceStrip" type="HBoxContainer" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ProfilesButton" type="Button" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "  ·  "
+script = ExtResource("2")
+
+[node name="Stage" type="Control" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RoomView" parent="Margin/Column/Stage" instance=ExtResource("4")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Board" type="GridContainer" parent="Margin/Column/Stage"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 3
+
+[node name="RecordOverlay" parent="." instance=ExtResource("5")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1

@@ -1,0 +1,29 @@
+# Godot 4.x cache
+.godot/
+*.translation
+*.tmp
+export_presets.cfg.bak
+
+# Export output
+build/
+exports/
+export.cfg
+export_credentials.cfg
+
+# Local tooling
+.direnv/
+result
+result-*
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Editor junk
+*.swp
+*.swo
+*~
