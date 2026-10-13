@@ -61,6 +61,16 @@ doc-size-check:
 room-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_probe.tscn
 
+# The microphone on a real audio device: record ambient sound, save it, reload it (tools/instr/mic_probe.gd).
+# Windowed, because the dummy audio driver has no capture; out of `check` for the same reason.
+mic-probe:
+    "{{godot}}" --path . tools/instr/mic_probe.tscn
+
+# The README picture: open the room, swing the door, light the lamp, save docs/img/room.png
+# (tools/instr/screenshot_probe.gd). Windowed. Re-run whenever the room changes.
+screenshot:
+    "{{godot}}" --path . tools/instr/screenshot_probe.tscn
+
 # Everything the PR gate runs, in its order, then the headless scene probes.
 check: doc-size-check lint test room-probe
 

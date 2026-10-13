@@ -15,6 +15,8 @@ justfile  text eol=lf
 # Godot diffs and merges (.tscn/.tres/.import/.gd/.svg) stay text-tracked above. A family's own recordings
 # never enter the repository; they live under user:// on the device (docs/profiles.md).
 *.png     filter=lfs diff=lfs merge=lfs -text
+# README and docs pictures stay plain files: GitHub renders them without an LFS fetch and they are small.
+docs/img/*.png -filter -diff -merge
 *.jpg     filter=lfs diff=lfs merge=lfs -text
 *.jpeg    filter=lfs diff=lfs merge=lfs -text
 *.webp    filter=lfs diff=lfs merge=lfs -text

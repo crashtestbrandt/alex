@@ -29,8 +29,8 @@ profile (docs/profiles.md).
 
 ## What the app must never do
 
-The literature on gestalt language processing is explicit that drilling, flashcards, quizzing and
-question-heavy interaction work against these learners. The intent above adds the rest. These are rules:
+Echolalia is communicative, and questions and demands draw more echoing and less original speech than
+comments do (README "Research", items 1 to 3). The intent above adds the rest. These are rules:
 
 - **No testing.** No questions put to the learner, no right answers, no scores, no streaks, no timers, no
   rewards. A screen that adds one of these is wrong however well it is built.
@@ -79,8 +79,9 @@ agreeing on where the seams are.
 ## Reference: the Natural Language Acquisition stages
 
 The NLA framework (Blanc, after Peters and Prizant) describes how echolalia becomes self-generated language.
-A profile may record a stage for the caregiver's reference. Nothing on the learner's screen shows it, and it
-gates nothing.
+Its clinical claims are debated and its protocol has no empirical evaluation (README "Research", items 8 to
+10); the app uses its chunking idea as a design heuristic and depends on nothing else in it. A profile may
+record a stage for the caregiver's reference. Nothing on the learner's screen shows it, and it gates nothing.
 
 | Stage | What the learner does | What the adults model |
 | --- | --- | --- |
@@ -93,8 +94,5 @@ gates nothing.
 
 ## Sources
 
-- Blanc, M. *Natural Language Acquisition on the Autism Spectrum: The Journey from Echolalia to
-  Self-Generated Language.* Communication Development Center, 2012.
-- The Natural Language Acquisition Guide, Communication Development Center (PDF, 2024).
-- Prizant, B. "Language acquisition and communicative behavior in autism: Toward an understanding of the
-  'whole' of it." *Journal of Speech and Hearing Disorders*, 1983.
+The reading list, with both sides of the framework debate, is the README's "Research" section. One list,
+so it cannot drift.

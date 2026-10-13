@@ -28,11 +28,20 @@ Everything stays on the device. There is no account, no network and no analytics
 
 ## Why it is built this way
 
-Learners who process language in gestalts are harmed by drilling, flashcards and question-heavy teaching, and
-helped by hearing short, natural phrases in familiar voices attached to real things. The phrases ship in chunks
-an adult can recombine ("Let's go" + "outside", "Let's go" + "in the car"), which is the move from echoing a
-phrase to owning its parts. The thinking, and the rules that follow from it, are in
-[`docs/design.md`](docs/design.md). The framework behind the chunks is Natural Language Acquisition (Blanc).
+Echolalia is communication, not noise. Repeated phrases carry requests, protests, turn-taking and
+self-regulation [[1]](#research), [[2]](#research). Questions and demands draw more echoing and less original
+speech from autistic children than comments do, which is why the app asks nothing and only offers
+[[3]](#research). Whether echolalia should be reduced at all is contested, and the reviews find little evidence
+for the interventions that try [[4]](#research), [[5]](#research). Jessie does not try: it plays the learner's
+phrases back in familiar voices, attached to things they can act on, and lets repetition run.
+
+The phrases ship in chunks an adult can recombine ("Let's go" + "outside", "Let's go" + "in the car"). That idea
+comes from the Natural Language Acquisition framework [[6]](#research), [[7]](#research), which describes
+language growing from whole gestalts to flexible sentences. The framework's clinical claims are debated and its
+protocol has no empirical evaluation yet [[8]](#research), [[9]](#research), [[10]](#research). Jessie uses the
+chunking as a design heuristic for making seams visible, not as a treatment, and nothing in the app depends on
+the stage model being right. The thinking, and the rules that follow from it, are in
+[`docs/design.md`](docs/design.md).
 
 Nothing about one child is in the code. A profile, a starter pack and a style preset carry everything, so one
 install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/profiles.md)).
@@ -87,6 +96,44 @@ arm in `SpotView`.
 
 No `export_presets.cfg` is committed yet. The preset must include `*.json` in its export filter, or a shipped
 build has no starter packs, and the iOS and Android presets need a microphone permission.
+
+## Research
+
+What the claims above rest on. Peer-reviewed unless noted. The debate in 8 to 10 is live, and a reader deciding
+how much weight to give the stage model should read both sides.
+
+1. Prizant, B. M., & Duchan, J. F. (1981). The functions of immediate echolalia in autistic children. *Journal
+   of Speech and Hearing Disorders*, 46(3), 241–249. [doi:10.1044/jshd.4603.241](https://doi.org/10.1044/jshd.4603.241)
+2. Prizant, B. M., & Rydell, P. J. (1984). Analysis of functions of delayed echolalia in autistic children.
+   *Journal of Speech and Hearing Research*, 27(2), 183–192. [doi:10.1044/jshr.2702.183](https://doi.org/10.1044/jshr.2702.183)
+3. Rydell, P. J., & Mirenda, P. (1994). Effects of high and low constraint utterances on the production of
+   immediate and delayed echolalia in young children with autism. *Journal of Autism and Developmental
+   Disorders*, 24(6), 719–735. [doi:10.1007/BF02172282](https://doi.org/10.1007/BF02172282)
+4. Blackburn, C., Tueres, M., Sandanayake, N., Roberts, J., & Sutherland, R. (2023). A systematic review of
+   interventions for echolalia in autistic children. *International Journal of Language & Communication
+   Disorders*, 58(6), 1977–1993. [doi:10.1111/1460-6984.12931](https://doi.org/10.1111/1460-6984.12931)
+5. Cohn, E. G., McVilly, K. R., Harrison, M. J., & Stiegler, L. N. (2022). Repeating purposefully: Empowering
+   educators with functional communication models of echolalia in autism. *Autism & Developmental Language
+   Impairments*, 7. [doi:10.1177/23969415221091928](https://doi.org/10.1177/23969415221091928)
+6. Peters, A. M. (1983). *The Units of Language Acquisition.* Cambridge University Press. The source of the
+   gestalt versus analytic distinction in typical language development.
+7. Blanc, M. (2012). *Natural Language Acquisition on the Autism Spectrum: The Journey from Echolalia to
+   Self-Generated Language.* Communication Development Center. Not peer-reviewed; the origin of the six stages.
+8. Haydock, A., Harrison, L., Baldwin, K., & Leadbitter, K. (2024). Embracing gestalt language development as a
+   fundamental neurodiversity-affirmative practice. *Autism*, 28(5), 1055–1059.
+   [doi:10.1177/13623613241234598](https://doi.org/10.1177/13623613241234598). For the framework; see the
+   response by Venker and Lorang (2025) in the same journal, [doi:10.1177/13623613241287577](https://doi.org/10.1177/13623613241287577).
+9. Hutchins, T. L., Knox, S. E., & Fletcher, E. C. (2024). Natural language acquisition and gestalt language
+   processing: A critical analysis of their application to autism and speech language therapy. *Autism &
+   Developmental Language Impairments*, 9. Against the framework's theoretical footing.
+10. Bryant, L., Bowen, C., Grove, R., Dixon, G., Beals, K., Shane, H., & Hemsley, B. (2024). Systematic review
+    of interventions based on gestalt language processing and natural language acquisition (GLP/NLA): Clinical
+    implications of absence of evidence and cautions for clinicians and parents. *Current Developmental
+    Disorders Reports*, 12(2). [doi:10.1007/s40474-024-00312-z](https://doi.org/10.1007/s40474-024-00312-z).
+    Found no empirical study of the protocol's effectiveness.
+11. Stiegler, L. N. (2015). Examining the echolalia literature: Where do speech-language pathologists stand?
+    *American Journal of Speech-Language Pathology*, 24(4), 750–762.
+    [doi:10.1044/2015_AJSLP-14-0166](https://doi.org/10.1044/2015_AJSLP-14-0166). A survey of the disagreements.
 
 ## License
 
