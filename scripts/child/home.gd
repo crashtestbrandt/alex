@@ -1,18 +1,28 @@
 extends Control
 class_name ChildHome
-## The learner's screen: one room or board at a time, a strip to move between them, and a held button back
-## to the adults' picker. No scores, no timers, no wrong answers (docs/design.md).
+## The learner's screen: the room or the tiles, a strip of two modes to move between them, and a held button
+## back to the adults' picker. No scores, no timers, no wrong answers (docs/design.md).
 ##
-## Holding a spot or a tile opens the caregiver's recording overlay for that gestalt.
+## The strip reads Explore and Words, never a room's or a board's title. Explore is the profile's first room;
+## room choice inside it waits until a profile has a second room. Words is every tile the boards name
+## (`Profile.words_gestalts`). Holding a spot or a tile opens the caregiver's recording overlay for that
+## gestalt.
 
 signal profiles_requested
 
+## The learner's two modes, in strip order.
+enum Mode {
+	EXPLORE = 0,
+	WORDS = 1,
+}
+
 const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
+const _MODE_LABELS: Dictionary[int, String] = {Mode.EXPLORE: "Explore", Mode.WORDS: "Words"}
 
 @onready var _title: HoldButton = %Title
 @onready var _name_slot: Control = %NameSlot
 @onready var _top_bar: HBoxContainer = %TopBar
-@onready var _strip: PillBar = %PlaceStrip
+@onready var _strip: PillBar = %ModeStrip
 @onready var _room_view: RoomView = %RoomView
 @onready var _stage: ScrollContainer = %Stage
 @onready var _column: VBoxContainer = %Column
@@ -24,10 +34,10 @@ const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 
 var _safe_rect: Rect2 = Rect2()
 var _profile: Profile = null
-var _board: Board = null
+var _mode: Mode = Mode.EXPLORE
 var _room: Room = null
 var _tiles: Dictionary[String, GestaltTile] = {}
-var _places: Dictionary[String, SdfButton] = {}
+var _modes: Dictionary[int, SdfButton] = {}
 var _speaking_spot: Spot = null
 
 func _ready() -> void:
@@ -57,11 +67,9 @@ func show_profile(p: Profile) -> void:
 	_title.disabled = p.display_name.is_empty()
 	_build_strip()
 	if not p.rooms.is_empty():
-		show_room(p.rooms[0])
-	elif not p.boards.is_empty():
-		show_board(p.boards[0])
+		show_explore()
 	else:
-		show_board(_all_gestalts_board(p))
+		show_words()
 
 func set_safe_area(rect: Rect2) -> void:
 	_safe_rect = rect
@@ -70,20 +78,26 @@ func set_safe_area(rect: Rect2) -> void:
 	_record_overlay.set_safe_area(rect)
 	_layout_home.call_deferred()
 
+## Explore: the profile's first room.
+func show_explore() -> void:
+	if not _profile.rooms.is_empty():
+		show_room(_profile.rooms[0])
+
 func show_room(r: Room) -> void:
 	_speaker.stop()
+	_mode = Mode.EXPLORE
 	_room = r
-	_board = null
 	_grid.visible = false
 	_stage.visible = false
 	_room_view.visible = true
 	_room_view.show_room(_profile, r)
-	_show_place("room:" + r.id)
+	_show_mode(Mode.EXPLORE)
 	_layout_home()
 
-func show_board(b: Board) -> void:
+## Words: every tile the profile's boards name, or its whole bank (`Profile.words_gestalts`).
+func show_words() -> void:
 	_speaker.stop()
-	_board = b
+	_mode = Mode.WORDS
 	_room = null
 	_room_view.visible = false
 	_grid.visible = true
@@ -93,7 +107,7 @@ func show_board(b: Board) -> void:
 		_grid.remove_child(child)
 		child.queue_free()
 	_tiles.clear()
-	for g: Gestalt in _profile.board_gestalts(b):
+	for g: Gestalt in _profile.words_gestalts():
 		var tile: GestaltTile = _TILE_SCENE.instantiate() as GestaltTile
 		tile.set_gestalt(g)
 		tile.tapped.connect(_on_tile_tapped)
@@ -101,39 +115,37 @@ func show_board(b: Board) -> void:
 		_grid.add_child(tile)
 		_tiles[g.id] = tile
 	_layout_board()
-	_show_place("board:" + b.id)
+	_show_mode(Mode.WORDS)
 	_layout_home()
 
+## The pill a mode shows on the strip, or null when the profile has nothing for that mode.
+func mode_button(m: Mode) -> SdfButton:
+	return _modes.get(m, null)
+
+## A mode gets a pill only when it has something to show. The strip shows only when both do.
 func _build_strip() -> void:
 	_strip.clear()
-	_places.clear()
-	_strip.visible = _profile.rooms.size() + _profile.boards.size() >= 2
-	if not _strip.visible:
-		return
-	for r: Room in _profile.rooms:
-		var button: SdfButton = SdfButton.new()
-		button.text = r.title
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.custom_minimum_size.x = 160.0
-		button.pressed.connect(show_room.bind(r))
-		_strip.add_item(button)
-		_places["room:" + r.id] = button
-	for b: Board in _profile.boards:
-		var button: SdfButton = SdfButton.new()
-		button.text = b.title
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.custom_minimum_size.x = 160.0
-		button.pressed.connect(show_board.bind(b))
-		_strip.add_item(button)
-		_places["board:" + b.id] = button
+	_modes.clear()
+	if not _profile.rooms.is_empty():
+		_add_mode(Mode.EXPLORE, show_explore)
+	if not _profile.words_gestalts().is_empty():
+		_add_mode(Mode.WORDS, show_words)
+	_strip.visible = _modes.size() >= 2
 
-func _show_place(key: String) -> void:
-	var button: SdfButton = _places.get(key, null)
-	if button == null:
-		return
-	for other: SdfButton in _places.values():
-		other.set_pressed_no_signal(other == button)
-		other.refresh()
+func _add_mode(m: Mode, show: Callable) -> void:
+	var button: SdfButton = SdfButton.new()
+	button.text = _MODE_LABELS[m]
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.custom_minimum_size.x = 160.0
+	button.pressed.connect(show)
+	_strip.add_item(button)
+	_modes[m] = button
+
+func _show_mode(m: Mode) -> void:
+	for key: int in _modes.keys():
+		var button: SdfButton = _modes[key]
+		button.set_pressed_no_signal(key == m)
+		button.refresh()
 
 ## The room renders edge to edge behind the top bar; it frames itself into the band below the bar.
 func _sync_room_inset() -> void:
@@ -172,13 +184,6 @@ func _layout_board() -> void:
 	for tile: GestaltTile in _tiles.values():
 		tile.custom_minimum_size.x = width
 
-## A profile with nothing to show lists every gestalt it has.
-static func _all_gestalts_board(p: Profile) -> Board:
-	var ids: PackedStringArray = PackedStringArray()
-	for g: Gestalt in p.gestalts:
-		ids.push_back(g.id)
-	return Board.make("all", "All", ids)
-
 func _say(g: Gestalt) -> void:
 	_speaker.say(g, ProfileStore.media_dir(_profile.id))
 
@@ -199,7 +204,7 @@ func _on_speech_started(g: Gestalt, seconds: float) -> void:
 		return
 	var tile: GestaltTile = _tiles.get(g.id, null)
 	if tile != null:
-		tile.play_split(seconds)
+		tile.play(seconds)
 
 func _on_spot_held(s: Spot, g: Gestalt) -> void:
 	_speaking_spot = s
@@ -225,10 +230,10 @@ func _on_profiles_held() -> void:
 func _on_style_changed(_preset: StylePreset) -> void:
 	if _profile == null:
 		return
-	if _room != null:
+	if _mode == Mode.EXPLORE and _room != null:
 		show_room(_room)
-	elif _board != null:
-		show_board(_board)
+	else:
+		show_words()
 
 func _on_name_tapped() -> void:
 	if _profile == null or _title.consumed_by_hold():

@@ -23,8 +23,8 @@ this repository.
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
 | `gestalts` | The bank. See below. |
-| `rooms` | Explorable screens of spots. See below. |
-| `boards` | Plain screens of gestalt ids. |
+| `rooms` | Explorable screens of spots. The first is the learner's Explore. See below. |
+| `boards` | Lists of gestalt ids. Together they are the learner's Words tiles (docs/ui.md "The mode strip"). |
 
 A gestalt row:
 
@@ -39,7 +39,8 @@ A gestalt row:
 
 A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front
 and Top, with a pan and a zoom; the default) or `tilt` (adds Tilt, a look around from the room's center).
-`orbit` in an older file reads as `tilt`. A spot row:
+`orbit` in an older file reads as `tilt`. A room's and a board's `title` is for the adults. The learner's
+strip reads Explore and Words. A spot row:
 
 | Field | Meaning |
 | --- | --- |
@@ -88,6 +89,7 @@ ships the packs under any export mode (docs/exports.md).
 | Field | Meaning |
 | --- | --- |
 | `background`, `surface`, `accent`, `text` | The four interface colors. |
+| `chunk_palette` | The fills a chunk's pill draws from, keyed by the chunk's text (docs/ui.md "Chunk colors"). Each must carry `text` at 4.5:1. |
 | `wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`, `wall_color` | What a room and its objects are made of. |
 | `font_scale` | Multiplies every font size. |
 | `motion` | `FULL`, `REDUCED` or `NONE`. Every tween multiplies by `Style.motion_scale()`; zero skips it. |

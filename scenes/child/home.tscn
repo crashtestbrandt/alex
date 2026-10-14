@@ -77,7 +77,7 @@ clip_text = true
 alignment = 0
 tooltip_text = "Tap to hear your name; hold to record"
 
-[node name="PlaceStrip" type="MarginContainer" parent="Margin/Column/TopBar"]
+[node name="ModeStrip" type="MarginContainer" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4

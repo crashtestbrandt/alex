@@ -23,6 +23,8 @@ const VIEW_TWEEN_SECONDS: float = 0.7
 const WIDGET_MARGIN: float = 10.0
 ## How long a moved view stays, with nothing touched, before it returns to the front.
 const IDLE_RESET_SECONDS: float = 120.0
+const CAPTION_FONT_BASE: int = 28
+const CAPTION_MAX_PX: float = 504.0
 
 ## The idle period in use. A probe shortens it.
 var idle_seconds: float = IDLE_RESET_SECONDS
@@ -310,69 +312,52 @@ func _clamp_pan(pan_m: Vector2) -> Vector2:
 func room_silhouette() -> Rect2:
 	return CameraFraming.room_silhouette(RoomSpace.dims(), _target(), _azimuth, _elevation)
 
-## Float `g`'s chunks above spot `s` for about `seconds`, one chunk lighting after another.
+## Float `g`'s chunks above spot `s` for about `seconds`, each chunk marked in turn ([ChunkRow]). The pills
+## float on their own, with the style's relief and no card behind them.
 func show_chunks(s: Spot, g: Gestalt, seconds: float) -> void:
 	var b: SpotBody = _bodies.get(s.id, null)
 	if b == null:
 		return
 	_clear_captions()
-	var panel: SdfPanel = SdfPanel.new()
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var row: HFlowContainer = HFlowContainer.new()
-	row.alignment = FlowContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("h_separation", 14)
-	row.add_theme_constant_override("v_separation", 6)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var width: float = minf(560.0, safe_rect().size.x - 48.0)
-	var content_width: float = width - SdfPanel.CONTENT_MARGIN_PX * 2.0
-	var labels: Array[Label] = []
-	var natural_width: float = 0.0
-	for chunk: String in g.chunks:
-		var label: Label = Label.new()
-		label.text = chunk
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.add_theme_font_size_override("font_size", Style.font_px(28))
-		var font: Font = get_theme_font("font", "Label")
-		label.custom_minimum_size.x = minf(ceilf(font.get_string_size(chunk, HORIZONTAL_ALIGNMENT_LEFT, -1, Style.font_px(28)).x) + 2.0, content_width)
-		natural_width += label.custom_minimum_size.x + 14.0
-		row.add_child(label)
-		labels.push_back(label)
-	panel.add_child(row)
-	_captions.add_child(panel)
-	panel.custom_minimum_size.x = minf(width, natural_width - 14.0 + SdfPanel.CONTENT_MARGIN_PX * 2.0)
-	panel.size.x = panel.custom_minimum_size.x
-	_place_caption.call_deferred(panel, b.top_point())
+	var row: ChunkRow = ChunkRow.new()
+	row.name = "Caption"
+	row.floating = true
+	row.set_chunks(g.chunks, CAPTION_FONT_BASE)
+	_captions.add_child(row)
+	var width: float = minf(CAPTION_MAX_PX, safe_rect().size.x - 48.0)
+	row.fit_width(width)
+	row.custom_minimum_size.x = minf(width, row.natural_width())
+	row.size.x = row.custom_minimum_size.x
+	# Wrapped pills settle their height a frame after the first sort; the caption is placed again when they do.
+	row.minimum_size_changed.connect(_place_caption.bind(row, b.top_point()), CONNECT_DEFERRED)
+	_place_caption.call_deferred(row, b.top_point())
+	row.play(seconds)
 	var scale_factor: float = Style.motion_scale()
-	var hold: float = maxf(seconds, 0.6)
+	var hold: float = maxf(seconds, ChunkRow.MIN_PHRASE_SECONDS)
 	if scale_factor <= 0.0:
-		get_tree().create_timer(hold + 0.5).timeout.connect(panel.queue_free)
+		get_tree().create_timer(hold + 0.5).timeout.connect(row.queue_free)
 		return
-	var tween: Tween = panel.create_tween()
-	if scale_factor > 0.0 and labels.size() > 1:
-		for label: Label in labels:
-			label.add_theme_color_override("font_color", Style.current.text.lerp(Style.current.surface, 0.3))
-		var per_chunk: float = hold / labels.size()
-		for label: Label in labels:
-			tween.tween_callback(func() -> void: label.add_theme_color_override("font_color", Style.current.text))
-			tween.tween_interval(per_chunk)
-	else:
-		tween.tween_interval(hold)
-	tween.tween_interval(0.5)
-	if scale_factor > 0.0:
-		tween.tween_property(panel, "modulate:a", 0.0, 0.4 * scale_factor)
-	tween.tween_callback(panel.queue_free)
+	var tween: Tween = row.create_tween()
+	tween.tween_interval(hold + 0.5)
+	tween.tween_property(row, "modulate:a", 0.0, 0.4 * scale_factor)
+	tween.tween_callback(row.queue_free)
 
-func _place_caption(panel: SdfPanel, at: Vector3) -> void:
-	if not is_instance_valid(panel) or panel.is_queued_for_deletion():
+## The caption on screen now, or null.
+func caption_row() -> ChunkRow:
+	for caption: Node in _captions.get_children():
+		if not caption.is_queued_for_deletion():
+			return caption as ChunkRow
+	return null
+
+func _place_caption(caption: Control, at: Vector3) -> void:
+	if not is_instance_valid(caption) or caption.is_queued_for_deletion():
 		return
-	panel.reset_size()
+	caption.reset_size()
 	var anchor: Vector2 = _camera.unproject_position(at)
 	var safe: Rect2 = safe_rect().grow(-16.0)
-	panel.position = Vector2(
-		clampf(anchor.x - panel.size.x / 2.0, safe.position.x, maxf(safe.position.x, safe.end.x - panel.size.x)),
-		clampf(anchor.y - panel.size.y - 12.0, safe.position.y, maxf(safe.position.y, safe.end.y - panel.size.y)))
+	caption.position = Vector2(
+		clampf(anchor.x - caption.size.x / 2.0, safe.position.x, maxf(safe.position.x, safe.end.x - caption.size.x)),
+		clampf(anchor.y - caption.size.y - 12.0, safe.position.y, maxf(safe.position.y, safe.end.y - caption.size.y)))
 
 func _clear_captions() -> void:
 	for caption: Node in _captions.get_children():

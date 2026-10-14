@@ -26,6 +26,23 @@ func test_board_gestalts_follow_board_order_and_skip_unknown_ids() -> void:
 	assert_eq(listed.size(), 2, "the missing id is skipped")
 	assert_eq(listed[0].id, "b", "board order, not bank order")
 
+func test_words_join_every_board_in_order_once() -> void:
+	var p: Profile = _sample()
+	p.put_gestalt(Gestalt.from_text("c", "See you | later"))
+	p.boards.push_back(Board.make("more", "More", PackedStringArray(["a", "c"])))
+	var ids: PackedStringArray = PackedStringArray()
+	for g: Gestalt in p.words_gestalts():
+		ids.push_back(g.id)
+	assert_eq(ids, PackedStringArray(["b", "a", "c"]), "board order, a repeat dropped, a missing id skipped")
+
+func test_words_fall_back_to_the_bank() -> void:
+	var p: Profile = _sample()
+	p.boards.clear()
+	assert_eq(p.words_gestalts().size(), 2, "no boards: the whole bank")
+	p.boards.push_back(Board.make("gone", "Gone", PackedStringArray(["missing"])))
+	assert_eq(p.words_gestalts().size(), 2, "boards that name nothing held: the whole bank")
+	assert_true(Profile.make("p2", "Empty").words_gestalts().is_empty(), "an empty bank has no words")
+
 func test_dict_round_trip() -> void:
 	var p: Profile = _sample()
 	var back: Profile = Profile.from_dict(p.to_dict())
