@@ -75,9 +75,13 @@ and never reach the learner's screen.
 ## Making chunks visible
 
 A gestalt is authored with `|` chunk marks: `Let's go | to the park`. `Gestalt.from_text` keeps the spoken
-text and the chunk list. When an object is touched, its chunks float above it and light up in order while the
-phrase plays; on a tile, the chunks pull apart. The learner sees where the seams are without being told. A
-gestalt with no bar stays whole, which is right for a phrase that should not be broken yet.
+text and the chunk list.
+
+- Each chunk sits on a pill in its own color, keyed by its text, so the same chunk looks the same everywhere.
+- When an object is touched, its chunks float above it. When a tile is tapped, its chunks stay on the tile.
+- While the phrase plays, each chunk is marked in turn.
+- The learner sees where the seams are without being told.
+- A gestalt with no bar stays whole, which is right for a phrase that should not be broken yet.
 
 The same chunk list feeds the remix board later. Authoring the seam once, in the text, keeps every feature
 agreeing on where the seams are.

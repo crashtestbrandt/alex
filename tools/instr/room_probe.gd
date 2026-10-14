@@ -155,12 +155,53 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(room_view.visible and not grid.visible, "Explore brings the room back")
 	_check(home.mode_button(ChildHome.Mode.EXPLORE).button_pressed, "Explore is the pressed pill again")
+	await _check_chunks(home, room_view)
 	home.show_words()
 	await get_tree().process_frame
 
 	await _check_name(home, p)
 	await _check_cleanup(home, p)
 	_finish(repo, p.id)
+
+## A chunk is the same color in the caption and on a tile. The spoken chunk grows at full motion and
+## brightens, at its own size, at motion NONE.
+func _check_chunks(home: ChildHome, room_view: RoomView) -> void:
+	var door: SpotBody = room_view.body("door")
+	room_view.tap(door)
+	await get_tree().create_timer(0.2).timeout
+	var caption: ChunkRow = room_view.caption_row()
+	_check(caption != null, "the door's caption is a chunk row")
+	if caption == null:
+		return
+	var caption_pills: Array[ChunkRow.Pill] = caption.pills()
+	_check(caption_pills.size() == 2 and caption_pills[0].text == "Let's go", "the caption holds the door's chunks")
+	for pill: ChunkRow.Pill in caption_pills:
+		_check(pill.color() == ChunkColors.color_for(pill.text, Style.current.chunk_palette), "caption '%s' takes its text's color" % pill.text)
+		_check(pill.fill() == pill.color(), "caption '%s' keeps its color at full motion" % pill.text)
+	_check(caption_pills[0].is_spoken() and caption_pills[0].body_scale().x > 1.01, "the spoken chunk grows (%s)" % caption_pills[0].body_scale())
+	_check(not caption_pills[1].is_spoken() and caption_pills[1].body_scale().is_equal_approx(Vector2.ONE), "the next chunk waits at rest")
+
+	home.show_words()
+	await get_tree().process_frame
+	var tile: GestaltTile = home._tiles.get("lets_go_in_the_car", null)
+	_check(tile != null, "the car tile is in Words")
+	if tile == null:
+		return
+	var tile_pill: ChunkRow.Pill = tile.chunk_row().pills()[0]
+	_check(tile_pill.text == "Let's go" and tile_pill.fill() == caption_pills[0].color(), "\"Let's go\" is one color on the caption and the tile")
+
+	var previous: StylePreset = Style.current
+	Style.apply(StylePreset.load_by_id("quiet"))
+	await get_tree().process_frame
+	tile = home._tiles.get("lets_go_in_the_car", null)
+	tile_pill = tile.chunk_row().pills()[0]
+	tile_pill.set_spoken(true)
+	_check(tile_pill.fill() == ChunkColors.spoken(tile_pill.color()) and tile_pill.body_scale() == Vector2.ONE, "at motion NONE the spoken chunk brightens and keeps its size")
+	tile_pill.set_spoken(false)
+	_check(tile_pill.fill() == tile_pill.color(), "at rest it returns to its color")
+	Style.apply(previous)
+	home.show_explore()
+	await get_tree().create_timer(0.3).timeout
 
 ## The strip reads Explore then Words, whatever the room and the board are called.
 func _check_strip(home: ChildHome, p: Profile) -> void:

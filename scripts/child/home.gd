@@ -204,7 +204,7 @@ func _on_speech_started(g: Gestalt, seconds: float) -> void:
 		return
 	var tile: GestaltTile = _tiles.get(g.id, null)
 	if tile != null:
-		tile.play_split(seconds)
+		tile.play(seconds)
 
 func _on_spot_held(s: Spot, g: Gestalt) -> void:
 	_speaking_spot = s

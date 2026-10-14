@@ -88,6 +88,7 @@ ships the packs under any export mode (docs/exports.md).
 | Field | Meaning |
 | --- | --- |
 | `background`, `surface`, `accent`, `text` | The four interface colors. |
+| `chunk_palette` | The fills a chunk's pill draws from, keyed by the chunk's text (docs/ui.md "Chunk colors"). Each must carry `text` at 4.5:1. |
 | `wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`, `wall_color` | What a room and its objects are made of. |
 | `font_scale` | Multiplies every font size. |
 | `motion` | `FULL`, `REDUCED` or `NONE`. Every tween multiplies by `Style.motion_scale()`; zero skips it. |

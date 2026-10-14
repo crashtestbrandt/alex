@@ -394,7 +394,7 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	stage.ensure_control_visible(last)
 	await _settle()
 	_inside(last, stage.get_global_rect(), "last tile reachable")
-	last.play_split(0.5)
+	last.play(0.5)
 	await get_tree().create_timer(0.3).timeout
 	_inside(last.get_node("%Chunks") as Control, last.get_global_rect(), "animated chunks")
 	var holds: Array[int] = [0]

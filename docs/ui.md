@@ -45,6 +45,20 @@ is `PASS`, so a tap on its padding does not.
 - Room and board titles stay in profile data and never reach the learner's screen.
 - Room choice inside Explore and a caregiver label for Explore wait until a profile has a second room.
 
+## Chunk colors
+
+- Every chunk has one color, keyed by its text. "Let's go" is the same color on every tile, caption and pack.
+- The key is the chunk lowercased and trimmed.
+- `ChunkColors` hashes the key into the style preset's `chunk_palette`. The hash is FNV-1a with the murmur3
+  finalizer, 32 bits, pinned in `chunk_colors_test.gd`.
+- Two chunks can share a color, about one pair in ten with a 10-color palette. A large bank makes that certain.
+- The color fills a pill behind the chunk. The text keeps the preset's text color.
+- Every palette color carries the text at 4.5:1 or better, at rest and brightened (`style_preset_test.gd`).
+- A color carries identity only. Nothing about a chunk's function, stage or use picks it.
+- The chunk being spoken grows by a tenth, times `Style.motion_scale()`. At motion NONE it brightens instead
+  and keeps its size.
+- The tile in Words and the caption in the room are both a `ChunkRow`.
+
 ## The controls
 
 | Control | Extends | What it is |
@@ -56,6 +70,7 @@ is `PASS`, so a tap on its padding does not.
 | `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the mode strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
 | `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
+| `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. |
 
 The background quad an `SdfShape` paints is the control grown by `SdfShape.PAD_PX` on each side, so the
 shadow has room. It is drawn with `draw_texture_rect` over a white texture because a plain rect carries no UVs
@@ -97,7 +112,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
 - The current phrase has one opaque caption panel. Repeated taps replace it; view changes clear it.
-- Shadows remain dark in every style. Glyphs and tile text change color while pressed.
+- Shadows remain dark in every style. Glyphs change color while pressed. Chunk text keeps the text color on its pill.
 
 ## Visual sweep
 
