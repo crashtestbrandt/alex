@@ -48,6 +48,13 @@ func _init() -> void:
 		add_theme_stylebox_override(state, empty)
 
 func _ready() -> void:
+	# A swipe beginning on a button must reach its enclosing scroll container.
+	var ancestor: Node = get_parent()
+	while ancestor != null:
+		if ancestor is ScrollContainer:
+			mouse_filter = Control.MOUSE_FILTER_PASS
+			break
+		ancestor = ancestor.get_parent()
 	_shape = SdfShape.new()
 	_shape.name = "Shape"
 	_shape.show_behind_parent = true

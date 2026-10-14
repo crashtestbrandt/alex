@@ -27,6 +27,7 @@ var _gestalt: Gestalt = null
 var _profile: Profile = null
 var _take: AudioStreamWAV = null
 var _idle: float = 0.0
+var _previous_focus: Control = null
 
 func _ready() -> void:
 	visible = false
@@ -40,6 +41,7 @@ func _ready() -> void:
 	set_process(false)
 
 func open(g: Gestalt, p: Profile) -> void:
+	_previous_focus = get_viewport().gui_get_focus_owner()
 	_gestalt = g
 	_profile = p
 	_phrase.text = g.text
@@ -51,6 +53,7 @@ func open(g: Gestalt, p: Profile) -> void:
 		_status.text = "This device has no microphone available."
 		_record_button.disabled = true
 		(_record_button as SdfButton).refresh()
+	_focus_controls()
 
 func close() -> void:
 	if _recorder.is_recording():
@@ -59,6 +62,9 @@ func close() -> void:
 	_take = null
 	visible = false
 	set_process(false)
+	if is_instance_valid(_previous_focus) and _previous_focus.is_visible_in_tree():
+		_previous_focus.grab_focus()
+	_previous_focus = null
 	closed.emit()
 
 func _process(delta: float) -> void:
@@ -89,6 +95,28 @@ func _reset() -> void:
 	_record_button.disabled = false
 	(_record_button as SdfButton).refresh()
 	_status.text = "Hold the button, say it, let go."
+	if visible:
+		_focus_controls()
+
+## Keyboard navigation stays in the caregiver overlay until Back or Escape closes it.
+func _focus_controls() -> void:
+	var controls: Array[Control] = []
+	if _review_row.visible:
+		controls.assign([_keep_button, _again_button])
+	elif not _record_button.disabled:
+		controls.push_back(_record_button)
+	controls.push_back(_cancel_button)
+	for index: int in controls.size():
+		var control: Control = controls[index]
+		var previous: NodePath = controls[(index - 1 + controls.size()) % controls.size()].get_path()
+		var next: NodePath = controls[(index + 1) % controls.size()].get_path()
+		control.focus_previous = previous
+		control.focus_next = next
+		control.focus_neighbor_left = previous
+		control.focus_neighbor_top = previous
+		control.focus_neighbor_right = next
+		control.focus_neighbor_bottom = next
+	controls[0].grab_focus()
 
 func _on_record_down() -> void:
 	_preview.stop()
@@ -96,6 +124,8 @@ func _on_record_down() -> void:
 	_status.text = "Listening…"
 
 func _on_record_up() -> void:
+	if not _recorder.is_recording():
+		return
 	var take: AudioStreamWAV = _recorder.stop()
 	if take == null or take.get_length() < MIN_TAKE_SECONDS:
 		_status.text = "That was very short. Hold the button while you speak."
@@ -106,6 +136,7 @@ func _on_record_up() -> void:
 	_status.text = "Here is how it sounds."
 	_record_button.visible = false
 	_review_row.visible = true
+	_focus_controls()
 
 func _on_keep() -> void:
 	if _take == null:

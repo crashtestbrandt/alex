@@ -45,11 +45,13 @@ func setup(s: Spot, r: Recipe, p_size_m: float, material: Material) -> void:
 			_glow.push_back(glow)
 	# Keep the pane in both the mesh and the picking field; only its material is translucent.
 	if s.kind == Spot.Kind.WINDOW and _parts.has("pane"):
-		var pane: StandardMaterial3D = _parts["pane"].material_override as StandardMaterial3D
-		pane.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		pane.albedo_color = Color(1.0, 1.0, 1.0, 0.16)
-		pane.emission = Style.current.glass
-		_parts["pane"].cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var pane_material: Material = _parts["pane"].material_override
+		if pane_material is StandardMaterial3D:
+			var pane: StandardMaterial3D = pane_material
+			pane.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			pane.albedo_color = Color(1.0, 1.0, 1.0, 0.16)
+			pane.emission = Style.current.glass
+			_parts["pane"].cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_bounds = r.aabb()
 	_apply_state()
 

@@ -35,6 +35,32 @@ func _square(control: Control, label: String) -> void:
 func _inside(control: Control, rect: Rect2, label: String) -> void:
 	_check(rect.grow(2.0).encloses(control.get_global_rect()), "%s fits (%s in %s)" % [label, control.get_global_rect(), rect])
 
+func _drag_scroll(scroll: ScrollContainer, at: Vector2) -> void:
+	var before_drag: int = scroll.scroll_vertical
+	var press: InputEventMouseButton = InputEventMouseButton.new()
+	press.position = at
+	press.global_position = press.position
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	get_viewport().push_input(press, true)
+	var drag: InputEventMouseMotion = InputEventMouseMotion.new()
+	drag.relative = Vector2(0.0, -120.0)
+	drag.position = press.position + drag.relative
+	drag.global_position = drag.position
+	drag.button_mask = MOUSE_BUTTON_MASK_LEFT
+	get_viewport().push_input(drag, true)
+	drag.relative = Vector2(0.0, -60.0)
+	drag.position += drag.relative
+	drag.global_position = drag.position
+	get_viewport().push_input(drag, true)
+	await _settle()
+	press.pressed = false
+	press.position = drag.position
+	press.global_position = drag.position
+	get_viewport().push_input(press, true)
+	await _settle()
+	_check(scroll.scroll_vertical > before_drag, "drag scrolls %s" % scroll.name)
+
 func _run() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg == "--capture" or arg.begins_with("--capture="):
@@ -167,6 +193,16 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	var screen: Rect2 = home.get_global_rect()
 	var grid: GridContainer = home.get_node("%Board") as GridContainer
 	var stage: ScrollContainer = home.get_node("%Stage") as ScrollContainer
+	var wheel: InputEventMouseButton = InputEventMouseButton.new()
+	wheel.position = stage.get_global_rect().get_center()
+	wheel.global_position = wheel.position
+	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	wheel.pressed = true
+	get_viewport().push_input(wheel, true)
+	await _settle()
+	_check(stage.scroll_vertical > 0, "mouse wheel scrolls the board")
+	await _drag_scroll(stage, stage.get_global_rect().get_center())
+	_check(not overlay.visible, "drag scrolling does not open the recorder")
 	_square(home.get_node("%ProfilesButton") as Control, "profile button with wrapped navigation")
 	_inside(home.get_node("%TopBar") as Control, screen, "long name header")
 	_inside(home.get_node("%PlaceStrip") as Control, screen, "long place titles")
@@ -191,6 +227,19 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	_check(holds[0] == 0, "scrolling cancels a caregiver hold")
 	_check(not overlay.visible, "scrolling never opens the recorder")
 	_shot("board")
+	last.grab_focus()
+	overlay.open(last.gestalt, profile)
+	await _settle()
+	var tab: InputEventKey = InputEventKey.new()
+	tab.keycode = KEY_TAB
+	tab.pressed = true
+	for step: int in 6:
+		get_viewport().push_input(tab, true)
+		await _settle()
+		var focused: Control = get_viewport().gui_get_focus_owner()
+		_check(focused != null and overlay.is_ancestor_of(focused), "keyboard focus stays in recording overlay")
+	overlay.close()
+	_check(get_viewport().gui_get_focus_owner() == last, "closing recorder restores tile focus")
 	var fixtures: PackedStringArray = []
 	for index: int in 10:
 		var fixture: Profile = ProfileStore.create_profile("A longer profile name %d" % index, null, "calm")
@@ -199,6 +248,11 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	await _settle()
 	var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
 	var create: Control = picker.get_node("%CreateButton") as Control
+	sheet.scroll_vertical = 0
+	await _settle()
+	var first_profile: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	await _drag_scroll(sheet, first_profile.get_global_rect().get_center())
+	_check(picker.visible, "dragging a profile does not open it")
 	sheet.ensure_control_visible(create)
 	await _settle()
 	_inside(create, screen, "create reachable with many profiles")

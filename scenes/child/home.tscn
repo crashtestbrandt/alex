@@ -96,7 +96,6 @@ unique_name_in_owner = true
 script = ExtResource("scroll")
 layout_mode = 2
 size_flags_vertical = 3
-mouse_filter = 2
 
 [node name="Board" type="GridContainer" parent="Margin/Column/Stage"]
 unique_name_in_owner = true

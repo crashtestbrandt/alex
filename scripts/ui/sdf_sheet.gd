@@ -9,7 +9,9 @@ var _panel: Control = null
 func _ready() -> void:
 	super()
 	_panel = get_child(0) as Control
+	_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	_content = Control.new()
+	_content.mouse_filter = Control.MOUSE_FILTER_PASS
 	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_content)

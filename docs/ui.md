@@ -71,9 +71,10 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - The profile title truncates within the header. Place choices wrap onto a separate row in narrow portrait windows.
 - Place and view bars select exactly one item. Keyboard focus has a visible border.
 - Board columns follow the available width and the style's touch floor. Rows balance across columns.
-- Long phrases wrap within tiles. Larger boards scroll without reducing touch targets.
+- Long phrases wrap within tiles. Larger boards scroll without reducing touch targets. Swipes beginning on buttons reach their scroll container.
 - `SdfSheet` centers caregiver forms, limits their line length, and scrolls tall content. `SdfScroll` draws its scrollbar with `SdfShape`.
 - Recording actions wrap. Back and Create stay reachable after rotation and with long content.
+- Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
 - The current phrase has one opaque caption panel. Repeated taps replace it; view changes clear it.
 - Shadows remain dark in every style. Glyphs and tile text change color while pressed.
@@ -82,7 +83,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 
 - `just layout-probe` checks six viewport shapes in all three styles, all four camera views, caption bounds, tile bounds, and scrolling.
 - The sizes are 390×844, 844×390, 768×1024, 1280×800, 1920×1080, and 640×640.
-- A 320×568 stress case checks a long profile name, long place titles, a 30-phrase board, ten additional profiles, and scroll-cancelled holds.
+- A 320×568 stress case checks a long profile name, long place titles, a 30-phrase board, ten additional profiles, native wheel and drag scrolling, scroll-cancelled holds, and recording focus.
 - `just visual-probe` saves room, caption, board, recording, review, and picker screenshots under `user://visual_probe_captures/`.
 - Pass `--capture=<directory>` to the probe to choose a different screenshot directory.
 - The probe uses an isolated profile repository and deletes its fixtures. It never records audio.
