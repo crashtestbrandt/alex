@@ -2,7 +2,8 @@ extends HFlowContainer
 class_name ChunkRow
 ## A gestalt's chunks as a wrapping row of pills (docs/ui.md "Chunk colors"). Each pill is an [SdfShape] filled
 ## with its chunk's color (ChunkColors) behind a label in the style's text color, so contrast holds in every
-## preset. The tile on a board and the caption in the room are both one of these.
+## preset. The tile on a board and the caption in the room are both one of these. A caption floats over the
+## room with no card behind it, so its pills take the style's relief; a tile's pills sit flat on the tile.
 ##
 ## While the phrase plays, the chunk being spoken grows a little, by `SPOKEN_GROWTH` times
 ## [method Style.motion_scale]. At motion NONE it brightens instead, keeping its hue. The schedule follows the
@@ -15,6 +16,13 @@ const SPOKEN_GROWTH: float = 0.1
 const SPOKEN_SECONDS: float = 0.12
 ## The shortest a phrase is paced over, so a fast one still shows each chunk.
 const MIN_PHRASE_SECONDS: float = 0.6
+
+## Whether the pills stand off what is behind them with the style's relief: the rim and the shadow.
+var floating: bool = false:
+	set(value):
+		floating = value
+		for pill: Pill in _pills:
+			pill.set_floating(value)
 
 var _pills: Array[Pill] = []
 var _tween: Tween = null
@@ -34,6 +42,7 @@ func set_chunks(chunks: PackedStringArray, font_base: int) -> void:
 	_pills.clear()
 	for chunk: String in chunks:
 		var pill: Pill = Pill.new(chunk, Style.font_px(font_base))
+		pill.set_floating(floating)
 		add_child(pill)
 		_pills.push_back(pill)
 
@@ -128,6 +137,13 @@ class Pill extends Control:
 
 	func body_scale() -> Vector2:
 		return _body.scale
+
+	## Below zero, the shape takes the style preset's relief.
+	func set_floating(on: bool) -> void:
+		_shape.relief = -1.0 if on else 0.0
+
+	func relief() -> float:
+		return _shape.relief
 
 	func fit_width(width: float) -> void:
 		var font: Font = _label.get_theme_font("font")

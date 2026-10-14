@@ -175,6 +175,7 @@ func _check_chunks(home: ChildHome, room_view: RoomView) -> void:
 		return
 	var caption_pills: Array[ChunkRow.Pill] = caption.pills()
 	_check(caption_pills.size() == 2 and caption_pills[0].text == "Let's go", "the caption holds the door's chunks")
+	_check(caption.get_parent().get_child_count() == 1 and caption_pills[0].relief() < 0.0, "the caption is bare pills with the style's relief")
 	for pill: ChunkRow.Pill in caption_pills:
 		_check(pill.color() == ChunkColors.color_for(pill.text, Style.current.chunk_palette), "caption '%s' takes its text's color" % pill.text)
 		_check(pill.fill() == pill.color(), "caption '%s' keeps its color at full motion" % pill.text)
@@ -189,6 +190,7 @@ func _check_chunks(home: ChildHome, room_view: RoomView) -> void:
 		return
 	var tile_pill: ChunkRow.Pill = tile.chunk_row().pills()[0]
 	_check(tile_pill.text == "Let's go" and tile_pill.fill() == caption_pills[0].color(), "\"Let's go\" is one color on the caption and the tile")
+	_check(tile_pill.relief() == 0.0, "a tile's pills sit flat")
 
 	var previous: StylePreset = Style.current
 	Style.apply(StylePreset.load_by_id("quiet"))

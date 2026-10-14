@@ -58,6 +58,8 @@ is `PASS`, so a tap on its padding does not.
 - The chunk being spoken grows by a tenth, times `Style.motion_scale()`. At motion NONE it brightens instead
   and keeps its size.
 - The tile in Words and the caption in the room are both a `ChunkRow`.
+- A caption has no card behind it. Its pills take the style's relief, so they stand off the room.
+- A tile's pills sit flat on the tile.
 
 ## The controls
 
@@ -70,7 +72,7 @@ is `PASS`, so a tap on its padding does not.
 | `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the mode strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
 | `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
-| `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. |
+| `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. `floating` gives the pills the style's relief. |
 
 The background quad an `SdfShape` paints is the control grown by `SdfShape.PAD_PX` on each side, so the
 shadow has room. It is drawn with `draw_texture_rect` over a white texture because a plain rect carries no UVs
@@ -111,7 +113,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Profile rows keep their Look action inline. Creation and look editing have separate forms.
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
-- The current phrase has one opaque caption panel. Repeated taps replace it; view changes clear it.
+- The current phrase has one caption. Repeated taps replace it; view changes clear it.
 - Shadows remain dark in every style. Glyphs change color while pressed. Chunk text keeps the text color on its pill.
 
 ## Visual sweep
