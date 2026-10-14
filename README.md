@@ -1,6 +1,6 @@
 # Alex
 
-A room to explore, that speaks in voices you love.
+Scenes to explore and phrases to tap, spoken in voices the learner knows.
 
 Alex Language EXplorer is a small app for children who acquire language in whole chunks: autistic
 children, children with developmental delays, and any child whose first speech is echolalia. It is not a
@@ -11,15 +11,18 @@ after a caregiver spends a few minutes setting it up.
 
 ## What the learner sees
 
-A bedroom. A door, a lamp, a window, a bed, a cup on the nightstand, a rug, a ball, a pair of shoes by the
-door. Touch the door and it swings open as a familiar voice says "Let's go outside." Touch it again and it
-closes: "Let's go inside." The lamp lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
-up one after another, so the learner sees where a phrase comes apart without being told.
+The learner moves between two modes, Explore and Words.
 
-Two pills at the top switch between Explore, the room, and Words, a column of phrase tiles. Three buttons
-under the room look at it from the front, the side and above. A caregiver can add a fourth that
-turns the room, or take all of them away. Whatever the learner does with them, the room comes back to the front
-on its own.
+- **Explore** is a 3D scene of everyday objects. Touching an object plays its reaction and says its phrase
+  in a familiar voice.
+- **Words** is a column of phrase tiles. Tapping a tile says its phrase.
+- **Chunks** show on colored pills while a phrase plays, and each is marked as it is spoken. A chunk keeps
+  its color everywhere it appears, so "Let's go" looks the same on every tile and caption.
+- **Views** move the camera to the front, the side and above. A caregiver can add a turning view or remove
+  all of them. A moved view returns to the front on its own.
+
+The shipped starter pack's scene is a bedroom. Touching the door opens it to "Let's go outside" and closes it
+to "Let's go inside". Scenes, objects and phrases are data in a pack, so a pack can describe any place.
 
 There are no questions, no right answers, no scores, no timers and no rewards. Touching the same thing forty
 times is fine. Nothing on the learner's screen can delete anything, buy anything, or leave the device.
@@ -27,8 +30,8 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
 ## What a caregiver does
 
 1. **Make a profile.** A name, a starter pack, a look. One minute.
-2. **Record the phrases in your own voice.** Hold any object for two seconds, hold the big button, say the
-   phrase, let go, hear it back, keep it. Until you do, the device's own voice fills in.
+2. **Record the phrases in your own voice.** Hold any object or tile for two seconds, hold the big button,
+   say the phrase, let go, hear it back, keep it. Until you do, the device's own voice fills in.
 3. **Record the name.** Hold the profile name to record it; tap the name to hear it.
 4. **Hand it over.**
 
@@ -63,10 +66,14 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 ## Status
 
-Early and usable. One 3D room with nine objects, a plain board for phrases with no object, three looks, and
-recording in your own voice. Coming: more rooms and reactions, the learner's own songs and clips, a remix board
-that offers chunk beginnings beside chunk endings, and a bank view for caregivers. Exports for Android and iOS
-phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording there is not yet tried.
+Early and usable.
+
+- **Ships:** one starter pack with a nine-object scene and a Words column, three looks, and recording in
+  your own voice.
+- **Coming:** scene packs a profile can add, more objects and reactions, a Words mode for building phrases
+  from chunks, the learner's own songs and clips, and a bank view for caregivers.
+- **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording
+  there is not yet tried.
 
 ## For developers
 
@@ -76,7 +83,7 @@ phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording there
 git lfs pull   # application artwork
 just setup     # the import pass that registers every class; run once after cloning
 just editor    # open the project
-just run       # profile picker, then the room
+just run       # profile picker, then the learner's screen
 just lint      # headless project load; fails on script errors
 just test      # the unit suites, about a second
 just check     # doc caps, lint, tests, the room probe
@@ -89,11 +96,11 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | --- | --- |
 | `scenes/` | `main.tscn`, the adults' `ui/profile_picker.tscn` and `ui/record_overlay.tscn`, the learner's `child/home.tscn`, `child/room_view.tscn` and `child/gestalt_tile.tscn`. |
 | `scripts/profiles/` | The data model: `Profile`, `Gestalt`, `Room`, `Spot`, `Board`, `NlaStage`, `Starter`, `JsonValue`, `ProfileRepo`, the `ProfileStore` autoload. |
-| `scripts/style/` | `StylePreset` (a resource) and the `Style` autoload that turns one into a Theme. |
+| `scripts/style/` | `StylePreset` (a resource), the `Style` autoload that turns one into a Theme, and `ChunkColors`. |
 | `scripts/speech/` | `Speaker` (a recording, else OS text to speech) and `Recorder` (the microphone). |
 | `scripts/geometry/` | Objects as recipes and the camera math: `Sdf`, `Mesher`, `Primitive`, `Recipe`, `RecipeBuilder`, `ObjectRecipes`, `Picker`, `CameraFraming`, `RoomSpace`. |
 | `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
-| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `UiGeometry`. |
+| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `ChunkRow`, `UiGeometry`. |
 | `shaders/ui/` | `shape.gdshader` and `glyph.gdshader`, the two fields every control is drawn from. |
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
@@ -103,13 +110,19 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.
 
-### Adding a room
+### Adding content
 
-A room is JSON in a starter pack: spots with a `kind` (what it looks like), a `reaction` (what it does), a
-wall or a place on the floor, a size, and the gestalt it says. No art is needed; every kind is built from
-primitives the way the thing is made, with a distance field as its twin for picking and, later, editing
-([`docs/geometry.md`](docs/geometry.md)). The fields are listed in [`docs/profiles.md`](docs/profiles.md). A
-new kind of object is a `Spot.Kind` value and a recipe function in `ObjectRecipes`.
+A starter pack is JSON under `starters/`. No art and no code are needed.
+
+- **Gestalts** are the phrases, authored with `|` chunk marks.
+- **A room** is the Explore scene: spots with a `kind` (what it looks like), a `reaction` (what it does), a
+  wall or a place on the floor, a size, and the gestalt it says.
+- **Boards** list the gestalts Words shows.
+
+Every object kind is built from primitives, with a distance field as its twin for picking and, later,
+editing ([`docs/geometry.md`](docs/geometry.md)). The fields are listed in
+[`docs/profiles.md`](docs/profiles.md). A new kind of object is a `Spot.Kind` value and a recipe function in
+`ObjectRecipes`.
 
 ### Exports
 
