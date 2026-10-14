@@ -32,7 +32,7 @@ runs:
 
     - name: Restore Godot
       id: godot-cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: ~/godot
         key: godot-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}
@@ -55,7 +55,7 @@ runs:
 
     - name: Save Godot
       if: steps.godot-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: ~/godot
         key: godot-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}
@@ -72,7 +72,7 @@ runs:
     - name: Restore templates
       id: templates-cache
       if: inputs.templates != ''
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: ${{ steps.paths.outputs.templates }}
         key: godot-templates-${{ inputs.version }}-${{ runner.os }}-${{ steps.paths.outputs.list-hash }}
@@ -98,7 +98,7 @@ runs:
       if: >-
         inputs.templates != '' && steps.templates-cache.outputs.cache-hit != 'true'
         && github.event_name != 'pull_request'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: ${{ steps.paths.outputs.templates }}
         key: godot-templates-${{ inputs.version }}-${{ runner.os }}-${{ steps.paths.outputs.list-hash }}
