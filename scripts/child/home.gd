@@ -10,6 +10,7 @@ signal profiles_requested
 const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 
 @onready var _title: HoldButton = %Title
+@onready var _name_slot: Control = %NameSlot
 @onready var _top_bar: HBoxContainer = %TopBar
 @onready var _strip: PillBar = %PlaceStrip
 @onready var _room_view: RoomView = %RoomView
@@ -30,6 +31,12 @@ var _places: Dictionary[String, SdfButton] = {}
 var _speaking_spot: Spot = null
 
 func _ready() -> void:
+	var name_padding: StyleBoxEmpty = StyleBoxEmpty.new()
+	name_padding.set_content_margin_all(4.0)
+	for state: String in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
+		_title.add_theme_stylebox_override(state, name_padding)
+	_name_slot.resized.connect(_layout_name)
+	_title.theme_changed.connect(_layout_name.call_deferred)
 	_profiles_button.held.connect(_on_profiles_held)
 	_title.pressed.connect(_on_name_tapped)
 	_title.held.connect(_on_name_held)
@@ -48,7 +55,6 @@ func show_profile(p: Profile) -> void:
 	_profile = p
 	_title.text = p.display_name
 	_title.disabled = p.display_name.is_empty()
-	_title.custom_minimum_size = Vector2(Style.current.tile_min_size, Style.current.tile_min_size)
 	_build_strip()
 	if not p.rooms.is_empty():
 		show_room(p.rooms[0])
@@ -145,8 +151,21 @@ func _layout_home() -> void:
 		parent.move_child(_strip, 1)
 	_strip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_FILL
 	_strip.fit_width(available.x - 48.0 if compact else available.x * 0.55)
+	_layout_name.call_deferred()
 	_layout_board()
 	_sync_room_inset.call_deferred()
+
+## Only the displayed name receives taps; unused header space passes through to the room.
+func _layout_name() -> void:
+	var minimum: Vector2 = _title.get_combined_minimum_size()
+	_name_slot.custom_minimum_size.y = minimum.y
+	var font: Font = _title.get_theme_font("font")
+	var font_size: int = _title.get_theme_font_size("font_size")
+	var text_width: float = font.get_string_size(_title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var padding: Vector2 = _title.get_theme_stylebox("normal").get_minimum_size()
+	_title.visible = not _title.text.is_empty() and _name_slot.size.x >= minimum.x
+	_title.size = Vector2(minf(ceilf(text_width) + padding.x, _name_slot.size.x), minimum.y)
+	_title.position = Vector2(0.0, maxf(0.0, (_name_slot.size.y - _title.size.y) / 2.0))
 
 func _layout_board() -> void:
 	var width: float = clampf(_stage.size.x - 16.0, Style.current.tile_min_size, 320.0)

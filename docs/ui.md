@@ -104,6 +104,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 
 - Words tiles keep a bounded width and their content height. They wrap into rows in a vertically scrolling column.
 - The profile name is a hold-capable button: tap for speech, hold for recording.
+- Its hit area fits the displayed name with 4 px padding. Long names truncate within the space left by the other header controls.
 - Boot and native application artwork live in `assets/brand/`; see [branding.md](branding.md) for generation prompts.
 - The room uses 4× MSAA and a 4096 px directional shadow map with medium soft filtering on desktop and mobile.
 - Shadow filtering is configured separately from geometry anti-aliasing; see [Godot's project settings](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-lights-and-shadows-directional-shadow-soft-shadow-filter-quality).

@@ -58,15 +58,21 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Button" parent="Margin/Column/TopBar"]
+[node name="NameSlot" type="Control" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Title" type="Button" parent="Margin/Column/TopBar/NameSlot"]
+unique_name_in_owner = true
+layout_mode = 0
 theme_type_variation = &"TitleLabel"
 text = "Profile"
 text_overrun_behavior = 3
 script = ExtResource("2")
 quiet = true
+radius_px = 6.0
 clip_text = true
 alignment = 0
 tooltip_text = "Tap to hear your name; hold to record"
