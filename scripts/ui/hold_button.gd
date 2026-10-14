@@ -1,4 +1,4 @@
-extends Button
+extends SdfButton
 class_name HoldButton
 ## A button that fires only after being held. The adult-facing screens sit behind one so a stray tap from
 ## the child never leaves the board. `held` fires once per press, at `hold_seconds`.
@@ -11,6 +11,7 @@ var _down_for: float = -1.0
 var _fired: bool = false
 
 func _ready() -> void:
+	super()
 	button_down.connect(_on_down)
 	button_up.connect(_on_up)
 	set_process(false)

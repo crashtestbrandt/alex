@@ -73,6 +73,20 @@ static func frame_extent(azimuth_deg: float, elevation_deg: float, room: Vector3
 static func perspective_distance(extent: float, fov_deg: float) -> float:
 	return extent / (2.0 * tan(deg_to_rad(fov_deg) / 2.0))
 
+## The extent the full viewport needs so that a band `safe_height_px` tall out of `viewport_height_px` shows
+## `safe_extent`. Floating controls take the rest.
+static func full_extent(safe_extent: float, safe_height_px: float, viewport_height_px: float) -> float:
+	if safe_height_px <= 0.0:
+		return safe_extent
+	return safe_extent * viewport_height_px / safe_height_px
+
+## Camera3D's `v_offset` that lands the target `offset_px` below the viewport's center: a positive offset
+## raises the camera, which moves everything down on the screen by the same share of the extent.
+static func center_offset(offset_px: float, viewport_height_px: float, extent: float) -> float:
+	if viewport_height_px <= 0.0:
+		return 0.0
+	return offset_px / viewport_height_px * extent
+
 ## How many pixels an object `size_m` across covers at the target plane.
 static func projected_px(size_m: float, extent: float, viewport_height_px: float) -> float:
 	if extent <= 0.0:

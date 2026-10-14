@@ -1,6 +1,7 @@
 extends Control
-## Screenshot: seed a profile from the home starter, open its room, swing the door and light the lamp, and
-## save the viewport to docs/img/room.png (`just screenshot`). Windowed, because it needs a renderer. The
+## Screenshots: seed a profile from the home starter, open its room, swing the door and light the lamp, and
+## save the viewport to docs/img/room.png; then open the recording overlay for the door's phrase and save
+## docs/img/record.png (`just screenshot`). Windowed, because it needs a renderer. The
 ## profile it makes is deleted on the way out. Re-run it whenever the room changes so the README stays true.
 ##
 ## The root is a Control, not a Node: a theme set on the window propagates only through Control and Window
@@ -8,6 +9,7 @@ extends Control
 
 const _MAIN: PackedScene = preload("res://scenes/main.tscn")
 const _OUT: String = "res://docs/img/room.png"
+const _OUT_RECORD: String = "res://docs/img/record.png"
 const _TAPPED: PackedStringArray = ["door", "light"]
 
 func _ready() -> void:
@@ -32,12 +34,25 @@ func _run() -> void:
 	# Mid-utterance: the door has finished swinging and the first chunk is lit.
 	await get_tree().create_timer(0.6).timeout
 	await RenderingServer.frame_post_draw
-	var image: Image = get_viewport().get_texture().get_image()
-	var err: Error = image.save_png(_OUT)
+	var err: Error = _save(_OUT)
+	if err == OK:
+		await get_tree().create_timer(2.5).timeout
+		var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
+		overlay.open(p.gestalt("lets_go_outside"), p)
+		await get_tree().create_timer(0.3).timeout
+		await RenderingServer.frame_post_draw
+		err = _save(_OUT_RECORD)
+		overlay.close()
 	repo.delete_profile(p.id)
 	if err == OK:
-		print("SCREENSHOT %s %dx%d" % [_OUT, image.get_width(), image.get_height()])
 		get_tree().quit(0)
 	else:
 		print("SCREENSHOT FAIL %s" % error_string(err))
 		get_tree().quit(1)
+
+func _save(path: String) -> Error:
+	var image: Image = get_viewport().get_texture().get_image()
+	var err: Error = image.save_png(path)
+	if err == OK:
+		print("SCREENSHOT %s %dx%d" % [path, image.get_width(), image.get_height()])
+	return err

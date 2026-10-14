@@ -42,12 +42,12 @@ Side, Top; the default) or `orbit` (adds Turn and a drag). A spot row:
 | Field | Meaning |
 | --- | --- |
 | `id` | Unique within the room. |
-| `kind` | What it looks like: `door`, `light`, `window`, `ball`, `bed`, `cup`, `shoes`, `tub`, `star`, `circle`. Built from primitives (docs/geometry.md). |
+| `kind` | What it looks like: `door`, `light`, `window`, `ball`, `bed`, `cup`, `shoes`, `tub`, `star`, `table`, `circle`. Built from primitives (docs/geometry.md). |
 | `reaction` | What it does when touched: `bounce`, `open`, `glow`, `spin`, `wobble`, `grow`. |
 | `wall` | `none` for the floor (the default), or `back`, `left`, `right`. |
 | `x` | Across the room for a floor spot, along the wall for a wall spot. 0 to 1. |
 | `y` | Back to front for a floor spot, 0 at the back wall. Ignored on a wall. |
-| `height` | The base of a wall spot as a fraction of the room's height, 0 to 0.9. Ignored on the floor. |
+| `height` | The base of the object as a fraction of the room's height, 0 to 0.9: up a wall, or on top of something on the floor. A table's top is at 0.9 of its `size`. |
 | `size` | The object's longest extent as a fraction of the room's width, 0.05 to 0.6. The camera pulls in a little when the smallest spot would fall under the touch floor, and picking honors the floor regardless. |
 | `gestalt` | What it says. |
 | `alt_gestalt` | What it says when toggled on (door open, light on). Optional. |
@@ -90,6 +90,7 @@ Packs are read with `DirAccess` at runtime, so **a shipped build needs `*.json` 
 | `motion` | `FULL`, `REDUCED` or `NONE`. Every tween multiplies by `Style.motion_scale()`; zero skips it. |
 | `corner_radius` | Tile and panel corners. |
 | `tile_min_size` | The smallest tile, in pixels. 160 is the floor. |
+| `relief` | How far every shape stands off the screen, 0 flat to 1. The lit rim and the shadow (docs/ui.md). |
 
 `Style.apply` builds a Theme from the preset at runtime and sets it on the root window. There is no theme
 file to keep in step. `calm`, `bold` and `quiet` ship; a fourth is a new `.tres`.

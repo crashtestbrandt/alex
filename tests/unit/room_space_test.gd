@@ -5,9 +5,11 @@ func _spot(wall: String, x: float, y: float, height: float) -> Spot:
 	return Spot.from_dict({"id": "s", "gestalt": "g", "wall": wall, "x": x, "y": y, "height": height, "size": 0.2})
 
 func test_floor_spot() -> void:
-	var xf: Transform3D = RoomSpace.place(_spot("none", 0.5, 0.5, 0.3))
+	var xf: Transform3D = RoomSpace.place(_spot("none", 0.5, 0.5, 0.0))
 	assert_almost_eq(xf.origin.x, 0.0, 0.0001, "centered across")
-	assert_almost_eq(xf.origin.y, 0.0, 0.0001, "on the floor, height ignored")
+	assert_almost_eq(xf.origin.y, 0.0, 0.0001, "on the floor")
+	var raised: Transform3D = RoomSpace.place(_spot("none", 0.5, 0.5, 0.25))
+	assert_almost_eq(raised.origin.y, RoomSpace.HEIGHT * 0.25, 0.0001, "a floor spot can stand on something")
 	assert_almost_eq(xf.origin.z, 0.0, 0.0001, "mid depth")
 	assert_almost_eq((xf.basis * Vector3.BACK).z, 1.0, 0.0001, "faces the open front")
 
@@ -36,3 +38,14 @@ func test_smallest_spot() -> void:
 		{"id": "a", "gestalt": "g", "size": 0.5}, {"id": "b", "gestalt": "g", "size": 0.1}]})
 	assert_almost_eq(RoomSpace.smallest_spot_m(r), 0.1 * RoomSpace.WIDTH, 0.0001, "the smallest, in meters")
 	assert_almost_eq(RoomSpace.smallest_spot_m(Room.new()), 0.0, 0.0001, "an empty room has none")
+
+func test_content_box_stops_at_the_tallest_spot() -> void:
+	var r: Room = Room.from_dict({"id": "r", "spots": [
+		{"id": "door", "gestalt": "g", "wall": "back", "size": 0.5},
+		{"id": "ball", "gestalt": "g", "size": 0.1}]})
+	assert_almost_eq(RoomSpace.content_dims(r).y, 2.0, 0.0001, "the door's top, 0.5 of the width")
+	var low: Room = Room.from_dict({"id": "r", "spots": [{"id": "ball", "gestalt": "g", "size": 0.1}]})
+	assert_almost_eq(RoomSpace.content_dims(low).y, RoomSpace.CONTENT_HEIGHT_MIN, 0.0001, "never under the floor")
+	var high: Room = Room.from_dict({"id": "r", "spots": [{"id": "w", "gestalt": "g", "wall": "back", "height": 0.9, "size": 0.6}]})
+	assert_almost_eq(RoomSpace.content_dims(high).y, RoomSpace.HEIGHT, 0.0001, "never above the wall")
+	assert_almost_eq(RoomSpace.content_dims(null).y, RoomSpace.CONTENT_HEIGHT_MIN, 0.0001, "no room, the floor")

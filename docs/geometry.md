@@ -16,7 +16,10 @@ live in `RoomSpace`:
 | `HEIGHT` | 2.6 m |
 | `WALL` | 0.06 m thick |
 
-The floor is `y = 0`, the back wall is at `-Z`, the open front faces `+Z`. A spot's `x`, `y` and `height`
+The floor is `y = 0`, the back wall is at `-Z`, the open front faces `+Z`. The drawn shell is bigger than the
+box: the floor and the side walls run `APRON` past the open front toward the camera, and every wall rises
+`WALL_RISE` past the room's height, so the world reaches every edge of the screen instead of stopping at the
+box. Spots and the camera's framing use the box; only the shell uses the apron and the rise. A spot's `x`, `y` and `height`
 are fractions of this box, so a starter pack never names a meter. `RoomSpace.place` turns a spot into a
 transform: a floor spot stands at `x` across and `y` back to front; a wall spot hangs on its wall at `x` along
 it with its base at `height`, turned to face into the room. A wall hides while the camera stands outside it
@@ -109,8 +112,9 @@ Input rules (`RoomView._gui_input`):
 - A drag past `DRAG_PX` that started on an object cancels the press and does nothing more.
 - A drag that started on empty room turns the view only when `camera` is `orbit`.
 
-Framing (`CameraFraming`, pure): the frame extent is the vertical span of the world visible at the room's
-center. `fit_extent` projects the box's silhouette for the current angles; `frame_extent` pulls that in when
+Framing (`CameraFraming`, pure): the frame extent is the vertical span of the world visible at the framed
+box's center. The box is the room's footprint up to its tallest spot, framed into the band between the
+floating controls (docs/ui.md "Floating over the room"). `fit_extent` projects the box's silhouette for the current angles; `frame_extent` pulls that in when
 the smallest spot would project under the touch floor, by at most `MAX_PULL_IN`; `perspective_distance`
 turns the extent into a camera distance; `camera_transform` places the camera with an up vector that turns
 smoothly from the front view to straight down.

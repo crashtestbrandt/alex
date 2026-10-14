@@ -7,13 +7,13 @@ children, children with developmental delays, and any child whose first speech i
 clinical tool and not a substitute for one. It is something a learner can pick up and discover on their own,
 after a caregiver spends a few minutes setting it up.
 
-![The home room: a door swung open, a lit lamp, a window, a bed, a tub, a ball, a cup and shoes, with two phrases floating in chunks](docs/img/room.png)
+![The bedroom: a door swung open on the left wall, a lit lamp, a bed under the window, a cup on the nightstand, a rug with a ball on it, and shoes by the door, with two phrases floating in chunks](docs/img/room.png)
 
 ## What the learner sees
 
-A room. A door, a lamp, a window, a ball, a cup, a bed, a pair of shoes, a tub. Touch the door and it swings
-open as a familiar voice says "Let's go outside." Touch it again and it closes: "Let's go inside." The lamp
-lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
+A bedroom. A door, a lamp, a window, a bed, a cup on the nightstand, a rug, a ball, a pair of shoes by the
+door. Touch the door and it swings open as a familiar voice says "Let's go outside." Touch it again and it
+closes: "Let's go inside." The lamp lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
 up one after another, so the learner sees where a phrase comes apart without being told.
 
 Three buttons under the room look at it from the front, the side and above. A caregiver can add a fourth that
@@ -29,6 +29,8 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
 2. **Record the phrases in your own voice.** Hold any object for two seconds, hold the big button, say the
    phrase, let go, hear it back, keep it. Until you do, the device's own voice fills in.
 3. **Hand it over.**
+
+![The recording overlay: the phrase, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
 
 Everything stays on the device. There is no account, no network and no analytics.
 
@@ -54,7 +56,7 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 ## Status
 
-Early and usable. One 3D room with eight objects, a plain board for phrases with no object, three looks, and
+Early and usable. One 3D room with nine objects, a plain board for phrases with no object, three looks, and
 recording in your own voice. Coming: more rooms and reactions, the learner's own songs and clips, a remix board
 that offers chunk beginnings beside chunk endings, and a bank view for caregivers. Desktop only until an export
 preset exists; the target device is a tablet.
@@ -83,11 +85,12 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `scripts/speech/` | `Speaker` (a recording, else OS text to speech) and `Recorder` (the microphone). |
 | `scripts/geometry/` | Objects as recipes and the camera math: `Sdf`, `Mesher`, `Primitive`, `Recipe`, `RecipeBuilder`, `ObjectRecipes`, `Picker`, `CameraFraming`, `RoomSpace`. |
 | `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
-| `scripts/ui/` | Adult-facing screens and shared controls: `ProfilePicker`, `RecordOverlay`, `HoldButton`. |
+| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `UiGeometry`. |
+| `shaders/ui/` | `shape.gdshader` and `glyph.gdshader`, the two fields every control is drawn from. |
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
-| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md). |
+| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md). |
 
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.

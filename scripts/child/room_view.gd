@@ -19,6 +19,13 @@ const WIDGET_MARGIN: float = 10.0
 
 ## How long a moved view stays before it returns to the front. A probe shortens it.
 var idle_seconds: float = RecordOverlay.IDLE_SECONDS
+## How much of the top of the view floating controls cover. The home sets it from its top bar; the camera
+## frames the room into the band below it and above the view widget.
+var safe_top_px: float = 0.0:
+	set(value):
+		safe_top_px = value
+		if is_node_ready():
+			_layout()
 
 var _profile: Profile = null
 var _room: Room = null
@@ -55,7 +62,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
 	_build_shell()
-	_sun.look_at_from_position(Vector3(2.5, 5.0, 4.0), Vector3.ZERO, Vector3.UP)
+	# From the front and high, so the raised side walls throw their shadow onto the apron, not the back wall.
+	_sun.look_at_from_position(Vector3(0.8, 6.0, 5.0), Vector3.ZERO, Vector3.UP)
 	_sun.shadow_enabled = true
 	_sun.light_energy = 0.75
 	_env.environment = _make_environment(Style.current)
@@ -112,6 +120,13 @@ func camera_position() -> Vector3:
 func wall_visible(w: Spot.Wall) -> bool:
 	var wall: MeshInstance3D = _walls.get(w, null)
 	return wall != null and wall.visible
+
+## The band the room is framed into: this control minus the floating controls above and below.
+func safe_rect() -> Rect2:
+	var bottom: float = 0.0
+	if _widget.visible:
+		bottom = _widget.size.y + 2.0 * WIDGET_MARGIN
+	return Rect2(0.0, safe_top_px, size.x, maxf(size.y - safe_top_px - bottom, 1.0))
 
 ## Where a body's center falls on this control.
 func screen_point(b: SpotBody) -> Vector2:
@@ -197,9 +212,10 @@ func show_chunks(s: Spot, g: Gestalt, seconds: float) -> void:
 	_captions.add_child(row)
 	row.reset_size()
 	var anchor: Vector2 = _camera.unproject_position(b.top_point())
+	var safe: Rect2 = safe_rect()
 	var above: Vector2 = anchor + Vector2(-row.size.x / 2.0, -row.size.y - 12.0)
-	above.x = clampf(above.x, 8.0, maxf(8.0, _container.size.x - row.size.x - 8.0))
-	above.y = clampf(above.y, 8.0, maxf(8.0, _container.size.y - row.size.y - 8.0))
+	above.x = clampf(above.x, 8.0, maxf(8.0, safe.end.x - row.size.x - 8.0))
+	above.y = clampf(above.y, safe.position.y + 8.0, maxf(safe.position.y + 8.0, safe.end.y - row.size.y - 8.0))
 	row.position = above
 	var scale_factor: float = Style.motion_scale()
 	var hold: float = maxf(seconds, 0.6)
@@ -281,11 +297,14 @@ func _on_view_chosen(target: CameraFraming.View) -> void:
 
 # --- camera -----------------------------------------------------------------------------------------------
 
+## The full viewport's extent: the room is framed into the safe band, and the band's extent is scaled up to the
+## whole viewport, which the floating controls then cover at the top and bottom.
 func _extent_for(azimuth: float, elevation: float) -> float:
 	var smallest: float = RoomSpace.smallest_spot_m(_room) if _room != null else 0.0
-	var view_size: Vector2 = _container.size
-	var aspect: float = view_size.x / maxf(view_size.y, 1.0)
-	return CameraFraming.frame_extent(azimuth, elevation, RoomSpace.dims(), aspect, smallest, view_size.y, float(Style.current.tile_min_size))
+	var safe: Rect2 = safe_rect()
+	var aspect: float = safe.size.x / maxf(safe.size.y, 1.0)
+	var band: float = CameraFraming.frame_extent(azimuth, elevation, RoomSpace.content_dims(_room), aspect, smallest, safe.size.y, float(Style.current.tile_min_size))
+	return CameraFraming.full_extent(band, safe.size.y, size.y)
 
 func _move_camera(azimuth: float, elevation: float, animate: bool) -> void:
 	if _view_tween != null:
@@ -315,7 +334,9 @@ func _blend(t: float) -> void:
 func _apply_camera() -> void:
 	var distance: float = CameraFraming.perspective_distance(_extent, CameraFraming.FOV_DEG)
 	_camera.fov = CameraFraming.FOV_DEG
-	_camera.transform = CameraFraming.camera_transform(RoomSpace.center(), _azimuth, _elevation, distance)
+	_camera.transform = CameraFraming.camera_transform(_target(), _azimuth, _elevation, distance)
+	var safe: Rect2 = safe_rect()
+	_camera.v_offset = CameraFraming.center_offset(safe.get_center().y - size.y / 2.0, size.y, _extent)
 	for w: int in _walls.keys():
 		var wall: Spot.Wall = w as Spot.Wall
 		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position)
@@ -323,29 +344,35 @@ func _apply_camera() -> void:
 func _on_resized() -> void:
 	_layout()
 
-## The viewport takes everything above the widget's row, so no object is ever behind a button.
+## What the camera looks at: a little under the center of the framed box, since a raised camera sees more
+## floor than ceiling and the near floor edge projects larger.
+func _target() -> Vector3:
+	return Vector3(0.0, RoomSpace.content_dims(_room).y * 0.42, 0.0)
+
+## The viewport fills the control edge to edge; the widget floats over its bottom right corner, and the camera
+## frames the room into the band the floating controls leave.
 func _layout() -> void:
-	var band: float = 0.0
-	if _widget.visible:
-		_widget.reset_size()
-		band = _widget.size.y + WIDGET_MARGIN
+	_widget.reset_size()
 	_container.position = Vector2.ZERO
-	_container.size = Vector2(size.x, maxf(size.y - band, 1.0))
-	_widget.position = Vector2(size.x - _widget.size.x, size.y - _widget.size.y)
+	_container.size = size
+	_widget.position = Vector2(size.x - _widget.size.x - WIDGET_MARGIN, size.y - _widget.size.y - WIDGET_MARGIN)
 	_extent = _extent_for(_azimuth, _elevation)
 	_apply_camera()
 
 # --- the room box -----------------------------------------------------------------------------------------
 
+## The floor and the side walls run an apron past the open front, and every wall rises past the room's height,
+## so the world fills the screen from the camera's side of the room (docs/geometry.md "The room").
 func _build_shell() -> void:
 	var w: float = RoomSpace.WIDTH
-	var h: float = RoomSpace.HEIGHT
-	var d: float = RoomSpace.DEPTH
+	var h: float = RoomSpace.HEIGHT + RoomSpace.WALL_RISE
+	var d: float = RoomSpace.DEPTH + RoomSpace.APRON
 	var t: float = RoomSpace.WALL
-	_floor = _slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, -t / 2.0), Style.current.floor_color)
-	_walls[Spot.Wall.BACK] = _slab(Vector3(w + 2.0 * t, h, t), Vector3(0.0, h / 2.0, -d / 2.0 - t / 2.0), Style.current.wall_color)
-	_walls[Spot.Wall.LEFT] = _slab(Vector3(t, h, d), Vector3(-w / 2.0 - t / 2.0, h / 2.0, 0.0), Style.current.wall_color.darkened(0.06))
-	_walls[Spot.Wall.RIGHT] = _slab(Vector3(t, h, d), Vector3(w / 2.0 + t / 2.0, h / 2.0, 0.0), Style.current.wall_color.darkened(0.06))
+	var mid_z: float = RoomSpace.APRON / 2.0
+	_floor = _slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, mid_z - t / 2.0), Style.current.floor_color)
+	_walls[Spot.Wall.BACK] = _slab(Vector3(w + 2.0 * t, h, t), Vector3(0.0, h / 2.0, -RoomSpace.DEPTH / 2.0 - t / 2.0), Style.current.wall_color)
+	_walls[Spot.Wall.LEFT] = _slab(Vector3(t, h, d), Vector3(-w / 2.0 - t / 2.0, h / 2.0, mid_z), Style.current.wall_color.darkened(0.06))
+	_walls[Spot.Wall.RIGHT] = _slab(Vector3(t, h, d), Vector3(w / 2.0 + t / 2.0, h / 2.0, mid_z), Style.current.wall_color.darkened(0.06))
 
 func _slab(size_m: Vector3, at: Vector3, color: Color) -> MeshInstance3D:
 	var batch: MeshBatch = Mesher.box(size_m / 2.0, 0.0, color)

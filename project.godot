@@ -39,6 +39,11 @@ gdscript/warnings/unsafe_call_argument=2
 ; Vendored code under addons/ is held to its own standard, first-party code to this one.
 gdscript/warnings/exclude_addons=true
 
+[gui]
+
+; Text is a distance field too: the default font renders as multichannel SDF (docs/ui.md).
+theme/default_font_multichannel_signed_distance_field=true
+
 [display]
 
 ; Landscape tablet is the primary device. The canvas scales to whatever the device is.
