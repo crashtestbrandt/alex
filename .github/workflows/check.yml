@@ -1,7 +1,11 @@
 name: check
 
-# The PR gate: doc caps, export presets, GDScript lint, unit suites. GitHub-hosted runners, so a fork PR never
-# reaches a machine of ours. `pull_request` rather than `pull_request_target`, so a fork PR gets no secrets.
+# The PR gate: doc caps, export presets, GDScript lint, unit suites, and the Linux, Windows and Android exports.
+# GitHub-hosted runners, so a fork PR never reaches a machine of ours. `pull_request` rather than
+# `pull_request_target`, so a fork PR gets no secrets.
+#
+# A pull request only restores caches and uploads no artifact, so it writes nothing to Actions storage. A push
+# to main saves the caches.
 
 on:
   push:
@@ -37,28 +41,46 @@ jobs:
         with:
           lfs: true
 
-      - name: Cache the Godot binary
-        id: godot-cache
-        uses: actions/cache@v4
+      - uses: ./.github/actions/godot
         with:
-          path: ~/godot
-          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
-
-      - name: Install Godot
-        if: steps.godot-cache.outputs.cache-hit != 'true'
-        run: |
-          set -euo pipefail
-          mkdir -p ~/godot
-          zip="Godot_v${GODOT_VERSION}_linux.x86_64.zip"
-          curl -fsSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}/${zip}" -o /tmp/godot.zip
-          unzip -q -o /tmp/godot.zip -d /tmp/godot
-          install -m 0755 "/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64" ~/godot/godot
-
-      - name: Put Godot on PATH
-        run: echo "$HOME/godot" >> "$GITHUB_PATH"
+          version: ${{ env.GODOT_VERSION }}
 
       - name: Lint
         run: tools/lint-gdscript.sh
 
       - name: Unit suites
         run: godot --headless --path . --script tests/run_unit_tests.gd
+
+  # The exports a Linux runner can build, checked by tools/check-exports.sh. The Android APK is debug-signed with
+  # a key made for the run. The AAB, macOS and iOS exports run in release.yml.
+  exports:
+    runs-on: ubuntu-latest
+    needs: [docs]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+          # The Android version code is the commit count.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          templates: linux_release.x86_64 windows_release_x86_64.exe android_debug.apk
+
+      - name: Import
+        run: godot --headless --path . --import
+
+      - name: Linux
+        run: tools/export.sh --export-release Linux build/pr/linux/alex.x86_64
+
+      - name: Windows
+        run: tools/export.sh --export-release "Windows Desktop" build/pr/windows/alex.exe
+
+      # A new editor settings file takes the SDK and JDK paths from ANDROID_HOME and JAVA_HOME, which the runner
+      # image sets.
+      - name: Android
+        run: tools/export.sh --export-debug Android build/pr/android/alex.apk
+
+      - name: Check the exports
+        run: tools/check-exports.sh build/pr

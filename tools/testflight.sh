@@ -9,6 +9,8 @@
 # - The archive's build number is the commit count. Xcode raises it at upload when App Store Connect already
 #   holds that number for the version, which a squash merge can cause.
 # - --export-only signs the .ipa into <build directory>/ipa/ and uploads nothing.
+# - ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID sign and upload with an App Store Connect API key instead of
+#   the Xcode account. The release workflow runs it that way (docs/releases.md).
 set -euo pipefail
 
 if [[ $# -lt 1 || $# -gt 2 || ( $# -eq 2 && "$2" != "--export-only" ) ]]; then
@@ -47,12 +49,25 @@ if [[ -z "$team" ]]; then
 fi
 build="$(git rev-list --count HEAD)"
 
+# With an App Store Connect API key, xcodebuild signs and uploads as that key, and the signing certificates
+# are the cloud-managed ones. Without one, it uses the account Xcode is signed in to.
+auth=()
+if [[ -n "${ASC_KEY_PATH:-}" ]]; then
+	if [[ -z "${ASC_KEY_ID:-}" || -z "${ASC_ISSUER_ID:-}" ]]; then
+		printf 'testflight: ASC_KEY_PATH needs ASC_KEY_ID and ASC_ISSUER_ID too.\n' >&2
+		exit 2
+	fi
+	auth=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID"
+		-authenticationKeyIssuerID "$ASC_ISSUER_ID")
+fi
+
 archive="$dir/alex.xcarchive"
 rm -rf "$archive"
 printf 'testflight: archiving build %s for team %s\n' "$build" "$team"
 if ! xcodebuild -project "$dir/ios/alex.xcodeproj" -scheme alex -configuration Release \
 	-destination 'generic/platform=iOS' -archivePath "$archive" -derivedDataPath build/xcode-dd \
-	-allowProvisioningUpdates CURRENT_PROJECT_VERSION="$build" archive > "$dir/archive.log" 2>&1; then
+	-allowProvisioningUpdates ${auth[@]+"${auth[@]}"} CURRENT_PROJECT_VERSION="$build" archive \
+	> "$dir/archive.log" 2>&1; then
 	grep -E 'error:' "$dir/archive.log" | sort -u >&2 || tail -20 "$dir/archive.log" >&2
 	printf 'testflight: the archive failed. The full log is %s/archive.log.\n' "$dir" >&2
 	exit 1
@@ -86,7 +101,7 @@ if [[ "$destination" == "upload" ]]; then
 	printf 'testflight: uploading to App Store Connect\n'
 fi
 if ! xcodebuild -exportArchive -archivePath "$archive" -exportPath "$out" -exportOptionsPlist "$options" \
-	-allowProvisioningUpdates > "$dir/upload.log" 2>&1; then
+	-allowProvisioningUpdates ${auth[@]+"${auth[@]}"} > "$dir/upload.log" 2>&1; then
 	grep -iE 'error' "$dir/upload.log" | sort -u >&2 || tail -20 "$dir/upload.log" >&2
 	printf 'testflight: the export failed. The full log is %s/upload.log.\n' "$dir" >&2
 	exit 1

@@ -75,7 +75,7 @@ expect_text() {
 }
 
 # The just export-* recipes name these presets.
-PRESETS=("Android" "iOS" "macOS" "Windows Desktop" "Linux")
+PRESETS=("Android" "Google Play" "iOS" "macOS" "Windows Desktop" "Linux")
 for name in "${PRESETS[@]}"; do
 	if ! has_preset "$name"; then
 		fail "No preset is named \"$name\". The justfile's export recipes name it."
@@ -92,13 +92,22 @@ while IFS= read -r name; do
 done < <(printf '%s\n' "$FLAT" | awk -F '\t' '$2 == "name" { print $3 }')
 
 # Phones and tablets, a microphone, and nothing that leaves the device.
-if has_preset "Android"; then
-	expect "Android" permissions/record_audio true
-	for size in small normal large xlarge; do
-		expect "Android" "screen/support_$size" true
-	done
-	expect_not_true "Android" permissions/internet
-	expect_not_true "Android" user_data_backup/allow
+for name in "Android" "Google Play"; do
+	if has_preset "$name"; then
+		expect "$name" permissions/record_audio true
+		for size in small normal large xlarge; do
+			expect "$name" "screen/support_$size" true
+		done
+		expect_not_true "$name" permissions/internet
+		expect_not_true "$name" user_data_backup/allow
+		# tools/export.sh stamps the commit count over this line, so it must be there.
+		expect "$name" version/code 1
+	fi
+done
+# The Play Store takes only an AAB, which needs the Gradle build.
+if has_preset "Google Play"; then
+	expect "Google Play" gradle_build/use_gradle_build true
+	expect "Google Play" gradle_build/export_format 1
 fi
 if has_preset "iOS"; then
 	expect "iOS" application/targeted_device_family 2

@@ -10,6 +10,9 @@ exports/
 export.cfg
 export_credentials.cfg
 
+# The Gradle build template, installed by the `Google Play` export (tools/export.sh)
+android/
+
 # Local tooling
 .direnv/
 result

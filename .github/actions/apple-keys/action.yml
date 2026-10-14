@@ -1,0 +1,69 @@
+name: Apple keys
+description: >
+  Install the App Store Connect API key and, when given, the Developer ID identity, for this job only. Sets
+  ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID for tools/testflight.sh and tools/notarize-macos.sh.
+
+inputs:
+  asc-key:
+    description: The contents of the App Store Connect API key (.p8).
+    required: true
+  asc-key-id:
+    description: The API key's ID.
+    required: true
+  asc-issuer-id:
+    description: The API key's issuer ID.
+    required: true
+  developer-id-p12:
+    description: A base64 PKCS 12 holding the Developer ID Application certificate and its key. Empty for none.
+    required: false
+    default: ""
+  developer-id-password:
+    description: The PKCS 12 password.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: API key
+      shell: bash
+      env:
+        ASC_KEY: ${{ inputs.asc-key }}
+        KEY_ID: ${{ inputs.asc-key-id }}
+        ISSUER_ID: ${{ inputs.asc-issuer-id }}
+      run: |
+        set -euo pipefail
+        if [[ -z "$ASC_KEY" || -z "$KEY_ID" || -z "$ISSUER_ID" ]]; then
+          echo "::error::ASC_KEY_P8, ASC_KEY_ID and ASC_ISSUER_ID must all be set in the release environment."
+          exit 1
+        fi
+        # xcodebuild and altool also look for the key under this name.
+        dir="$HOME/.appstoreconnect/private_keys"
+        mkdir -p "$dir"
+        printf '%s' "$ASC_KEY" > "$dir/AuthKey_$KEY_ID.p8"
+        chmod 600 "$dir/AuthKey_$KEY_ID.p8"
+        {
+          echo "ASC_KEY_PATH=$dir/AuthKey_$KEY_ID.p8"
+          echo "ASC_KEY_ID=$KEY_ID"
+          echo "ASC_ISSUER_ID=$ISSUER_ID"
+        } >> "$GITHUB_ENV"
+
+    - name: Developer ID
+      if: inputs.developer-id-p12 != ''
+      shell: bash
+      env:
+        P12: ${{ inputs.developer-id-p12 }}
+        P12_PASSWORD: ${{ inputs.developer-id-password }}
+      run: |
+        set -euo pipefail
+        keychain="$RUNNER_TEMP/signing.keychain-db"
+        keychain_password="$(openssl rand -hex 16)"
+        printf '%s' "$P12" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+        security create-keychain -p "$keychain_password" "$keychain"
+        security set-keychain-settings -lut 3600 "$keychain"
+        security unlock-keychain -p "$keychain_password" "$keychain"
+        security import "$RUNNER_TEMP/developer-id.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+        security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+        rm -f "$RUNNER_TEMP/developer-id.p12"
+        security find-identity -v -p codesigning "$keychain"

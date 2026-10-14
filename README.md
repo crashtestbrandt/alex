@@ -97,7 +97,7 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
-| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md), [`exports.md`](docs/exports.md). |
+| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md), [`exports.md`](docs/exports.md), [`releases.md`](docs/releases.md). |
 
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.
@@ -113,15 +113,16 @@ new kind of object is a `Spot.Kind` value and a recipe function in `ObjectRecipe
 ### Exports
 
 ```sh
-just export-android   # one preset into build/<commit>/android/; also -ios, -macos, -windows, -linux
+just export-android   # one preset into build/<commit>/android/; also -play, -ios, -macos, -windows, -linux
 just exports          # every preset, then check what each export holds
 just run-ios          # export iOS and run it on the paired iPhone or iPad
 just testflight       # export iOS, archive it and upload it for TestFlight
+just release          # tag main with project.godot's version; CI builds, signs and publishes it
 ```
 
 Each needs the Godot export templates of the same version. Android also needs a JDK and an Android SDK, and iOS
 needs Xcode and an Apple Developer Team ID. [`docs/exports.md`](docs/exports.md) has the setup, the signing and
-the checks.
+the checks. [`docs/releases.md`](docs/releases.md) has the release workflow and its secrets.
 
 ## Research
 
