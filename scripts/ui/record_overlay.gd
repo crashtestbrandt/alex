@@ -19,7 +19,7 @@ const MIN_TAKE_SECONDS: float = 0.3
 @onready var _keep_button: Button = %KeepButton
 @onready var _again_button: Button = %AgainButton
 @onready var _cancel_button: Button = %CancelButton
-@onready var _review_row: HBoxContainer = %ReviewRow
+@onready var _review_row: HFlowContainer = %ReviewRow
 @onready var _recorder: Recorder = %Recorder
 @onready var _preview: AudioStreamPlayer = %Preview
 
@@ -36,6 +36,7 @@ func _ready() -> void:
 	_keep_button.pressed.connect(_on_keep)
 	_again_button.pressed.connect(_reset)
 	_cancel_button.pressed.connect(close)
+	get_window().focus_exited.connect(_cancel_capture)
 	set_process(false)
 
 func open(g: Gestalt, p: Profile) -> void:
@@ -49,11 +50,13 @@ func open(g: Gestalt, p: Profile) -> void:
 	if not _recorder.is_available():
 		_status.text = "This device has no microphone available."
 		_record_button.disabled = true
+		(_record_button as SdfButton).refresh()
 
 func close() -> void:
 	if _recorder.is_recording():
 		_recorder.stop()
 	_preview.stop()
+	_take = null
 	visible = false
 	set_process(false)
 	closed.emit()
@@ -69,6 +72,14 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if visible and (event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventKey):
 		_idle = 0.0
+		if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+			close()
+			get_viewport().set_input_as_handled()
+
+func _cancel_capture() -> void:
+	if _recorder.is_recording():
+		_recorder.stop()
+		_reset()
 
 func _reset() -> void:
 	_take = null
@@ -76,6 +87,7 @@ func _reset() -> void:
 	_review_row.visible = false
 	_record_button.visible = true
 	_record_button.disabled = false
+	(_record_button as SdfButton).refresh()
 	_status.text = "Hold the button, say it, let go."
 
 func _on_record_down() -> void:

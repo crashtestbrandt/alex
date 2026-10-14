@@ -21,7 +21,12 @@ func _ready() -> void:
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()
+	resized.connect(_layout_profiles)
+	Style.changed.connect(func(_preset: StylePreset) -> void: _layout_profiles())
 	refresh()
+
+func _layout_profiles() -> void:
+	_profiles.columns = UiGeometry.grid_columns(minf(size.x - 120.0, 704.0), _profiles.get_child_count(), 280.0, 12.0)
 
 ## Re-read the profiles on disk: one button each, in the store's order.
 func refresh() -> void:
@@ -33,13 +38,15 @@ func refresh() -> void:
 		var p: Profile = ProfileStore.load_profile(profile_id)
 		var button: SdfButton = SdfButton.new()
 		button.text = profile_id if p == null else p.display_name
-		button.focus_mode = Control.FOCUS_NONE
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size = Vector2(0, 88)
 		button.pressed.connect(_on_profile_pressed.bind(profile_id))
 		_profiles.add_child(button)
 	_profiles.visible = not ids.is_empty()
-	_status.text = "No profiles yet. Make one below." if ids.is_empty() else ""
+	_status.text = "Create a profile to begin." if ids.is_empty() else ""
+	_status.visible = not _status.text.is_empty()
+	_layout_profiles()
 
 func _fill_starters() -> void:
 	_starter_bar.clear()
@@ -70,6 +77,7 @@ func _on_name_submitted(_text: String) -> void:
 	_on_create()
 
 func _on_create() -> void:
+	_status.visible = true
 	var name: String = _name_edit.text.strip_edges()
 	if name.is_empty():
 		_status.text = "Give the profile a name."

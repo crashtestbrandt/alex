@@ -6,8 +6,8 @@ twin, tap picking, and the camera. Everything here is `scripts/geometry/` plus `
 
 ## The room
 
-A room is a three-walled box, open at the front, drawn from four slabs (`RoomView._build_shell`). The numbers
-live in `RoomSpace`:
+A room is a three-walled box, open at the front (`RoomView._build_shell`). Wall slabs surround the openings
+defined by door and window recipes. The numbers live in `RoomSpace`:
 
 | Constant | Value |
 | --- | --- |
@@ -91,8 +91,8 @@ The learner's camera is always perspective. A room seen in perspective reads as 
 view flattens it back into a picture. Orthographic projection stays in the framing math for the editor's plan
 and elevation views.
 
-`ViewWidget` offers up to four buttons, each `tile_min_size` square, in a row under the room so no object is
-ever behind one. The pressed button is the current view. The room's `camera` field decides what shows:
+`ViewWidget` offers up to four buttons, each seven tenths of `tile_min_size` square, with a 96-unit floor.
+The bar wraps if needed. The camera reserves its height so objects stay clear of it. The pressed button is the current view. The room's `camera` field decides what shows:
 
 | `camera` | Buttons | Drag on empty room |
 | --- | --- | --- |
@@ -112,12 +112,23 @@ Input rules (`RoomView._gui_input`):
 - A drag past `DRAG_PX` that started on an object cancels the press and does nothing more.
 - A drag that started on empty room turns the view only when `camera` is `orbit`.
 
-Framing (`CameraFraming`, pure): the frame extent is the vertical span of the world visible at the framed
-box's center. The box is the room's footprint up to its tallest spot, framed into the band between the
-floating controls (docs/ui.md "Floating over the room"). `fit_extent` projects the box's silhouette for the current angles; `frame_extent` pulls that in when
-the smallest spot would project under the touch floor, by at most `MAX_PULL_IN`; `perspective_distance`
-turns the extent into a camera distance; `camera_transform` places the camera with an up vector that turns
-smoothly from the front view to straight down.
+Framing (`CameraFraming`, pure):
+
+- `points_extent` fits the eight corners of every object's bounds and the floor footprint into the visible band.
+- The calculation includes perspective depth, the asymmetric screen-space band, and the camera's vertical offset.
+- Object bounds take priority over projected touch size. The nearest-object picking radius supplies the touch floor.
+- `perspective_distance` turns the extent into a camera distance. `camera_transform` uses a continuous up vector through the orbit.
+- Orthographic silhouette helpers remain available for a future editor.
+
+## Openings and exterior
+
+- `ObjectRecipes.opening` defines a clear rectangle behind each door and window frame.
+- `RoomSpace.wall_sections` splits a wall into nonoverlapping rectangles around all openings. It clips edge openings and merges overlapping holes by repeated partitioning.
+- The door swings outward into the garden. Its leaf keeps the same mesh and picking field.
+- The window pane retains its picking field and uses a translucent material without casting an opaque shadow.
+- A floor, path, and fixed arrangement of trees provide depth through the openings. The exterior uses the same primitive builders and style materials as the room.
+- Upper wall extensions prevent a sky seam in portrait views. They do not cast shadows into the room.
+- Changing rooms rebuilds the shell and its openings. Hiding a side wall hides all its sections together.
 
 ## Gates
 

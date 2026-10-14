@@ -22,6 +22,9 @@ func _ready() -> void:
 	# A container lays its children out inside its margins, the shape included. It is pinned back to the full
 	# rect after every sort, so the drawn panel is the panel and not its content box.
 	sort_children.connect(_place_shape)
+	visibility_changed.connect(_schedule_layout)
+	minimum_size_changed.connect(_schedule_layout)
+	resized.connect(_schedule_layout)
 	Style.changed.connect(_on_style_changed)
 	_refresh()
 
@@ -32,6 +35,13 @@ func _notification(what: int) -> void:
 func _place_shape() -> void:
 	_shape.position = Vector2.ZERO
 	_shape.size = size
+	var inset: Vector2 = Vector2.ONE * CONTENT_MARGIN_PX
+	for child: Node in get_children():
+		if child is Control and child != _shape:
+			fit_child_in_rect(child as Control, Rect2(inset, size - inset * 2.0))
+
+func _schedule_layout() -> void:
+	_place_shape.call_deferred()
 
 func radius() -> float:
 	return UiGeometry.rounded_radius(size, Style.current.corner_radius * RADIUS_SCALE)

@@ -9,6 +9,8 @@ class_name Main
 @onready var _home: ChildHome = %ChildHome
 
 func _ready() -> void:
+	get_window().size_changed.connect(_update_canvas)
+	_update_canvas()
 	_picker.profile_chosen.connect(open_profile)
 	_home.profiles_requested.connect(show_picker)
 	var requested: String = _profile_arg()
@@ -32,6 +34,11 @@ func open_profile(profile_id: String) -> void:
 	_home.show_profile(p)
 	_picker.visible = false
 	_home.visible = true
+
+func _update_canvas() -> void:
+	var canvas: Vector2i = UiGeometry.canvas_size(get_window().size)
+	if get_window().content_scale_size != canvas:
+		get_window().content_scale_size = canvas
 
 static func _profile_arg() -> String:
 	for arg: String in OS.get_cmdline_user_args():

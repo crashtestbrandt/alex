@@ -13,6 +13,8 @@ const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 @onready var _top_bar: HBoxContainer = %TopBar
 @onready var _strip: PillBar = %PlaceStrip
 @onready var _room_view: RoomView = %RoomView
+@onready var _stage: ScrollContainer = %Stage
+@onready var _column: VBoxContainer = %Column
 @onready var _grid: GridContainer = %Board
 @onready var _profiles_button: HoldButton = %ProfilesButton
 @onready var _speaker: Speaker = %Speaker
@@ -33,7 +35,10 @@ func _ready() -> void:
 	_record_overlay.kept.connect(_on_recording_kept)
 	_top_bar.item_rect_changed.connect(_sync_room_inset)
 	Style.changed.connect(_on_style_changed)
-	_sync_room_inset()
+	resized.connect(_layout_home)
+	_stage.resized.connect(_layout_board)
+	_strip.item_rect_changed.connect(_sync_room_inset)
+	_layout_home()
 
 func show_profile(p: Profile) -> void:
 	_profile = p
@@ -51,9 +56,11 @@ func show_room(r: Room) -> void:
 	_room = r
 	_board = null
 	_grid.visible = false
+	_stage.visible = false
 	_room_view.visible = true
 	_room_view.show_room(_profile, r)
 	_show_place("room:" + r.id)
+	_layout_home()
 
 func show_board(b: Board) -> void:
 	_speaker.stop()
@@ -61,7 +68,10 @@ func show_board(b: Board) -> void:
 	_room = null
 	_room_view.visible = false
 	_grid.visible = true
+	_stage.visible = true
+	_stage.scroll_vertical = 0
 	for child: Node in _grid.get_children():
+		_grid.remove_child(child)
 		child.queue_free()
 	_tiles.clear()
 	for g: Gestalt in _profile.board_gestalts(b):
@@ -71,8 +81,9 @@ func show_board(b: Board) -> void:
 		tile.held.connect(_on_tile_held.bind(tile))
 		_grid.add_child(tile)
 		_tiles[g.id] = tile
-	_grid.columns = _columns_for(_tiles.size())
+	_layout_board()
 	_show_place("board:" + b.id)
+	_layout_home()
 
 func _build_strip() -> void:
 	_strip.clear()
@@ -83,12 +94,16 @@ func _build_strip() -> void:
 	for r: Room in _profile.rooms:
 		var button: SdfButton = SdfButton.new()
 		button.text = r.title
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size.x = 160.0
 		button.pressed.connect(show_room.bind(r))
 		_strip.add_item(button)
 		_places["room:" + r.id] = button
 	for b: Board in _profile.boards:
 		var button: SdfButton = SdfButton.new()
 		button.text = b.title
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size.x = 160.0
 		button.pressed.connect(show_board.bind(b))
 		_strip.add_item(button)
 		_places["board:" + b.id] = button
@@ -97,14 +112,30 @@ func _show_place(key: String) -> void:
 	var button: SdfButton = _places.get(key, null)
 	if button == null:
 		return
-	button.set_pressed_no_signal(true)
 	for other: SdfButton in _places.values():
+		other.set_pressed_no_signal(other == button)
 		other.refresh()
 
 ## The room renders edge to edge behind the top bar; it frames itself into the band below the bar.
 func _sync_room_inset() -> void:
 	var bar_bottom: float = _top_bar.global_position.y + _top_bar.size.y - _room_view.global_position.y
-	_room_view.safe_top_px = maxf(bar_bottom + 8.0, 0.0)
+	if _strip.visible:
+		bar_bottom = maxf(bar_bottom, _strip.global_position.y + _strip.size.y - _room_view.global_position.y)
+	_room_view.safe_top_px = maxf(bar_bottom + 16.0, 0.0)
+
+func _layout_home() -> void:
+	var compact: bool = size.x < 900.0 and size.y > size.x * 1.2
+	var parent: Node = _column if compact else _top_bar
+	if _strip.get_parent() != parent:
+		_strip.reparent(parent)
+		parent.move_child(_strip, 1)
+	_strip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_FILL
+	_strip.fit_width(size.x - 48.0 if compact else size.x * 0.55)
+	_layout_board()
+	_sync_room_inset.call_deferred()
+
+func _layout_board() -> void:
+	_grid.columns = UiGeometry.grid_columns(_stage.size.x - 16.0, _tiles.size(), Style.current.tile_min_size)
 
 ## A profile with nothing to show lists every gestalt it has.
 static func _all_gestalts_board(p: Profile) -> Board:
@@ -112,13 +143,6 @@ static func _all_gestalts_board(p: Profile) -> Board:
 	for g: Gestalt in p.gestalts:
 		ids.push_back(g.id)
 	return Board.make("all", "All", ids)
-
-static func _columns_for(count: int) -> int:
-	if count <= 1:
-		return 1
-	if count <= 4:
-		return 2
-	return 3
 
 func _say(g: Gestalt) -> void:
 	_speaker.say(g, ProfileStore.media_dir(_profile.id))

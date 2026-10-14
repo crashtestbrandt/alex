@@ -41,6 +41,11 @@ func _init() -> void:
 
 func _ready() -> void:
 	Style.changed.connect(_on_style_changed)
+	var button: SdfButton = get_parent() as SdfButton
+	if button != null:
+		button.button_down.connect(_apply.call_deferred)
+		button.button_up.connect(_apply.call_deferred)
+		button.toggled.connect(func(_on: bool) -> void: _apply.call_deferred())
 	_apply()
 
 func _notification(what: int) -> void:
@@ -55,7 +60,11 @@ func _apply() -> void:
 	_material.set_shader_parameter("radius_px", minf(size.x, size.y) * RADIUS_FRACTION)
 	_material.set_shader_parameter("width_px", width_px)
 	_material.set_shader_parameter("figure", figure)
-	_material.set_shader_parameter("tint", tint if tint.a > 0.0 else Style.current.text)
+	var color: Color = tint if tint.a > 0.0 else Style.current.text
+	var button: SdfButton = get_parent() as SdfButton
+	if button != null and tint.a <= 0.0 and button.is_active():
+		color = Style.current.surface
+	_material.set_shader_parameter("tint", color)
 	queue_redraw()
 
 func _on_style_changed(_preset: StylePreset) -> void:

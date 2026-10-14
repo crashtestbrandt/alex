@@ -25,6 +25,8 @@ func _ready() -> void:
 		var view: CameraFraming.View = v as CameraFraming.View
 		var button: ViewButton = ViewButton.new()
 		button.figure = _FIGURES[v]
+		var view_name: String = CameraFraming.View.keys()[v]
+		button.tooltip_text = view_name.capitalize()
 		button.pressed.connect(_on_pressed.bind(view))
 		add_item(button)
 		_buttons[v] = button
@@ -37,8 +39,8 @@ func set_mode(camera: Room.Camera) -> void:
 
 ## Show `view` as the current one without emitting.
 func show_current(view: CameraFraming.View) -> void:
-	_buttons[view].set_pressed_no_signal(true)
 	for button: ViewButton in _buttons.values():
+		button.set_pressed_no_signal(button == _buttons[view])
 		button.refresh()
 		button.update_glyph()
 

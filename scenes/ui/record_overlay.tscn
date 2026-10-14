@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://scripts/ui/sdf_button.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/ui/sdf_glyph.gd" id="5"]
 
+[ext_resource type="Script" path="res://scripts/ui/sdf_sheet.gd" id="sheet"]
+
 [node name="RecordOverlay" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -31,7 +33,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.55)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="ScrollContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,8 +41,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+script = ExtResource("sheet")
+panel_width = 640.0
+horizontal_scroll_mode = 0
+
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(640, 0)
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 script = ExtResource("3")
 
@@ -52,6 +58,7 @@ alignment = 1
 [node name="Heading" type="Label" parent="Center/Panel/Column"]
 layout_mode = 2
 text = "Record this in your voice"
+autowrap_mode = 3
 horizontal_alignment = 1
 
 [node name="Phrase" type="Label" parent="Center/Panel/Column"]
@@ -64,10 +71,11 @@ autowrap_mode = 3
 
 [node name="RecordButton" type="Button" parent="Center/Panel/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(170, 170)
+custom_minimum_size = Vector2(200, 200)
+tooltip_text = "Hold to record"
 layout_mode = 2
 size_flags_horizontal = 4
-focus_mode = 0
+focus_mode = 2
 script = ExtResource("4")
 shape = 2
 
@@ -83,11 +91,12 @@ script = ExtResource("5")
 figure = 5
 width_px = 4.0
 
-[node name="ReviewRow" type="HBoxContainer" parent="Center/Panel/Column"]
+[node name="ReviewRow" type="HFlowContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
 alignment = 1
 
 [node name="KeepButton" type="Button" parent="Center/Panel/Column/ReviewRow"]
@@ -96,6 +105,7 @@ custom_minimum_size = Vector2(200, 100)
 layout_mode = 2
 script = ExtResource("4")
 text = "Keep"
+primary = true
 
 [node name="AgainButton" type="Button" parent="Center/Panel/Column/ReviewRow"]
 unique_name_in_owner = true

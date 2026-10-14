@@ -115,3 +115,24 @@ static func camera_transform(target: Vector3, azimuth_deg: float, elevation_deg:
 	var up: Vector3 = orbit_up(azimuth_deg, elevation_deg)
 	var origin: Vector3 = target + direction * distance
 	return Transform3D(Basis.looking_at(-direction, up), origin)
+
+## Fit actual world points in perspective, including the depth-dependent camera offset.
+## Orthographic silhouette estimates clip near objects on portrait and overhead views.
+static func points_extent(points: Array[Vector3], target: Vector3, azimuth: float, elevation: float, viewport: Vector2, safe: Rect2) -> float:
+	var direction: Vector3 = orbit_direction(azimuth, elevation)
+	var up: Vector3 = orbit_up(azimuth, elevation)
+	var right: Vector3 = up.cross(direction)
+	var tangent: float = tan(deg_to_rad(FOV_DEG) / 2.0)
+	var height: float = maxf(viewport.y, 1.0)
+	var half_width: float = maxf(minf(safe.end.x - viewport.x / 2.0, viewport.x / 2.0 - safe.position.x), 1.0)
+	var half_band: float = maxf(safe.size.y / 2.0, 1.0)
+	var distance: float = 0.1
+	for point: Vector3 in points:
+		var delta: Vector3 = point - target
+		var depth: float = delta.dot(direction)
+		var x: float = delta.dot(right)
+		var y: float = delta.dot(up)
+		distance = maxf(distance, depth + absf(x) * height / (2.0 * tangent * half_width))
+		distance = maxf(distance, (y * height / (2.0 * tangent) + (height / 2.0 - safe.position.y) * depth) / half_band)
+		distance = maxf(distance, (-y * height / (2.0 * tangent) + (safe.end.y - height / 2.0) * depth) / half_band)
+	return distance * 2.0 * tangent

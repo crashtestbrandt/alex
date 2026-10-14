@@ -6,6 +6,19 @@ class_name UiGeometry
 ## A corner never gets tighter than this; below it the rim and the border stop reading.
 const MIN_RADIUS_PX: float = 4.0
 
+## Keep small screens legible without imposing a landscape canvas on portrait devices.
+static func canvas_size(window_size: Vector2i) -> Vector2i:
+	var short_side: float = maxf(mini(window_size.x, window_size.y), 1.0)
+	var scale_factor: float = maxf(640.0 / short_side, 1.0)
+	return Vector2i(Vector2(window_size) * scale_factor)
+
+## Columns are limited by both the touch floor and a readable phrase width.
+static func grid_columns(width: float, count: int, tile_floor: float, gap: float = 16.0) -> int:
+	var tile_width: float = maxf(tile_floor, 280.0)
+	var capacity: int = clampi(int((width + gap) / (tile_width + gap)), 1, maxi(1, mini(count, 4)))
+	var rows: int = ceili(float(maxi(count, 1)) / capacity)
+	return ceili(float(maxi(count, 1)) / rows)
+
 ## The radius of a shape nested `padding_px` inside one of `outer_radius_px`.
 static func concentric(outer_radius_px: float, padding_px: float) -> float:
 	return maxf(outer_radius_px - padding_px, MIN_RADIUS_PX)

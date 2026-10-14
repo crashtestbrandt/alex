@@ -8,7 +8,7 @@ const PAD_PX: float = 8.0
 const GAP_PX: int = 6
 
 var _shape: SdfShape = null
-var _row: HBoxContainer = HBoxContainer.new()
+var _row: HFlowContainer = HFlowContainer.new()
 var _group: ButtonGroup = ButtonGroup.new()
 
 func _init() -> void:
@@ -16,7 +16,8 @@ func _init() -> void:
 		add_theme_constant_override(side, int(PAD_PX))
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_row.name = "Row"
-	_row.add_theme_constant_override("separation", GAP_PX)
+	_row.add_theme_constant_override("h_separation", GAP_PX)
+	_row.add_theme_constant_override("v_separation", GAP_PX)
 	_row.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(_row)
 
@@ -46,9 +47,19 @@ func add_item(button: SdfButton) -> void:
 	button.shape = SdfButton.Shape.PILL
 	button.toggle_mode = true
 	button.button_group = _group
-	button.focus_mode = Control.FOCUS_NONE
+	button.focus_mode = Control.FOCUS_ALL
 	_row.add_child(button)
 	_refresh()
+
+func fit_width(available: float) -> void:
+	var natural: float = PAD_PX * 2.0
+	var count: int = 0
+	for button: SdfButton in items():
+		if button.visible:
+			natural += button.get_combined_minimum_size().x
+			count += 1
+	natural += maxf(count - 1, 0) * GAP_PX
+	custom_minimum_size.x = minf(natural, available)
 
 func items() -> Array[SdfButton]:
 	var out: Array[SdfButton] = []
@@ -70,8 +81,8 @@ func set_active(index: int) -> void:
 	var all: Array[SdfButton] = items()
 	if index < 0 or index >= all.size():
 		return
-	all[index].set_pressed_no_signal(true)
 	for button: SdfButton in all:
+		button.set_pressed_no_signal(button == all[index])
 		button.refresh()
 
 func clear() -> void:

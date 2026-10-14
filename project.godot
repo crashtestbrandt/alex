@@ -46,12 +46,12 @@ theme/default_font_multichannel_signed_distance_field=true
 
 [display]
 
-; Landscape tablet is the primary device. The canvas scales to whatever the device is.
+; Main adapts the canvas to the window. Tablets start in landscape; handhelds may rotate.
 window/size/viewport_width=1280
 window/size/viewport_height=800
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=4
+window/handheld/orientation=6
 
 [input_devices]
 

@@ -59,6 +59,8 @@ func _ready() -> void:
 	mouse_entered.connect(_on_hover.bind(true))
 	mouse_exited.connect(_on_hover.bind(false))
 	toggled.connect(_on_toggled)
+	focus_entered.connect(refresh)
+	focus_exited.connect(refresh)
 	Style.changed.connect(_on_style_changed)
 	refresh()
 
@@ -85,18 +87,19 @@ func refresh() -> void:
 			_shape.radius_px = UiGeometry.pill_radius(size)
 		_:
 			_shape.radius_px = UiGeometry.rounded_radius(size, shape_radius)
-	if active or primary:
-		_shape.fill = preset.accent
-	elif disabled:
+	if disabled:
 		_shape.fill = preset.surface.lerp(preset.background, 0.5)
+	elif active or primary:
+		_shape.fill = preset.accent
 	elif quiet:
 		_shape.fill = Color(preset.surface, 0.0)
 	else:
 		_shape.fill = preset.surface
-	_shape.border_px = HOVER_BORDER_PX if _hover and not active and not disabled else 0.0
-	_shape.border_color = preset.text if primary else preset.accent
+	_shape.border_px = HOVER_BORDER_PX if (_hover or has_focus()) and not disabled else 0.0
+	_shape.border_color = preset.surface if primary or active else preset.accent
 	_shape.relief = 0.0 if quiet else -1.0
 	if primary:
+		add_theme_color_override("font_focus_color", preset.surface)
 		add_theme_color_override("font_color", preset.surface)
 		add_theme_color_override("font_hover_color", preset.surface)
 
@@ -131,3 +134,10 @@ func _on_toggled(_on: bool) -> void:
 
 func _on_style_changed(_preset: StylePreset) -> void:
 	refresh()
+
+func _make_custom_tooltip(for_text: String) -> Object:
+	var panel: SdfPanel = SdfPanel.new()
+	var label: Label = Label.new()
+	label.text = for_text
+	panel.add_child(label)
+	return panel

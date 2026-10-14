@@ -14,6 +14,9 @@ func _ready() -> void:
 	super()
 	button_down.connect(_on_down)
 	button_up.connect(_on_up)
+	mouse_exited.connect(_cancel_hold)
+	visibility_changed.connect(_cancel_hold)
+	get_window().focus_exited.connect(_cancel_hold)
 	set_process(false)
 
 func _process(delta: float) -> void:
@@ -36,6 +39,16 @@ func progress() -> float:
 ## this to keep a hold from counting as a tap too.
 func consumed_by_hold() -> bool:
 	return _fired
+
+func _notification(what: int) -> void:
+	super(what)
+	if what == NOTIFICATION_SCROLL_BEGIN:
+		_cancel_hold()
+
+func _cancel_hold() -> void:
+	_down_for = -1.0
+	_fired = true
+	set_process(false)
 
 func _on_down() -> void:
 	_down_for = 0.0

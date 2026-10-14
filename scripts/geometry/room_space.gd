@@ -81,3 +81,35 @@ static func smallest_spot_m(r: Room) -> float:
 		if smallest <= 0.0 or m < smallest:
 			smallest = m
 	return smallest
+
+## Wall coordinates run left to right on the back wall and back to front on either side.
+## Split the solid wall around every aperture. Overlapping or edge-clipped openings remain a union.
+static func wall_sections(wall: Spot.Wall, room: Room) -> Array[Rect2]:
+	var length: float = WIDTH if wall == Spot.Wall.BACK else DEPTH
+	var drawn_length: float = length if wall == Spot.Wall.BACK else length + APRON
+	var sections: Array[Rect2] = [Rect2(0.0, 0.0, drawn_length, HEIGHT + WALL_RISE)]
+	if room == null:
+		return sections
+	for spot: Spot in room.spots:
+		if spot.wall != wall:
+			continue
+		var hole: Rect2 = ObjectRecipes.opening(spot.kind, spot_size_m(spot))
+		if not hole.has_area():
+			continue
+		hole.position += Vector2(spot.x * length, spot.height * HEIGHT)
+		var next: Array[Rect2] = []
+		for section: Rect2 in sections:
+			var cut: Rect2 = section.intersection(hole)
+			if not cut.has_area():
+				next.push_back(section)
+				continue
+			var pieces: Array[Rect2] = [
+				Rect2(section.position, Vector2(cut.position.x - section.position.x, section.size.y)),
+				Rect2(Vector2(cut.end.x, section.position.y), Vector2(section.end.x - cut.end.x, section.size.y)),
+				Rect2(Vector2(cut.position.x, section.position.y), Vector2(cut.size.x, cut.position.y - section.position.y)),
+				Rect2(Vector2(cut.position.x, cut.end.y), Vector2(cut.size.x, section.end.y - cut.end.y))]
+			for piece: Rect2 in pieces:
+				if piece.has_area():
+					next.push_back(piece)
+		sections = next
+	return sections

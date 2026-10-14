@@ -49,3 +49,39 @@ func test_content_box_stops_at_the_tallest_spot() -> void:
 	var high: Room = Room.from_dict({"id": "r", "spots": [{"id": "w", "gestalt": "g", "wall": "back", "height": 0.9, "size": 0.6}]})
 	assert_almost_eq(RoomSpace.content_dims(high).y, RoomSpace.HEIGHT, 0.0001, "never above the wall")
 	assert_almost_eq(RoomSpace.content_dims(null).y, RoomSpace.CONTENT_HEIGHT_MIN, 0.0001, "no room, the floor")
+
+func test_wall_openings_are_empty_and_remaining_slabs_do_not_overlap() -> void:
+	for wall: String in ["back", "left", "right"]:
+		var room: Room = Room.from_dict({"id": "r", "spots": [
+			{"id": "door", "kind": "door", "gestalt": "g", "wall": wall, "x": 0.2, "size": 0.5},
+			{"id": "window", "kind": "window", "gestalt": "g", "wall": wall, "x": 0.7, "height": 0.4, "size": 0.3}]})
+		var side: Spot.Wall = room.spots[0].wall
+		var length: float = RoomSpace.WIDTH if side == Spot.Wall.BACK else RoomSpace.DEPTH
+		var sections: Array[Rect2] = RoomSpace.wall_sections(side, room)
+		var area: float = 0.0
+		for i: int in sections.size():
+			var section: Rect2 = sections[i]
+			assert_true(section.has_area(), "no degenerate slabs")
+			area += section.get_area()
+			for j: int in range(i + 1, sections.size()):
+				assert_false(section.intersection(sections[j]).has_area(), "slabs never overlap")
+			for spot: Spot in room.spots:
+				var hole: Rect2 = ObjectRecipes.opening(spot.kind, RoomSpace.spot_size_m(spot))
+				hole.position += Vector2(spot.x * length, spot.height * RoomSpace.HEIGHT)
+				assert_false(section.intersection(hole).has_area(), "aperture contains no wall")
+		var expected: float = (length + (0.0 if side == Spot.Wall.BACK else RoomSpace.APRON)) * (RoomSpace.HEIGHT + RoomSpace.WALL_RISE)
+		for spot: Spot in room.spots:
+			expected -= ObjectRecipes.opening(spot.kind, RoomSpace.spot_size_m(spot)).get_area()
+		assert_almost_eq(area, expected, 0.0001, "wall area minus openings")
+
+func test_overlapping_and_edge_openings_remain_valid() -> void:
+	var room: Room = Room.from_dict({"id": "r", "spots": [
+		{"id": "a", "kind": "door", "gestalt": "g", "wall": "back", "x": 0.0, "size": 0.5},
+		{"id": "b", "kind": "door", "gestalt": "g", "wall": "back", "x": 0.0, "size": 0.5}]})
+	var sections: Array[Rect2] = RoomSpace.wall_sections(Spot.Wall.BACK, room)
+	var area: float = 0.0
+	for section: Rect2 in sections:
+		assert_true(section.position.x >= 0.0, "edge cut is clipped")
+		area += section.get_area()
+	var hole: Rect2 = ObjectRecipes.opening(Spot.Kind.DOOR, 2.0)
+	assert_almost_eq(area, RoomSpace.WIDTH * (RoomSpace.HEIGHT + RoomSpace.WALL_RISE) - hole.get_area() / 2.0, 0.0001, "overlapping holes are removed once")

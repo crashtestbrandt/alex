@@ -39,6 +39,16 @@ static func make(kind: Spot.Kind, size_m: float, preset: StylePreset) -> Recipe:
 			_circle(r, s, preset)
 	return r
 
+## The clear opening behind the frame, with a small overlap hidden by its bars.
+static func opening(kind: Spot.Kind, size_m: float) -> Rect2:
+	match kind:
+		Spot.Kind.DOOR:
+			return Rect2(-0.195 * size_m, 0.0, 0.39 * size_m, 0.97 * size_m)
+		Spot.Kind.WINDOW:
+			return Rect2(-0.40 * size_m, 0.05 * size_m, 0.80 * size_m, 0.80 * size_m)
+		_:
+			return Rect2()
+
 static func _at(x: float, y: float, z: float) -> Transform3D:
 	return Transform3D(Basis.IDENTITY, Vector3(x, y, z))
 
