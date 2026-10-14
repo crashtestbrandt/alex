@@ -1,7 +1,7 @@
 extends Control
 ## Screenshots: seed a profile from the home starter in the Bold style, open its room, swing the door, and
 ## save the viewport to docs/img/room.png; then open the recording overlay for the door's phrase and save
-## docs/img/record.png (`just screenshot`). Windowed, because it needs a renderer. The
+## docs/img/record.png; then return to the picker and save docs/img/picker.png (`just screenshot`). Windowed, because it needs a renderer. The
 ## profile it makes is deleted on the way out. Re-run it whenever the room changes so the README stays true.
 ##
 ## The root is a Control, not a Node: a theme set on the window propagates only through Control and Window
@@ -10,6 +10,7 @@ extends Control
 const _MAIN: PackedScene = preload("res://scenes/main.tscn")
 const _OUT: String = "res://docs/img/room.png"
 const _OUT_RECORD: String = "res://docs/img/record.png"
+const _OUT_PICKER: String = "res://docs/img/picker.png"
 const _STYLE: String = "bold"
 const _TAPPED: PackedStringArray = ["door"]
 
@@ -46,6 +47,11 @@ func _run() -> void:
 		await RenderingServer.frame_post_draw
 		err = _save(_OUT_RECORD)
 		overlay.close()
+	if err == OK:
+		main.show_picker()
+		await get_tree().create_timer(0.3).timeout
+		await RenderingServer.frame_post_draw
+		err = _save(_OUT_PICKER)
 	repo.delete_profile(p.id)
 	if err == OK:
 		get_tree().quit(0)

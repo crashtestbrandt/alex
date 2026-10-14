@@ -45,19 +45,22 @@ is `PASS`, so a tap on its padding does not.
 | `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. |
 | `SdfPanel` | `PanelContainer` | A panel with an `SdfShape` behind its content, a larger radius, and `inner_radius()` for what sits in it. |
 | `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the place strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
+| `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
 | `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
 
 The background quad an `SdfShape` paints is the control grown by `SdfShape.PAD_PX` on each side, so the
 shadow has room. It is drawn with `draw_texture_rect` over a white texture because a plain rect carries no UVs
 for the shader to read.
 
-## What stays stock
+## The profile picker
 
-`LineEdit`, `OptionButton`, `ItemList` and `HSeparator` on the profile picker keep the theme's style boxes.
-They are adult-facing, used once at setup, and each would need its own field-drawn control to replace. They
-are the only rasterized shapes left.
+The adults' first screen uses the same controls as the room's chrome: each profile is one button that opens
+it, the name is an `SdfField`, the starter pack and the style are pill bars with the choice pressed, and
+Create is the one `primary` button. Nothing on it is drawn by a theme style box.
 
 ## Gates
 
 `ui_geometry_test.gd` covers the pure numbers. The shaders have no headless gate; `just screenshot` renders
-`docs/img/room.png` (the Bold style, one object triggered) and `docs/img/record.png`, which is where they are checked.
+`docs/img/room.png` (the Bold style, one object triggered), `docs/img/record.png` and `docs/img/picker.png`,
+which is where they are checked. The picker image lists whatever profiles the machine holds, so it is ignored
+by git and stays local.

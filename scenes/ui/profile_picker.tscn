@@ -3,6 +3,8 @@
 [ext_resource type="Script" path="res://scripts/ui/profile_picker.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/sdf_panel.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/ui/sdf_button.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_field.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/pill_bar.gd" id="5"]
 
 [node name="ProfilePicker" type="Control"]
 layout_mode = 3
@@ -22,32 +24,34 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(640, 0)
+custom_minimum_size = Vector2(760, 0)
 layout_mode = 2
 script = ExtResource("2")
 
 [node name="Column" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
 [node name="Heading" type="Label" parent="Center/Panel/Column"]
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 text = "Who is this for?"
 
-[node name="ProfileList" type="ItemList" parent="Center/Panel/Column"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 200)
-layout_mode = 2
-auto_height = true
-
-[node name="OpenButton" type="Button" parent="Center/Panel/Column"]
+[node name="Profiles" type="GridContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
-script = ExtResource("3")
-text = "Open"
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 2
 
-[node name="Sep" type="HSeparator" parent="Center/Panel/Column"]
+[node name="Status" type="Label" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+autowrap_mode = 3
+
+[node name="Gap" type="Control" parent="Center/Panel/Column"]
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="NewHeading" type="Label" parent="Center/Panel/Column"]
@@ -58,28 +62,42 @@ text = "New profile"
 unique_name_in_owner = true
 layout_mode = 2
 placeholder_text = "Name"
+script = ExtResource("4")
 
-[node name="Row" type="HBoxContainer" parent="Center/Panel/Column"]
+[node name="StarterRow" type="HBoxContainer" parent="Center/Panel/Column"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="StarterSelect" type="OptionButton" parent="Center/Panel/Column/Row"]
-unique_name_in_owner = true
+[node name="StarterLabel" type="Label" parent="Center/Panel/Column/StarterRow"]
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
-size_flags_horizontal = 3
+text = "Start with"
 
-[node name="StyleSelect" type="OptionButton" parent="Center/Panel/Column/Row"]
+[node name="StarterBar" type="MarginContainer" parent="Center/Panel/Column/StarterRow"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+script = ExtResource("5")
+
+[node name="StyleRow" type="HBoxContainer" parent="Center/Panel/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StyleLabel" type="Label" parent="Center/Panel/Column/StyleRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Look"
+
+[node name="StyleBar" type="MarginContainer" parent="Center/Panel/Column/StyleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("5")
 
 [node name="CreateButton" type="Button" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 8
+focus_mode = 0
 script = ExtResource("3")
+shape = 1
+primary = true
 text = "Create"
-
-[node name="Status" type="Label" parent="Center/Panel/Column"]
-unique_name_in_owner = true
-layout_mode = 2
-text = ""

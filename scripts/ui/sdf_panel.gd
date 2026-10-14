@@ -17,15 +17,21 @@ func _ready() -> void:
 	_shape = SdfShape.new()
 	_shape.name = "Shape"
 	_shape.show_behind_parent = true
-	_shape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_shape)
 	move_child(_shape, 0)
+	# A container lays its children out inside its margins, the shape included. It is pinned back to the full
+	# rect after every sort, so the drawn panel is the panel and not its content box.
+	sort_children.connect(_place_shape)
 	Style.changed.connect(_on_style_changed)
 	_refresh()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_refresh()
+
+func _place_shape() -> void:
+	_shape.position = Vector2.ZERO
+	_shape.size = size
 
 func radius() -> float:
 	return UiGeometry.rounded_radius(size, Style.current.corner_radius * RADIUS_SCALE)
