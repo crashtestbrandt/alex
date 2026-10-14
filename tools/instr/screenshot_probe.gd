@@ -24,13 +24,13 @@ func _run() -> void:
 	await get_tree().process_frame
 	var home: ChildHome = main.get_node("%ChildHome") as ChildHome
 	var room_view: RoomView = home.get_node("%RoomView") as RoomView
-	for child: Node in room_view.get_children():
-		if child is SpotView:
-			var view: SpotView = child
-			if _TAPPED.has(view.spot.id):
-				view.tapped.emit(view.spot)
+	await get_tree().create_timer(0.3).timeout
+	for id: String in _TAPPED:
+		var body: SpotBody = room_view.body(id)
+		if body != null:
+			room_view.tap(body)
 	# Mid-utterance: the door has finished swinging and the first chunk is lit.
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(0.6).timeout
 	await RenderingServer.frame_post_draw
 	var image: Image = get_viewport().get_texture().get_image()
 	var err: Error = image.save_png(_OUT)

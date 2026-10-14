@@ -7,12 +7,18 @@ developmental delays, and any child whose first speech is echolalia. It is not a
 substitute for one. It is something a learner can pick up and discover on their own, after a caregiver spends a
 few minutes setting it up.
 
+![The home room: a door swung open, a lit lamp, a window, a bed, a tub, a ball, a cup and shoes, with two phrases floating in chunks](docs/img/room.png)
+
 ## What the learner sees
 
 A room. A door, a lamp, a window, a ball, a cup, a bed, a pair of shoes, a tub. Touch the door and it swings
 open as a familiar voice says "Let's go outside." Touch it again and it closes: "Let's go inside." The lamp
 lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
 up one after another, so the learner sees where a phrase comes apart without being told.
+
+Three buttons under the room look at it from the front, the side and above. A caregiver can add a fourth that
+turns the room, or take all of them away. Whatever the learner does with them, the room comes back to the front
+on its own.
 
 There are no questions, no right answers, no scores, no timers and no rewards. Touching the same thing forty
 times is fine. Nothing on the learner's screen can delete anything, buy anything, or leave the device.
@@ -48,7 +54,7 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 ## Status
 
-Early and usable. One room with eight objects, a plain board for phrases with no object, three looks, and
+Early and usable. One 3D room with eight objects, a plain board for phrases with no object, three looks, and
 recording in your own voice. Coming: more rooms and reactions, the learner's own songs and clips, a remix board
 that offers chunk beginnings beside chunk endings, and a bank view for caregivers. Desktop only until an export
 preset exists; the target device is a tablet.
@@ -75,12 +81,13 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `scripts/profiles/` | The data model: `Profile`, `Gestalt`, `Room`, `Spot`, `Board`, `NlaStage`, `Starter`, `JsonValue`, `ProfileRepo`, the `ProfileStore` autoload. |
 | `scripts/style/` | `StylePreset` (a resource) and the `Style` autoload that turns one into a Theme. |
 | `scripts/speech/` | `Speaker` (a recording, else OS text to speech) and `Recorder` (the microphone). |
-| `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotView`, `GestaltTile`. |
+| `scripts/geometry/` | Objects as recipes and the camera math: `Sdf`, `Mesher`, `Primitive`, `Recipe`, `RecipeBuilder`, `ObjectRecipes`, `Picker`, `CameraFraming`, `RoomSpace`. |
+| `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
 | `scripts/ui/` | Adult-facing screens and shared controls: `ProfilePicker`, `RecordOverlay`, `HoldButton`. |
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
-| `docs/` | [`design.md`](docs/design.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md). |
+| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md). |
 
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.
@@ -88,9 +95,10 @@ capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.
 ### Adding a room
 
 A room is JSON in a starter pack: spots with a `kind` (what it looks like), a `reaction` (what it does), a
-position, a size, and the gestalt it says. No art is needed; every kind is drawn from primitives. The fields are
-listed in [`docs/profiles.md`](docs/profiles.md). A new kind of object is a `Spot.Kind` value and a `_draw`
-arm in `SpotView`.
+wall or a place on the floor, a size, and the gestalt it says. No art is needed; every kind is built from
+primitives the way the thing is made, with a distance field as its twin for picking and, later, editing
+([`docs/geometry.md`](docs/geometry.md)). The fields are listed in [`docs/profiles.md`](docs/profiles.md). A
+new kind of object is a `Spot.Kind` value and a recipe function in `ObjectRecipes`.
 
 ### Exports
 

@@ -25,15 +25,16 @@
     {
       "id": "home",
       "title": "Home",
+      "camera": "views",
       "spots": [
-        {"id": "door", "kind": "door", "reaction": "open", "x": 0.11, "y": 0.52, "size": 0.34, "gestalt": "lets_go_outside", "alt_gestalt": "lets_go_inside"},
-        {"id": "light", "kind": "light", "reaction": "glow", "x": 0.47, "y": 0.2, "size": 0.2, "gestalt": "lights_on", "alt_gestalt": "lights_off"},
-        {"id": "window", "kind": "window", "reaction": "glow", "x": 0.8, "y": 0.28, "size": 0.26, "gestalt": "look_outside"},
-        {"id": "ball", "kind": "ball", "reaction": "bounce", "x": 0.36, "y": 0.7, "size": 0.15, "gestalt": "lets_play_ball"},
-        {"id": "cup", "kind": "cup", "reaction": "wobble", "x": 0.56, "y": 0.62, "size": 0.15, "gestalt": "time_for_a_snack"},
-        {"id": "shoes", "kind": "shoes", "reaction": "bounce", "x": 0.3, "y": 0.88, "size": 0.15, "gestalt": "lets_get_shoes"},
-        {"id": "bed", "kind": "bed", "reaction": "grow", "x": 0.83, "y": 0.68, "size": 0.26, "gestalt": "time_for_bed"},
-        {"id": "tub", "kind": "tub", "reaction": "wobble", "x": 0.6, "y": 0.87, "size": 0.2, "gestalt": "time_for_a_bath"}
+        {"id": "door", "kind": "door", "reaction": "open", "wall": "back", "x": 0.16, "height": 0.0, "size": 0.5, "gestalt": "lets_go_outside", "alt_gestalt": "lets_go_inside"},
+        {"id": "window", "kind": "window", "reaction": "glow", "wall": "back", "x": 0.72, "height": 0.4, "size": 0.3, "gestalt": "look_outside"},
+        {"id": "light", "kind": "light", "reaction": "glow", "x": 0.34, "y": 0.2, "size": 0.42, "gestalt": "lights_on", "alt_gestalt": "lights_off"},
+        {"id": "bed", "kind": "bed", "reaction": "grow", "x": 0.72, "y": 0.22, "size": 0.5, "gestalt": "time_for_bed"},
+        {"id": "tub", "kind": "tub", "reaction": "wobble", "x": 0.24, "y": 0.68, "size": 0.42, "gestalt": "time_for_a_bath"},
+        {"id": "ball", "kind": "ball", "reaction": "bounce", "x": 0.58, "y": 0.6, "size": 0.2, "gestalt": "lets_play_ball"},
+        {"id": "cup", "kind": "cup", "reaction": "wobble", "x": 0.88, "y": 0.56, "size": 0.2, "gestalt": "time_for_a_snack"},
+        {"id": "shoes", "kind": "shoes", "reaction": "bounce", "x": 0.76, "y": 0.8, "size": 0.24, "gestalt": "lets_get_shoes"}
       ]
     }
   ],

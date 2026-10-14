@@ -1,56 +1,186 @@
 extends Control
 class_name RoomView
-## One [Room] on screen: a floor line and its spots, laid out from their fractional positions so the same
-## room fits a phone and a tablet. Chunks float above a spot while its gestalt plays, then fade.
+## One [Room] in 3D: a three-walled box, its spots built from recipes, a camera the learner can move between
+## a few views, and captions that float over a spot while its gestalt plays (docs/geometry.md).
+##
+## Input rules, in the learner's favor: a tap on an object reacts and speaks; a two-second hold on an object
+## opens the caregiver's recorder; a drag that started on an object cancels and does nothing; a drag on
+## empty room orbits only when the room allows it; and any view returns to the front after the same idle
+## period the recording overlay uses.
 
 signal spot_tapped(spot: Spot, gestalt: Gestalt)
 signal spot_held(spot: Spot, gestalt: Gestalt)
 
-## The smallest a spot may be, in pixels. A touch target, floored whatever the room says.
-const MIN_SPOT_PX: float = 120.0
+const HOLD_SECONDS: float = 2.0
+const DRAG_PX: float = 24.0
+const ORBIT_DEG_PER_PX: float = 0.35
+const VIEW_TWEEN_SECONDS: float = 0.7
+const WIDGET_MARGIN: float = 10.0
+
+## How long a moved view stays before it returns to the front. A probe shortens it.
+var idle_seconds: float = RecordOverlay.IDLE_SECONDS
 
 var _profile: Profile = null
 var _room: Room = null
-var _views: Dictionary[String, SpotView] = {}
+var _bodies: Dictionary[String, SpotBody] = {}
+var _walls: Dictionary[int, MeshInstance3D] = {}
+var _floor: MeshInstance3D = null
+var _material: StandardMaterial3D = RecipeBuilder.make_material()
 
+var _view: CameraFraming.View = CameraFraming.View.FRONT
+var _azimuth: float = 0.0
+var _elevation: float = CameraFraming.FRONT_ELEVATION_DEG
+var _extent: float = 3.0
+var _view_tween: Tween = null
+var _blend_from: Vector3 = Vector3.ZERO
+var _blend_to: Vector3 = Vector3.ZERO
+
+var _press_pos: Vector2 = Vector2.ZERO
+var _press_body: SpotBody = null
+var _down_for: float = -1.0
+var _dragging: bool = false
+var _orbit_drag: bool = false
+var _idle: float = 0.0
+
+@onready var _container: SubViewportContainer = %ViewportContainer
+@onready var _viewport: SubViewport = %Viewport
+@onready var _world: Node3D = %World
+@onready var _camera: Camera3D = %Camera
+@onready var _sun: DirectionalLight3D = %Sun
+@onready var _env: WorldEnvironment = %Env
 @onready var _captions: Control = %Captions
+@onready var _widget: ViewWidget = %ViewWidget
 
 func _ready() -> void:
-	resized.connect(_layout)
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	focus_mode = Control.FOCUS_NONE
+	_build_shell()
+	_sun.look_at_from_position(Vector3(2.5, 5.0, 4.0), Vector3.ZERO, Vector3.UP)
+	_sun.shadow_enabled = true
+	_sun.light_energy = 0.75
+	_env.environment = _make_environment(Style.current)
+	_widget.view_chosen.connect(_on_view_chosen)
+	resized.connect(_on_resized)
 	Style.changed.connect(_on_style_changed)
+	_apply_camera()
 
 func show_room(p: Profile, r: Room) -> void:
 	_profile = p
 	_room = r
-	for view: SpotView in _views.values():
-		view.queue_free()
-	_views.clear()
+	for body: SpotBody in _bodies.values():
+		body.queue_free()
+	_bodies.clear()
 	for s: Spot in r.spots:
 		if p.gestalt(s.gestalt_id) == null:
 			continue
-		var view: SpotView = SpotView.new()
-		view.setup(s)
-		view.tapped.connect(_on_spot_tapped)
-		view.held.connect(_on_spot_held)
-		add_child(view)
-		_views[s.id] = view
-	_captions.move_to_front()
+		var size_m: float = RoomSpace.spot_size_m(s)
+		var recipe: Recipe = ObjectRecipes.make(s.kind, size_m, Style.current)
+		var body: SpotBody = SpotBody.new()
+		body.setup(s, recipe, size_m, _material)
+		body.set_rest(RoomSpace.place(s))
+		_world.add_child(body)
+		_bodies[s.id] = body
+	_widget.set_mode(r.camera)
 	_layout()
-	queue_redraw()
+	_cancel_press()
+	set_view(CameraFraming.View.FRONT, false)
 
 ## The gestalt a spot says right now: its alternate when toggled on and one exists.
 func gestalt_for(s: Spot) -> Gestalt:
-	var view: SpotView = _views.get(s.id, null)
-	if view != null and view.is_on and not s.alt_gestalt_id.is_empty():
+	var body: SpotBody = _bodies.get(s.id, null)
+	if body != null and body.is_on and not s.alt_gestalt_id.is_empty():
 		var alt: Gestalt = _profile.gestalt(s.alt_gestalt_id)
 		if alt != null:
 			return alt
 	return _profile.gestalt(s.gestalt_id)
 
+func bodies() -> Array[SpotBody]:
+	var out: Array[SpotBody] = []
+	for body: SpotBody in _bodies.values():
+		out.push_back(body)
+	return out
+
+func body(spot_id: String) -> SpotBody:
+	return _bodies.get(spot_id, null)
+
+func view() -> CameraFraming.View:
+	return _view
+
+func camera_position() -> Vector3:
+	return _camera.global_position
+
+func wall_visible(w: Spot.Wall) -> bool:
+	var wall: MeshInstance3D = _walls.get(w, null)
+	return wall != null and wall.visible
+
+## Where a body's center falls on this control.
+func screen_point(b: SpotBody) -> Vector2:
+	return _camera.unproject_position(b.center_point())
+
+## How many pixels a body's bounds cover on this control, width and height.
+func screen_size(b: SpotBody) -> Vector2:
+	var box: AABB = b.bounds()
+	var low: Vector2 = Vector2(INF, INF)
+	var high: Vector2 = Vector2(-INF, -INF)
+	for i: int in 8:
+		var corner: Vector2 = _camera.unproject_position(b.to_global(box.get_endpoint(i)))
+		low = Vector2(minf(low.x, corner.x), minf(low.y, corner.y))
+		high = Vector2(maxf(high.x, corner.x), maxf(high.y, corner.y))
+	return high - low
+
+## The body under a point on this control, or null. The ray is traced through every body's distance field;
+## when it hits nothing, the nearest body whose center is within half the touch floor is taken instead.
+func pick_at(point: Vector2) -> SpotBody:
+	var all: Array[SpotBody] = bodies()
+	if all.is_empty():
+		return null
+	var targets: Array[Picker.Target] = []
+	for b: SpotBody in all:
+		targets.push_back(b.pick_target())
+	var hit: int = Picker.pick(_camera.project_ray_origin(point), _camera.project_ray_normal(point), targets)
+	if hit >= 0:
+		return all[hit]
+	var reach: float = Style.current.tile_min_size / 2.0
+	var best: SpotBody = null
+	var best_d: float = INF
+	for b: SpotBody in all:
+		if _camera.is_position_behind(b.center_point()):
+			continue
+		var d: float = screen_point(b).distance_to(point)
+		if d <= reach and d < best_d:
+			best_d = d
+			best = b
+	return best
+
+## Play a body's reaction and say its gestalt, as a tap does.
+func tap(b: SpotBody) -> void:
+	var g: Gestalt = gestalt_for(b.spot)
+	b.react()
+	if g != null:
+		spot_tapped.emit(b.spot, g)
+
+## Move the camera to a view, animated unless `animate` is false or the style's motion is none.
+func set_view(target: CameraFraming.View, animate: bool = true) -> void:
+	_view = target
+	_widget.show_current(target)
+	var angles: Vector2 = CameraFraming.view_angles(target)
+	_move_camera(angles.x, angles.y, animate)
+
+## Turn the camera by a drag of `delta` pixels, within the orbit's limits. Only a room with `camera: orbit`
+## reaches this from input.
+func orbit_by(delta: Vector2) -> void:
+	var clamped: Vector2 = CameraFraming.clamp_orbit(_azimuth - delta.x * ORBIT_DEG_PER_PX, _elevation + delta.y * ORBIT_DEG_PER_PX)
+	_view = CameraFraming.View.TURN
+	_widget.show_current(_view)
+	_azimuth = clamped.x
+	_elevation = clamped.y
+	_extent = _extent_for(_azimuth, _elevation)
+	_apply_camera()
+
 ## Float `g`'s chunks above spot `s` for about `seconds`, one chunk lighting after another.
 func show_chunks(s: Spot, g: Gestalt, seconds: float) -> void:
-	var view: SpotView = _views.get(s.id, null)
-	if view == null:
+	var b: SpotBody = _bodies.get(s.id, null)
+	if b == null:
 		return
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
@@ -66,10 +196,10 @@ func show_chunks(s: Spot, g: Gestalt, seconds: float) -> void:
 		labels.push_back(label)
 	_captions.add_child(row)
 	row.reset_size()
-	var above: Vector2 = view.position + Vector2(view.size.x / 2.0 - row.size.x / 2.0, -row.size.y - 10.0)
-	above.x = clampf(above.x, 8.0, maxf(8.0, size.x - row.size.x - 8.0))
-	if above.y < 8.0:
-		above.y = view.position.y + view.size.y + 10.0
+	var anchor: Vector2 = _camera.unproject_position(b.top_point())
+	var above: Vector2 = anchor + Vector2(-row.size.x / 2.0, -row.size.y - 12.0)
+	above.x = clampf(above.x, 8.0, maxf(8.0, _container.size.x - row.size.x - 8.0))
+	above.y = clampf(above.y, 8.0, maxf(8.0, _container.size.y - row.size.y - 8.0))
 	row.position = above
 	var scale_factor: float = Style.motion_scale()
 	var hold: float = maxf(seconds, 0.6)
@@ -86,44 +216,163 @@ func show_chunks(s: Spot, g: Gestalt, seconds: float) -> void:
 	tween.tween_property(row, "modulate", Color(1, 1, 1, 0), 0.4 * scale_factor)
 	tween.tween_callback(row.queue_free)
 
+# --- input ------------------------------------------------------------------------------------------------
+
+func _gui_input(event: InputEvent) -> void:
+	_idle = 0.0
+	if event is InputEventMouseButton:
+		var button: InputEventMouseButton = event
+		if button.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if button.pressed:
+			_press_pos = button.position
+			_press_body = pick_at(button.position)
+			_down_for = 0.0
+			_dragging = false
+			_orbit_drag = false
+			set_process(true)
+		elif _down_for >= 0.0:
+			var was_tap: bool = not _dragging and _press_body != null
+			var tapped: SpotBody = _press_body
+			_cancel_press()
+			if was_tap:
+				tap(tapped)
+		accept_event()
+	elif event is InputEventMouseMotion and _down_for >= 0.0:
+		var motion: InputEventMouseMotion = event
+		if not _dragging and motion.position.distance_to(_press_pos) > DRAG_PX:
+			_dragging = true
+			# A drag that started on an object cancels it; a drag on empty room turns the view if allowed.
+			_orbit_drag = _press_body == null and _room != null and _room.camera == Room.Camera.ORBIT
+			_press_body = null
+		if _orbit_drag:
+			orbit_by(motion.relative)
+		accept_event()
+
+func _process(delta: float) -> void:
+	if _down_for >= 0.0:
+		if _press_body != null and not _dragging:
+			_down_for += delta
+			if _down_for >= HOLD_SECONDS:
+				var held: SpotBody = _press_body
+				_cancel_press()
+				var g: Gestalt = gestalt_for(held.spot)
+				if g != null:
+					spot_held.emit(held.spot, g)
+		return
+	if _view == CameraFraming.View.FRONT:
+		return
+	_idle += delta
+	if _idle >= idle_seconds:
+		_idle = 0.0
+		set_view(CameraFraming.View.FRONT)
+
+func _cancel_press() -> void:
+	_down_for = -1.0
+	_press_body = null
+	_dragging = false
+	_orbit_drag = false
+	_idle = 0.0
+	set_process(_room != null)
+
+func _on_view_chosen(target: CameraFraming.View) -> void:
+	_idle = 0.0
+	set_view(target)
+
+# --- camera -----------------------------------------------------------------------------------------------
+
+func _extent_for(azimuth: float, elevation: float) -> float:
+	var smallest: float = RoomSpace.smallest_spot_m(_room) if _room != null else 0.0
+	var view_size: Vector2 = _container.size
+	var aspect: float = view_size.x / maxf(view_size.y, 1.0)
+	return CameraFraming.frame_extent(azimuth, elevation, RoomSpace.dims(), aspect, smallest, view_size.y, float(Style.current.tile_min_size))
+
+func _move_camera(azimuth: float, elevation: float, animate: bool) -> void:
+	if _view_tween != null:
+		_view_tween.kill()
+		_view_tween = null
+	var extent: float = _extent_for(azimuth, elevation)
+	var scale_factor: float = Style.motion_scale()
+	if not animate or scale_factor <= 0.0 or not is_inside_tree():
+		_azimuth = azimuth
+		_elevation = elevation
+		_extent = extent
+		_apply_camera()
+		return
+	_blend_from = Vector3(_azimuth, _elevation, _extent)
+	_blend_to = Vector3(azimuth, elevation, extent)
+	_view_tween = create_tween()
+	_view_tween.tween_method(_blend, 0.0, 1.0, VIEW_TWEEN_SECONDS * scale_factor) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+func _blend(t: float) -> void:
+	var now: Vector3 = _blend_from.lerp(_blend_to, t)
+	_azimuth = now.x
+	_elevation = now.y
+	_extent = now.z
+	_apply_camera()
+
+func _apply_camera() -> void:
+	var distance: float = CameraFraming.perspective_distance(_extent, CameraFraming.FOV_DEG)
+	_camera.fov = CameraFraming.FOV_DEG
+	_camera.transform = CameraFraming.camera_transform(RoomSpace.center(), _azimuth, _elevation, distance)
+	for w: int in _walls.keys():
+		var wall: Spot.Wall = w as Spot.Wall
+		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position)
+
+func _on_resized() -> void:
+	_layout()
+
+## The viewport takes everything above the widget's row, so no object is ever behind a button.
 func _layout() -> void:
-	if _room == null:
-		return
-	var shorter: float = minf(size.x, size.y)
-	for s: Spot in _room.spots:
-		var view: SpotView = _views.get(s.id, null)
-		if view == null:
-			continue
-		var px: float = maxf(s.size * shorter, MIN_SPOT_PX)
-		view.size = Vector2(px, px)
-		var center: Vector2 = Vector2(s.x * size.x, s.y * size.y)
-		var top_left: Vector2 = center - view.size / 2.0
-		top_left.x = clampf(top_left.x, 0.0, maxf(0.0, size.x - px))
-		top_left.y = clampf(top_left.y, 0.0, maxf(0.0, size.y - px))
-		view.set_rest_position(top_left)
-	queue_redraw()
+	var band: float = 0.0
+	if _widget.visible:
+		_widget.reset_size()
+		band = _widget.size.y + WIDGET_MARGIN
+	_container.position = Vector2.ZERO
+	_container.size = Vector2(size.x, maxf(size.y - band, 1.0))
+	_widget.position = Vector2(size.x - _widget.size.x, size.y - _widget.size.y)
+	_extent = _extent_for(_azimuth, _elevation)
+	_apply_camera()
 
-func _draw() -> void:
-	if _room == null:
-		return
-	var floor_top: float = size.y * 0.72
-	draw_rect(Rect2(0.0, floor_top, size.x, size.y - floor_top), Style.current.accent.lerp(Style.current.background, 0.82))
-	draw_line(Vector2(0.0, floor_top), Vector2(size.x, floor_top), Style.current.text.lerp(Style.current.background, 0.6), 2.0)
+# --- the room box -----------------------------------------------------------------------------------------
 
-func _on_spot_tapped(s: Spot) -> void:
-	var g: Gestalt = gestalt_for(s)
-	var view: SpotView = _views.get(s.id, null)
-	if view != null:
-		view.react()
-	if g != null:
-		spot_tapped.emit(s, g)
+func _build_shell() -> void:
+	var w: float = RoomSpace.WIDTH
+	var h: float = RoomSpace.HEIGHT
+	var d: float = RoomSpace.DEPTH
+	var t: float = RoomSpace.WALL
+	_floor = _slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, -t / 2.0), Style.current.floor_color)
+	_walls[Spot.Wall.BACK] = _slab(Vector3(w + 2.0 * t, h, t), Vector3(0.0, h / 2.0, -d / 2.0 - t / 2.0), Style.current.wall_color)
+	_walls[Spot.Wall.LEFT] = _slab(Vector3(t, h, d), Vector3(-w / 2.0 - t / 2.0, h / 2.0, 0.0), Style.current.wall_color.darkened(0.06))
+	_walls[Spot.Wall.RIGHT] = _slab(Vector3(t, h, d), Vector3(w / 2.0 + t / 2.0, h / 2.0, 0.0), Style.current.wall_color.darkened(0.06))
 
-func _on_spot_held(s: Spot) -> void:
-	var g: Gestalt = gestalt_for(s)
-	if g != null:
-		spot_held.emit(s, g)
+func _slab(size_m: Vector3, at: Vector3, color: Color) -> MeshInstance3D:
+	var batch: MeshBatch = Mesher.box(size_m / 2.0, 0.0, color)
+	var mesh: ArrayMesh = ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, batch.to_arrays())
+	var instance: MeshInstance3D = MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.material_override = _material
+	instance.position = at
+	_world.add_child(instance)
+	return instance
 
-func _on_style_changed(_preset: StylePreset) -> void:
-	for view: SpotView in _views.values():
-		view.queue_redraw()
-	queue_redraw()
+func _make_environment(preset: StylePreset) -> Environment:
+	var env: Environment = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = preset.background
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = preset.wall_color.lerp(Color.WHITE, 0.4)
+	env.ambient_light_energy = 0.55
+	return env
+
+func _on_style_changed(preset: StylePreset) -> void:
+	_env.environment = _make_environment(preset)
+	for wall: MeshInstance3D in _walls.values():
+		wall.queue_free()
+	_walls.clear()
+	if _floor != null:
+		_floor.queue_free()
+	_build_shell()
+	_apply_camera()

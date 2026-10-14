@@ -36,15 +36,19 @@ A gestalt row:
 | `stage` | The stage the gestalt models, 0 for unstaged. |
 | `recording` | A file under `media/`, or empty. `wav`, `ogg` or `mp3`. |
 
-A room row holds `id`, `title` and `spots`. A spot row:
+A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front,
+Side, Top; the default) or `orbit` (adds Turn and a drag). A spot row:
 
 | Field | Meaning |
 | --- | --- |
 | `id` | Unique within the room. |
-| `kind` | What it looks like: `door`, `light`, `window`, `ball`, `bed`, `cup`, `shoes`, `tub`, `star`, `circle`. Drawn from primitives. |
+| `kind` | What it looks like: `door`, `light`, `window`, `ball`, `bed`, `cup`, `shoes`, `tub`, `star`, `circle`. Built from primitives (docs/geometry.md). |
 | `reaction` | What it does when touched: `bounce`, `open`, `glow`, `spin`, `wobble`, `grow`. |
-| `x`, `y` | Center as a fraction of the room, 0 to 1. |
-| `size` | Side as a fraction of the shorter screen edge, 0.05 to 0.6. Floored at 120 px on screen. |
+| `wall` | `none` for the floor (the default), or `back`, `left`, `right`. |
+| `x` | Across the room for a floor spot, along the wall for a wall spot. 0 to 1. |
+| `y` | Back to front for a floor spot, 0 at the back wall. Ignored on a wall. |
+| `height` | The base of a wall spot as a fraction of the room's height, 0 to 0.9. Ignored on the floor. |
+| `size` | The object's longest extent as a fraction of the room's width, 0.05 to 0.6. The camera pulls in a little when the smallest spot would fall under the touch floor, and picking honors the floor regardless. |
 | `gestalt` | What it says. |
 | `alt_gestalt` | What it says when toggled on (door open, light on). Optional. |
 
@@ -80,7 +84,8 @@ Packs are read with `DirAccess` at runtime, so **a shipped build needs `*.json` 
 
 | Field | Meaning |
 | --- | --- |
-| `background`, `surface`, `accent`, `text` | The four colors. |
+| `background`, `surface`, `accent`, `text` | The four interface colors. |
+| `wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`, `wall_color` | What a room and its objects are made of. |
 | `font_scale` | Multiplies every font size. |
 | `motion` | `FULL`, `REDUCED` or `NONE`. Every tween multiplies by `Style.motion_scale()`; zero skips it. |
 | `corner_radius` | Tile and panel corners. |

@@ -61,8 +61,13 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **No modals, confirmations or error text on the learner's screen.** Log it for the caregiver.
 - **Nothing built to extend a session.** No notifications, feed, autoplay chain or "one more".
 - **Repetition is unlimited and never interrupted.**
-- **Rooms and spots are data** (`Room`, `Spot`), drawn from primitives by `SpotView`. A new object kind is
-  a `Spot.Kind` plus a `_draw` arm, never an art asset.
+- **Rooms and spots are data** (`Room`, `Spot`), built from primitives by `ObjectRecipes` (docs/geometry.md).
+  A new object kind is a `Spot.Kind` plus a recipe function, never an art asset.
+- **A recipe is a union of rigid primitives, with no seed.** The mesh (`Mesher`) and the field (`Sdf`) are
+  twins; a primitive or an operation exists in both or in neither. The same spot is the same object every time.
+- **The learner's camera is perspective, on one clamped orbit.** Front, Side, Top and Turn are points on it,
+  `Room.camera` decides which buttons show, and a moved view returns to Front after the overlay's idle period.
+  Orthographic is for the editor. A drag that starts on an object never turns the view.
 - **The recording overlay writes nothing until Keep**, keeps the previous take, and closes itself when idle.
 - **A familiar voice beats a synthetic one.** The OS text-to-speech voice is a placeholder until a
   recording exists. Never make the synthetic voice the better experience.
@@ -72,7 +77,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **Adult screens sit behind a `HoldButton`.** A stray tap never leaves the board.
 - **Motion respects the style's `motion` setting.** Every tween multiplies by `Style.motion_scale()` and
   skips at zero.
-- **Touch targets honor `StylePreset.tile_min_size`.** 160 px is the floor.
+- **Touch targets honor `StylePreset.tile_min_size`.** 160 px is the floor. In the room, picking takes the
+  nearest object within half the floor when the ray misses, and the view buttons are the floor square.
 
 ## Data rules (docs/profiles.md)
 
@@ -83,7 +89,9 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **A bad row is skipped, never fatal.** One malformed gestalt does not lose a profile.
 - **Starter packs are JSON under `starters/`**, written for non-developers. `starter_test.gd` checks every
   board names gestalts the pack holds. A shipped build needs `*.json` in its export filter.
-- **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file.
+- **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
+  preset also carries the room's materials (`wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`,
+  `wall_color`).
 
 ## Gates (docs/gates.md)
 

@@ -4,10 +4,12 @@ class_name Spot
 ## its gestalt. A spot with an `alt_gestalt_id` alternates between two phrases as its state toggles, so a
 ## door says "Let's go outside" and then "Let's go inside".
 ##
-## Positions are fractions of the room, so one room fits every screen. `size` is a fraction of the shorter
-## screen edge and is floored at a touch target (RoomView).
+## Positions are fractions of the room box (RoomSpace), so one room fits every screen. A floor spot stands at
+## `x` across the width and `y` from the back wall; a wall spot hangs at `x` along its wall with its base at
+## `height`. `size` is the object's longest extent as a fraction of the room's width, and the camera is
+## framed so that no spot projects smaller than the style's touch floor (CameraFraming).
 
-## What the spot looks like. SpotView draws each kind from primitives; no art asset is needed.
+## What the spot looks like. ObjectRecipes builds each kind from primitives; no art asset is needed.
 enum Kind {
 	CIRCLE = 0,
 	DOOR = 1,
@@ -31,6 +33,14 @@ enum Reaction {
 	GROW = 5,
 }
 
+## Which wall a spot hangs on. NONE stands on the floor.
+enum Wall {
+	NONE = 0,
+	BACK = 1,
+	LEFT = 2,
+	RIGHT = 3,
+}
+
 const _KIND_NAMES: Dictionary[String, int] = {
 	"circle": Kind.CIRCLE, "door": Kind.DOOR, "light": Kind.LIGHT, "window": Kind.WINDOW,
 	"ball": Kind.BALL, "bed": Kind.BED, "cup": Kind.CUP, "shoes": Kind.SHOES, "tub": Kind.TUB,
@@ -40,6 +50,9 @@ const _REACTION_NAMES: Dictionary[String, int] = {
 	"bounce": Reaction.BOUNCE, "open": Reaction.OPEN, "glow": Reaction.GLOW, "spin": Reaction.SPIN,
 	"wobble": Reaction.WOBBLE, "grow": Reaction.GROW,
 }
+const _WALL_NAMES: Dictionary[String, int] = {
+	"none": Wall.NONE, "back": Wall.BACK, "left": Wall.LEFT, "right": Wall.RIGHT,
+}
 
 var id: String = ""
 var kind: Kind = Kind.CIRCLE
@@ -47,6 +60,9 @@ var reaction: Reaction = Reaction.BOUNCE
 var x: float = 0.5
 var y: float = 0.5
 var size: float = 0.18
+var wall: Wall = Wall.NONE
+## The base of a wall spot as a fraction of the room's height. A floor spot ignores it.
+var height: float = 0.0
 var gestalt_id: String = ""
 var alt_gestalt_id: String = ""
 
@@ -70,6 +86,16 @@ static func reaction_from_name(name: String) -> Reaction:
 	var value: int = _REACTION_NAMES[key]
 	return value as Reaction
 
+static func wall_name(w: Wall) -> String:
+	return _name_of(_WALL_NAMES, w, "none")
+
+static func wall_from_name(name: String) -> Wall:
+	var key: String = name.strip_edges().to_lower()
+	if not _WALL_NAMES.has(key):
+		return Wall.NONE
+	var value: int = _WALL_NAMES[key]
+	return value as Wall
+
 func to_dict() -> Dictionary:
 	return {
 		"id": id,
@@ -78,6 +104,8 @@ func to_dict() -> Dictionary:
 		"x": x,
 		"y": y,
 		"size": size,
+		"wall": wall_name(wall),
+		"height": height,
 		"gestalt": gestalt_id,
 		"alt_gestalt": alt_gestalt_id,
 	}
@@ -98,6 +126,8 @@ static func from_dict(d: Dictionary) -> Spot:
 	s.x = clampf(JsonValue.to_float(d.get("x"), 0.5), 0.0, 1.0)
 	s.y = clampf(JsonValue.to_float(d.get("y"), 0.5), 0.0, 1.0)
 	s.size = clampf(JsonValue.to_float(d.get("size"), 0.18), 0.05, 0.6)
+	s.wall = wall_from_name(JsonValue.to_text(d.get("wall"), "none"))
+	s.height = clampf(JsonValue.to_float(d.get("height"), 0.0), 0.0, 0.9)
 	return s
 
 static func _name_of(names: Dictionary[String, int], value: int, fallback: String) -> String:

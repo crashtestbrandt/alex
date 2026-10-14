@@ -19,6 +19,16 @@ const DIR: String = "res://styles"
 @export var surface: Color = Color("ffffff")
 @export var accent: Color = Color("2f6f8f")
 @export var text: Color = Color("1e2a32")
+## The materials a room's objects are built from (ObjectRecipes). Vertex colors, no texture.
+@export_group("Room materials")
+@export var wood: Color = Color(0.62, 0.45, 0.30)
+@export var cloth: Color = Color(0.86, 0.80, 0.70)
+@export var metal: Color = Color(0.70, 0.72, 0.75)
+@export var glass: Color = Color(0.72, 0.85, 0.93)
+@export var water: Color = Color(0.50, 0.76, 0.90)
+@export var floor_color: Color = Color(0.80, 0.72, 0.60)
+@export var wall_color: Color = Color(0.93, 0.91, 0.86)
+@export_group("")
 ## Multiplies every font size. 1.0 is a 24 px tile label.
 @export_range(0.5, 3.0, 0.05) var font_scale: float = 1.0
 @export var motion: Motion = Motion.FULL

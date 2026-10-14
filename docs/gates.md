@@ -25,8 +25,8 @@ Suites are hand-rolled, no GUT or GdUnit4. `tests/run_unit_tests.gd` discovers t
 | lint | `tools/lint-gdscript.sh`: import, then load the main scene; fail on any script error. |
 | test | `tests/run_unit_tests.gd`. |
 
-`just check` runs the same three locally, then the headless scene probes (`just room-probe`). A probe stays
-out of the PR gate. `just lint` also loads every `tools/instr/*.gd` so a probe that does not compile fails
+`just check` runs the same three locally, then the headless scene probes (`just room-probe`, which picks,
+taps, walks the views and idles back; docs/geometry.md "Gates"). A probe stays out of the PR gate. `just lint` also loads every `tools/instr/*.gd` so a probe that does not compile fails
 there rather than at a run.
 
 ## Doc size caps
