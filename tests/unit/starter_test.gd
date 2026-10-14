@@ -30,6 +30,7 @@ func test_home_routines_has_a_room_to_explore() -> void:
 	var s: Starter = Starter.find("home_routines")
 	assert_not_null(s, "present")
 	assert_eq(s.rooms.size(), 1, "one room")
+	assert_eq(s.rooms[0].title, "Explore", "the room is titled for the learner's Explore pill")
 	assert_true(s.rooms[0].spots.size() >= 6, "a handful of spots")
 
 func test_home_routines_is_mitigable() -> void:

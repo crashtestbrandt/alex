@@ -4,7 +4,7 @@ class_name Gestalt
 ## came from, what it does for the child, and the recording that voices it.
 ##
 ## Authoring text marks chunk boundaries with `|`: "Let's go | to the park" is two chunks. The chunks are
-## what the remix board recombines and what the tile animation pulls apart (docs/design.md). Text with no
+## what the remix board recombines and what the tile and the caption mark in turn (docs/design.md). Text with no
 ## bar is one chunk, which is right for a Stage 1 gestalt that should stay whole.
 
 ## What the gestalt does for the child, in the adults' words.

@@ -99,7 +99,12 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   recording exists. Never make the synthetic voice the better experience.
 - **Gestalts are authored with `|` chunk marks** (`Gestalt.from_text`). The chunks are the mitigation
   model; a Stage 1 gestalt with no bar stays whole, on purpose.
+- **A chunk's color is keyed by its text alone** (`ChunkColors`, docs/ui.md "Chunk colors"). It carries
+  identity, never a judgment. Every chunk on screen is a `ChunkRow` pill, and its text keeps the preset's
+  text color.
 - **A stage is optional, informs the caregiver only, and never appears on the learner's screen.**
+- **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
+  in profile data and off the learner's screen.
 - **Adult screens sit behind a `HoldButton`.** A stray tap never leaves the board.
 - **Motion respects the style's `motion` setting.** Every tween multiplies by `Style.motion_scale()` and
   skips at zero.
@@ -123,7 +128,7 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   (`tools/check-export-presets.sh`).
 - **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
   preset also carries the room's materials (`wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`,
-  `wall_color`).
+  `wall_color`) and the `chunk_palette`. A palette color carries `text` at 4.5:1 (`style_preset_test.gd`).
 
 ## Gates (docs/gates.md)
 

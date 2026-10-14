@@ -1,13 +1,15 @@
 extends Control
 ## Room probe: seed a profile from the home starter, open it in the real main scene, pick every spot through
 ## its own screen point, tap it twice, move the camera through every view, turn it past its limits, let it
-## idle back to the front, and switch to the board. Runs headless (`just room-probe`); it needs the live scene
-## tree, which is why it is a probe and not a unit suite (docs/gates.md). Prints ROOM-PROBE PASS or FAIL
-## and exits with the matching code. The profile it makes is deleted on the way out.
+## idle back to the front, and switch to Words and back on the strip. Runs headless (`just room-probe`); it
+## needs the live scene tree, which is why it is a probe and not a unit suite (docs/gates.md). Prints
+## ROOM-PROBE PASS or FAIL and exits with the matching code. The profile it makes is deleted on the way out.
 ##
 ## The root is a Control so the window's theme reaches the home screen.
 
 const _MAIN: PackedScene = preload("res://scenes/main.tscn")
+const _ROOM_TITLE: String = "Bedroom"
+const _BOARD_TITLE: String = "Favorites"
 
 var _failures: PackedStringArray = PackedStringArray()
 
@@ -29,6 +31,10 @@ func _run() -> void:
 	if p == null:
 		_finish(repo, "")
 		return
+	# Titles the strip must never show.
+	p.rooms[0].title = _ROOM_TITLE
+	p.boards[0].title = _BOARD_TITLE
+	repo.save_profile(p)
 	var main: Main = _MAIN.instantiate() as Main
 	add_child(main)
 	await get_tree().process_frame
@@ -43,6 +49,7 @@ func _run() -> void:
 	_check(home.visible, "home is shown after open_profile")
 	_check(room_view.visible, "the room is the first screen")
 	_check(room_view.size.x > 100.0 and room_view.size.y > 100.0, "the room view has a size (%s)" % room_view.size)
+	_check_strip(home, p)
 
 	var safe: Rect2 = room_view.safe_rect()
 	_check(safe.position.y > 40.0 and safe.end.y < room_view.size.y - 40.0, "floating controls leave a band (%s of %s)" % [safe, room_view.size])
@@ -138,15 +145,76 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(room_view.view() == CameraFraming.View.FRONT, "an idle view returns to the front")
 
-	home.show_board(p.boards[0])
+	home.mode_button(ChildHome.Mode.WORDS).pressed.emit()
 	await get_tree().process_frame
 	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
-	_check(grid.visible and not room_view.visible, "the board replaces the room")
-	_check(grid.get_child_count() == p.boards[0].gestalt_ids.size(), "one tile per board gestalt (%d)" % grid.get_child_count())
+	_check(grid.visible and not room_view.visible, "Words replaces the room")
+	_check(grid.get_child_count() == p.words_gestalts().size(), "one tile per Words gestalt (%d)" % grid.get_child_count())
+	_check(home.mode_button(ChildHome.Mode.WORDS).button_pressed and not home.mode_button(ChildHome.Mode.EXPLORE).button_pressed, "Words is the pressed pill")
+	home.mode_button(ChildHome.Mode.EXPLORE).pressed.emit()
+	await get_tree().process_frame
+	_check(room_view.visible and not grid.visible, "Explore brings the room back")
+	_check(home.mode_button(ChildHome.Mode.EXPLORE).button_pressed, "Explore is the pressed pill again")
+	await _check_chunks(home, room_view)
+	home.show_words()
+	await get_tree().process_frame
 
 	await _check_name(home, p)
 	await _check_cleanup(home, p)
 	_finish(repo, p.id)
+
+## A chunk is the same color in the caption and on a tile. The spoken chunk grows at full motion and
+## brightens, at its own size, at motion NONE.
+func _check_chunks(home: ChildHome, room_view: RoomView) -> void:
+	var door: SpotBody = room_view.body("door")
+	room_view.tap(door)
+	await get_tree().create_timer(0.2).timeout
+	var caption: ChunkRow = room_view.caption_row()
+	_check(caption != null, "the door's caption is a chunk row")
+	if caption == null:
+		return
+	var caption_pills: Array[ChunkRow.Pill] = caption.pills()
+	_check(caption_pills.size() == 2 and caption_pills[0].text == "Let's go", "the caption holds the door's chunks")
+	_check(caption.get_parent().get_child_count() == 1 and caption_pills[0].relief() < 0.0, "the caption is bare pills with the style's relief")
+	for pill: ChunkRow.Pill in caption_pills:
+		_check(pill.color() == ChunkColors.color_for(pill.text, Style.current.chunk_palette), "caption '%s' takes its text's color" % pill.text)
+		_check(pill.fill() == pill.color(), "caption '%s' keeps its color at full motion" % pill.text)
+	_check(caption_pills[0].is_spoken() and caption_pills[0].body_scale().x > 1.01, "the spoken chunk grows (%s)" % caption_pills[0].body_scale())
+	_check(not caption_pills[1].is_spoken() and caption_pills[1].body_scale().is_equal_approx(Vector2.ONE), "the next chunk waits at rest")
+
+	home.show_words()
+	await get_tree().process_frame
+	var tile: GestaltTile = home._tiles.get("lets_go_in_the_car", null)
+	_check(tile != null, "the car tile is in Words")
+	if tile == null:
+		return
+	var tile_pill: ChunkRow.Pill = tile.chunk_row().pills()[0]
+	_check(tile_pill.text == "Let's go" and tile_pill.fill() == caption_pills[0].color(), "\"Let's go\" is one color on the caption and the tile")
+	_check(tile_pill.relief() == 0.0, "a tile's pills sit flat")
+
+	var previous: StylePreset = Style.current
+	Style.apply(StylePreset.load_by_id("quiet"))
+	await get_tree().process_frame
+	tile = home._tiles.get("lets_go_in_the_car", null)
+	tile_pill = tile.chunk_row().pills()[0]
+	tile_pill.set_spoken(true)
+	_check(tile_pill.fill() == ChunkColors.spoken(tile_pill.color()) and tile_pill.body_scale() == Vector2.ONE, "at motion NONE the spoken chunk brightens and keeps its size")
+	tile_pill.set_spoken(false)
+	_check(tile_pill.fill() == tile_pill.color(), "at rest it returns to its color")
+	Style.apply(previous)
+	home.show_explore()
+	await get_tree().create_timer(0.3).timeout
+
+## The strip reads Explore then Words, whatever the room and the board are called.
+func _check_strip(home: ChildHome, p: Profile) -> void:
+	var strip: PillBar = home.get_node("%ModeStrip") as PillBar
+	_check(strip.visible, "the strip shows for a profile with a room and words")
+	var labels: PackedStringArray = PackedStringArray()
+	for button: SdfButton in strip.items():
+		labels.push_back(button.text)
+	_check(labels == PackedStringArray(["Explore", "Words"]), "the strip reads Explore, Words (%s)" % ", ".join(labels))
+	_check(home.mode_button(ChildHome.Mode.EXPLORE).button_pressed, "Explore is pressed on open")
+	_check(p.rooms[0].title == _ROOM_TITLE and p.boards[0].title == _BOARD_TITLE, "the room and board keep their titles in the profile")
 
 func _check_name(home: ChildHome, p: Profile) -> void:
 	var title: HoldButton = home.get_node("%Title") as HoldButton
