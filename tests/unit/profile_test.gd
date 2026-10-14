@@ -107,4 +107,37 @@ func test_v1_migration_preserves_existing_recordings() -> void:
 	assert_eq(back.gestalts[0].recording, "a.wav", "familiar recordings preserved")
 	assert_eq(back.rooms[0].to_dict(), p.rooms[0].to_dict(), "room configuration preserved")
 	assert_eq(old["schema"], 1, "migration does not mutate its input")
-	assert_eq(back.to_dict()["schema"], 2, "next save writes version 2")
+	assert_eq(back.to_dict()["schema"], Profile.SCHEMA_VERSION, "next save writes the current version")
+	assert_true(back.scenes.is_empty(), "a version 1 profile with no starter has no scene")
+
+func test_v2_migration_records_the_starter_as_the_scene() -> void:
+	var p: Profile = _sample()
+	p.starter_id = "home_routines"
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 2
+	old.erase("scenes")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 2 loads")
+	assert_eq(back.scenes, PackedStringArray(["home_routines"]), "the starter is its one scene")
+	assert_eq(old["schema"], 2, "migration does not mutate its input")
+	var blank: Dictionary = p.to_dict()
+	blank["schema"] = 2
+	blank.erase("scenes")
+	blank["starter"] = ""
+	assert_true(Profile.from_dict(blank).scenes.is_empty(), "a blank start has no scene")
+
+func test_scenes_round_trip_once_each() -> void:
+	var p: Profile = _sample()
+	p.scenes = PackedStringArray(["home_routines", "bath_time"])
+	var back: Profile = Profile.from_dict(p.to_dict())
+	assert_eq(back.scenes, PackedStringArray(["home_routines", "bath_time"]), "scenes survive the trip in order")
+	assert_true(back.has_scene("bath_time") and not back.has_scene("garden"), "has_scene reads the list")
+	var d: Dictionary = p.to_dict()
+	d["scenes"] = ["home_routines", "home_routines", "", " "]
+	assert_eq(Profile.from_dict(d).scenes, PackedStringArray(["home_routines"]), "a repeat and a blank are dropped")
+
+func test_gestalt_by_text_ignores_marks_and_casing() -> void:
+	var p: Profile = _sample()
+	assert_eq(p.gestalt_by_text("Let's go | outside").id, "a", "the authored form")
+	assert_eq(p.gestalt_by_text("let's GO outside").id, "a", "the spoken form, any casing")
+	assert_null(p.gestalt_by_text("Let's go inside"), "another phrase is not it")

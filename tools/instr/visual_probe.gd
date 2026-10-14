@@ -186,6 +186,13 @@ func _run() -> void:
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()
 			_inside(picker.get_node("%StyleBar") as Control, screen, "existing profile look choices")
+			var scene_rows: Control = picker.get_node("%SceneRows") as Control
+			_check(scene_rows.get_child_count() >= 2, "every shipped scene is listed (%d)" % scene_rows.get_child_count())
+			sheet.ensure_control_visible(scene_rows)
+			await _settle()
+			_inside(scene_rows, screen, "scene choices")
+			sheet.ensure_control_visible(create)
+			await _settle()
 			_inside(create, screen, "save look reachable")
 			_shot("profile-look")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()

@@ -131,6 +131,9 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **Starter packs are JSON under `starters/`**, written for non-developers. `starter_test.gd` checks every
   board names gestalts the pack holds. Every export preset includes `starters/*.json`
   (`tools/check-export-presets.sh`).
+- **A profile adds a pack as a scene** (`Starter.add_to`, docs/profiles.md "Adding a scene"). Copied ids are
+  prefixed with the pack id, a phrase the bank already says is reused rather than copied, and a pack is
+  added once. The profile never reads the pack again.
 - **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
   preset also carries the room's materials (`wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`,
   `wall_color`) and the `chunk_palette`. A palette color carries `text` at 4.5:1 (`style_preset_test.gd`).

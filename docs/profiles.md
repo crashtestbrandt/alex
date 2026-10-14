@@ -15,13 +15,14 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates version 1 to version 2 before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 and 2 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
 | `stage` | `NlaStage`, 0 for not staged. Informs the adults; gates nothing. |
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
+| `scenes` | Every pack the profile holds, the starter first, in the order added. Added in schema 3. |
 | `gestalts` | The bank. See below. |
 | `rooms` | Explorable screens of spots. The first is the learner's Explore. See below. |
 | `boards` | Lists of gestalt ids. Together they are the learner's Words tiles (docs/ui.md "The mode strip"). |
@@ -78,6 +79,23 @@ JSON under `starters/`, one file per pack, the same gestalt and board rows as a 
 A profile **copies** the pack at creation (`Starter.seed`) and never reads it again. Editing a pack changes
 nothing for an existing child. `starter_test.gd` checks every shipped pack parses and that every board names
 gestalts the pack holds.
+
+`blank`, `home_routines` (a bedroom) and `bath_time` (a bathroom) ship. A pack with at least one gestalt is
+a scene the adults' screen offers.
+
+### Adding a scene
+
+Edit on the adults' screen lists every shipped scene with Add. `Starter.add_to` copies the pack into the
+profile and records its id in `scenes`:
+
+- Every copied gestalt, room and board id is prefixed with the pack id: `bath_time.lets_get_in_the_tub`.
+  A gestalt id names a recording file, so the separator is a dot.
+- A phrase the bank already says, by its chunk key, is not copied. The pack's spots and boards point at the
+  bank's own gestalt, so one recording serves every scene that says the phrase.
+- A pack is added once. A second Add changes nothing.
+- A pack carries no recordings. A family's recordings never enter the repository.
+- The bank is the union, so every added scene's phrases are in Words and in Build.
+- Explore shows the first room until room choice lands (docs/ui.md "The mode strip").
 
 Packs are read with `DirAccess` at runtime. **Every export preset includes `starters/*.json`**, so a build
 ships the packs under any export mode (docs/exports.md).
