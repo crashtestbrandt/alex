@@ -49,8 +49,8 @@ func _ready() -> void:
 	_shape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_shape)
 	move_child(_shape, 0)
-	button_down.connect(_on_down)
-	button_up.connect(_on_up)
+	button_down.connect(_on_shape_down)
+	button_up.connect(_on_shape_up)
 	mouse_entered.connect(_on_hover.bind(true))
 	mouse_exited.connect(_on_hover.bind(false))
 	toggled.connect(_on_toggled)
@@ -92,12 +92,13 @@ func refresh() -> void:
 	_shape.border_color = preset.accent
 	_shape.relief = 0.0 if quiet else -1.0
 
-func _on_down() -> void:
+# Named for the shape so a subclass with its own press handlers, HoldButton, never overrides these.
+func _on_shape_down() -> void:
 	_down = true
 	refresh()
 	_animate_press(1.0)
 
-func _on_up() -> void:
+func _on_shape_up() -> void:
 	_down = false
 	refresh()
 	_animate_press(0.0)
