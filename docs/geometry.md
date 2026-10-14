@@ -114,8 +114,9 @@ Input rules (`RoomView._gui_input`):
 
 Framing (`CameraFraming`, pure):
 
+- Native mobile safe bounds constrain the object frame, captions, and view widget. A side cutout shifts the camera frame horizontally. The full-screen viewport keeps its aspect ratio.
 - `points_extent` fits the eight corners of every object's bounds and the floor footprint into the visible band.
-- The calculation includes perspective depth, the asymmetric screen-space band, and the camera's vertical offset.
+- The calculation includes perspective depth, the asymmetric screen-space band, and the camera's horizontal and vertical offsets.
 - Object bounds take priority over projected touch size. The nearest-object picking radius supplies the touch floor.
 - `perspective_distance` turns the extent into a camera distance. `camera_transform` uses a continuous up vector through the orbit.
 - Orthographic silhouette helpers remain available for a future editor.

@@ -27,6 +27,7 @@ var safe_top_px: float = 0.0:
 		if is_node_ready():
 			_layout()
 
+var _device_safe: Rect2 = Rect2()
 var _profile: Profile = null
 var _room: Room = null
 var _bodies: Dictionary[String, SpotBody] = {}
@@ -126,12 +127,25 @@ func wall_visible(w: Spot.Wall) -> bool:
 	var wall: Node3D = _walls.get(w, null)
 	return wall != null and wall.visible
 
-## The band the room is framed into: this control minus the floating controls above and below.
+func set_safe_area(rect: Rect2) -> void:
+	_device_safe = rect
+	_clear_captions()
+	_cancel_press()
+	_layout()
+
+func device_safe_rect() -> Rect2:
+	var full: Rect2 = Rect2(Vector2.ZERO, size)
+	var clipped: Rect2 = _device_safe.intersection(full)
+	return clipped if clipped.has_area() else full
+
+## The device-safe rectangle minus the floating controls above and below.
 func safe_rect() -> Rect2:
-	var bottom: float = 0.0
+	var safe: Rect2 = device_safe_rect()
+	var top: float = maxf(safe.position.y, safe_top_px)
+	var bottom: float = safe.end.y
 	if _widget.visible:
-		bottom = _widget.size.y + 2.0 * WIDGET_MARGIN
-	return Rect2(0.0, safe_top_px, size.x, maxf(size.y - safe_top_px - bottom, 1.0))
+		bottom -= _widget.size.y + 2.0 * WIDGET_MARGIN
+	return Rect2(safe.position.x, top, safe.size.x, maxf(bottom - top, 1.0))
 
 ## Where a body's center falls on this control.
 func screen_point(b: SpotBody) -> Vector2:
@@ -154,6 +168,8 @@ func screen_bounds(b: SpotBody) -> Rect2:
 ## The body under a point on this control, or null. The ray is traced through every body's distance field;
 ## when it hits nothing, the nearest body whose center is within half the touch floor is taken instead.
 func pick_at(point: Vector2) -> SpotBody:
+	if not device_safe_rect().has_point(point):
+		return null
 	var all: Array[SpotBody] = bodies()
 	if all.is_empty():
 		return null
@@ -282,6 +298,9 @@ func _gui_input(event: InputEvent) -> void:
 		var button: InputEventMouseButton = event
 		if button.button_index != MOUSE_BUTTON_LEFT:
 			return
+		if not device_safe_rect().has_point(button.position):
+			_cancel_press()
+			return
 		if button.pressed:
 			_press_pos = button.position
 			_press_body = pick_at(button.position)
@@ -298,6 +317,9 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 	elif event is InputEventMouseMotion and _down_for >= 0.0:
 		var motion: InputEventMouseMotion = event
+		if not device_safe_rect().has_point(motion.position):
+			_cancel_press()
+			return
 		if not _dragging and motion.position.distance_to(_press_pos) > DRAG_PX:
 			_dragging = true
 			# A drag that started on an object cancels it; a drag on empty room turns the view if allowed.
@@ -381,6 +403,7 @@ func _apply_camera() -> void:
 	_camera.fov = CameraFraming.FOV_DEG
 	_camera.transform = CameraFraming.camera_transform(_target(), _azimuth, _elevation, distance)
 	var safe: Rect2 = safe_rect()
+	_camera.h_offset = -CameraFraming.center_offset(safe.get_center().x - size.x / 2.0, size.y, _extent)
 	_camera.v_offset = CameraFraming.center_offset(safe.get_center().y - size.y / 2.0, size.y, _extent)
 	for w: int in _walls.keys():
 		var wall: Spot.Wall = w as Spot.Wall
@@ -398,11 +421,12 @@ func _target() -> Vector3:
 ## The viewport fills the control edge to edge; the widget floats over its bottom right corner, and the camera
 ## frames the room into the band the floating controls leave.
 func _layout() -> void:
-	_widget.fit_width(maxf(size.x - WIDGET_MARGIN * 2.0, 1.0))
+	var safe: Rect2 = device_safe_rect()
+	_widget.fit_width(maxf(safe.size.x - WIDGET_MARGIN * 2.0, 1.0))
 	_widget.reset_size()
 	_container.position = Vector2.ZERO
 	_container.size = size
-	_widget.position = Vector2(size.x - _widget.size.x - WIDGET_MARGIN, size.y - _widget.size.y - WIDGET_MARGIN)
+	_widget.position = safe.end - _widget.size - Vector2.ONE * WIDGET_MARGIN
 	_extent = _extent_for(_azimuth, _elevation)
 	_apply_camera()
 

@@ -76,19 +76,21 @@ func test_perspective_points_fit_asymmetric_safe_bands() -> void:
 		points.push_back(box.get_endpoint(corner))
 	var target: Vector3 = Vector3(0.0, 0.924, 0.0)
 	for viewport: Vector2 in [Vector2(640, 1385), Vector2(1385, 640), Vector2(1280, 800), Vector2(1920, 1080)]:
-		var safe: Rect2 = Rect2(16.0, 160.0, viewport.x - 32.0, viewport.y - 340.0)
-		for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
-			var angles: Vector2 = CameraFraming.view_angles(view)
-			var extent: float = CameraFraming.points_extent(points, target, angles.x, angles.y, viewport, safe)
-			var distance: float = CameraFraming.perspective_distance(extent, CameraFraming.FOV_DEG)
-			var direction: Vector3 = CameraFraming.orbit_direction(angles.x, angles.y)
-			var up: Vector3 = CameraFraming.orbit_up(angles.x, angles.y)
-			var right: Vector3 = up.cross(direction)
-			var offset: float = CameraFraming.center_offset(safe.get_center().y - viewport.y / 2.0, viewport.y, extent)
-			for point: Vector3 in points:
-				var delta: Vector3 = point - target
-				var depth: float = distance - delta.dot(direction)
-				assert_true(depth > 0.0, "point is in front of camera")
-				var scale_px: float = viewport.y / (2.0 * tan(deg_to_rad(CameraFraming.FOV_DEG) / 2.0) * depth)
-				var screen: Vector2 = viewport / 2.0 + Vector2(delta.dot(right), offset - delta.dot(up)) * scale_px
-				assert_true(safe.grow(0.01).has_point(screen), "perspective corner fits %s %s" % [viewport, view])
+		for edges: Vector2 in [Vector2(16, 32), Vector2(120, 32), Vector2(240, 32), Vector2(32, 240)]:
+			var safe: Rect2 = Rect2(edges.x, 160.0, viewport.x - edges.x - edges.y, viewport.y - 340.0)
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+				var angles: Vector2 = CameraFraming.view_angles(view)
+				var extent: float = CameraFraming.points_extent(points, target, angles.x, angles.y, viewport, safe)
+				var distance: float = CameraFraming.perspective_distance(extent, CameraFraming.FOV_DEG)
+				var direction: Vector3 = CameraFraming.orbit_direction(angles.x, angles.y)
+				var up: Vector3 = CameraFraming.orbit_up(angles.x, angles.y)
+				var right: Vector3 = up.cross(direction)
+				var offset: float = CameraFraming.center_offset(safe.get_center().y - viewport.y / 2.0, viewport.y, extent)
+				var offset_x: float = CameraFraming.center_offset(safe.get_center().x - viewport.x / 2.0, viewport.y, extent)
+				for point: Vector3 in points:
+					var delta: Vector3 = point - target
+					var depth: float = distance - delta.dot(direction)
+					assert_true(depth > 0.0, "point is in front of camera")
+					var scale_px: float = viewport.y / (2.0 * tan(deg_to_rad(CameraFraming.FOV_DEG) / 2.0) * depth)
+					var screen: Vector2 = viewport / 2.0 + Vector2(delta.dot(right) + offset_x, offset - delta.dot(up)) * scale_px
+					assert_true(safe.grow(0.01).has_point(screen), "perspective corner fits %s %s" % [viewport, view])

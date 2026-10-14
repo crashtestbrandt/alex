@@ -124,7 +124,7 @@ static func points_extent(points: Array[Vector3], target: Vector3, azimuth: floa
 	var right: Vector3 = up.cross(direction)
 	var tangent: float = tan(deg_to_rad(FOV_DEG) / 2.0)
 	var height: float = maxf(viewport.y, 1.0)
-	var half_width: float = maxf(minf(safe.end.x - viewport.x / 2.0, viewport.x / 2.0 - safe.position.x), 1.0)
+	var half_width: float = maxf(safe.size.x / 2.0, 1.0)
 	var half_band: float = maxf(safe.size.y / 2.0, 1.0)
 	var distance: float = 0.1
 	for point: Vector3 in points:
@@ -132,7 +132,8 @@ static func points_extent(points: Array[Vector3], target: Vector3, azimuth: floa
 		var depth: float = delta.dot(direction)
 		var x: float = delta.dot(right)
 		var y: float = delta.dot(up)
-		distance = maxf(distance, depth + absf(x) * height / (2.0 * tangent * half_width))
+		distance = maxf(distance, (x * height / (2.0 * tangent) + (safe.end.x - viewport.x / 2.0) * depth) / half_width)
+		distance = maxf(distance, (-x * height / (2.0 * tangent) + (viewport.x / 2.0 - safe.position.x) * depth) / half_width)
 		distance = maxf(distance, (y * height / (2.0 * tangent) + (height / 2.0 - safe.position.y) * depth) / half_band)
 		distance = maxf(distance, (-y * height / (2.0 * tangent) + (safe.end.y - height / 2.0) * depth) / half_band)
 	return distance * 2.0 * tangent

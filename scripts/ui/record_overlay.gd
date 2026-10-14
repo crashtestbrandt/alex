@@ -22,6 +22,7 @@ const MIN_TAKE_SECONDS: float = 0.3
 @onready var _review_row: HFlowContainer = %ReviewRow
 @onready var _recorder: Recorder = %Recorder
 @onready var _preview: AudioStreamPlayer = %Preview
+@onready var _sheet: SdfSheet = %Center
 
 var _gestalt: Gestalt = null
 var _profile: Profile = null
@@ -54,6 +55,9 @@ func open(g: Gestalt, p: Profile) -> void:
 		_record_button.disabled = true
 		(_record_button as SdfButton).refresh()
 	_focus_controls()
+
+func set_safe_area(rect: Rect2) -> void:
+	SafeArea.fit_control(_sheet, rect)
 
 func close() -> void:
 	if _recorder.is_recording():

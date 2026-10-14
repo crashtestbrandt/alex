@@ -179,6 +179,7 @@ func _run() -> void:
 			_shot("new-profile")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 			print("VISUAL checked %s" % _label)
+	await _safe_areas(main, home, picker, overlay, profile)
 	await _profile_looks(main, picker, profile)
 	_check(_profile_looks_complete, "profile look flow completed")
 	await _short_picker(main, picker)
@@ -357,3 +358,116 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	_shot("picker")
 	for id: String in fixtures:
 		ProfileStore.repo.delete_profile(id)
+
+## Pixel fixtures exercise the same conversion as DisplayServer, including a same-size 180-degree turn.
+func _safe_areas(main: Main, home: ChildHome, picker: ProfilePicker, overlay: RecordOverlay, profile: Profile) -> void:
+	var sizes: Array[Vector2i] = [Vector2i(390, 844), Vector2i(393, 852), Vector2i(844, 390), Vector2i(844, 390), Vector2i(390, 844), Vector2i(1024, 768)]
+	var natives: Array[Rect2] = [Rect2(0, 47, 390, 763), Rect2(0, 59, 393, 759), Rect2(59, 0, 785, 369), Rect2(0, 0, 785, 369), Rect2(0, 0, 390, 844), Rect2(0, 24, 1024, 724)]
+	var cutouts: Array[Rect2] = [Rect2(95, 0, 200, 34), Rect2(134, 11, 125, 37), Rect2(0, 95, 34, 200), Rect2(810, 95, 34, 200), Rect2(-10, -10, 1, 1), Rect2(-10, -10, 1, 1)]
+	var names: PackedStringArray = ["notch", "island", "landscape-left", "landscape-right", "rounded", "tablet"]
+	var mask: ColorRect = ColorRect.new()
+	mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var material: ShaderMaterial = ShaderMaterial.new()
+	material.shader = load("res://tools/instr/safe_screen.gdshader") as Shader
+	mask.material = material
+	add_child(mask)
+	mask.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var room: RoomView = home.get_node("%RoomView") as RoomView
+	for style: String in ["calm", "bold", "quiet"]:
+		profile.style_id = style
+		ProfileStore.save_profile(profile)
+		for index: int in sizes.size():
+			_label = "safe-%s-%s" % [style, names[index]]
+			get_window().size = sizes[index]
+			await _settle()
+			main.set_safe_area_override(natives[index])
+			material.set_shader_parameter("screen_size", Vector2(sizes[index]))
+			var cutout: Rect2 = cutouts[index]
+			material.set_shader_parameter("cutout", Vector4(cutout.position.x, cutout.position.y, cutout.size.x, cutout.size.y))
+			main.open_profile(profile.id)
+			await _settle()
+			var safe: Rect2 = main.safe_area_rect()
+			var transform: Transform2D = get_viewport().get_final_transform()
+			_check(natives[index].grow(1.0).encloses(transform * safe), "logical safe bounds fit native pixels")
+			_check(absf(transform.get_scale().x - transform.get_scale().y) < 0.001, "safe layout preserves uniform scale")
+			_check(room.get_global_rect().is_equal_approx(main.get_global_rect()), "world remains edge to edge")
+			_inside(home.get_node("%TopBar") as Control, safe, "header avoids cutouts")
+			_inside(home.get_node("%PlaceStrip") as Control, safe, "places avoid cutouts")
+			_inside(room.get_node("%ViewWidget") as Control, safe, "views avoid gesture area")
+			_square(home.get_node("%ProfilesButton") as Control, "profile control")
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+				room.set_view(view, false)
+				await _settle()
+				for body: SpotBody in room.bodies():
+					_check(room.safe_rect().grow(1.0).encloses(room.screen_bounds(body)), "object avoids cutouts in view %s" % view)
+			room.set_view(CameraFraming.View.FRONT, false)
+			_check(room.pick_at(Vector2.ZERO) == null, "unsafe edge cannot pick an object")
+			room.show_chunks(room.body("window").spot, Gestalt.from_text("safe", "Let's look | through the window"), 20.0)
+			await _settle()
+			var captions: Control = room.get_node("%Captions") as Control
+			_inside(captions.get_child(0) as Control, safe, "caption avoids cutouts")
+			_shot("room")
+			home.show_board(profile.boards[0])
+			await _settle()
+			_inside(home.get_node("%Stage") as Control, safe, "board scroll area avoids cutouts")
+			_shot("board")
+			overlay.open(Gestalt.from_text("safe", "Let's go outside together and look at the trees"), profile)
+			await _settle()
+			var record_sheet: ScrollContainer = overlay.get_node("%Center") as ScrollContainer
+			_inside(record_sheet, safe, "recording sheet avoids cutouts")
+			record_sheet.ensure_control_visible(overlay.get_node("%CancelButton") as Control)
+			await _settle()
+			_inside(overlay.get_node("%CancelButton") as Control, safe, "recording Back remains reachable")
+			_square(overlay.get_node("%RecordButton") as Control, "record control")
+			_shot("record")
+			overlay.close()
+			main.show_picker()
+			await _settle()
+			_inside(picker, safe, "profile picker avoids cutouts")
+			_shot("picker")
+			var card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+			(card.get_child(1) as SdfButton).pressed.emit()
+			await _settle()
+			var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
+			var save: Control = picker.get_node("%CreateButton") as Control
+			sheet.ensure_control_visible(save)
+			await _settle()
+			_inside(save, safe, "Save look remains reachable")
+			_shot("look")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+			(picker.get_node("%NewProfileButton") as SdfButton).pressed.emit()
+			await _settle()
+			sheet.ensure_control_visible(save)
+			await _settle()
+			_inside(save, safe, "Create remains reachable")
+			_shot("create")
+			print("VISUAL checked %s" % _label)
+	# Rotate while a form is still open, then change the notch side without resizing.
+	for index: int in [0, 2, 3]:
+		_label = "safe-open-form-%s" % names[index]
+		get_window().size = sizes[index]
+		await _settle()
+		main.set_safe_area_override(natives[index])
+		await _settle()
+		var create: Control = picker.get_node("%CreateButton") as Control
+		(picker.get_node("Center") as ScrollContainer).ensure_control_visible(create)
+		await _settle()
+		_inside(create, main.safe_area_rect(), "open form reflows on rotation")
+	main.open_profile(profile.id)
+	overlay.open(Gestalt.from_text("rotation", "Let's go outside"), profile)
+	await _settle()
+	for index: int in [0, 2, 3]:
+		_label = "safe-open-recorder-%s" % names[index]
+		get_window().size = sizes[index]
+		await _settle()
+		main.set_safe_area_override(natives[index])
+		await _settle()
+		var back: Control = overlay.get_node("%CancelButton") as Control
+		(overlay.get_node("%Center") as ScrollContainer).ensure_control_visible(back)
+		await _settle()
+		_inside(back, main.safe_area_rect(), "open recorder reflows on rotation")
+	overlay.close()
+	main.clear_safe_area_override()
+	mask.queue_free()
+	await _settle()
+	_check(main.safe_area_rect().is_equal_approx(main.get_global_rect()), "clearing fixture restores desktop bounds")

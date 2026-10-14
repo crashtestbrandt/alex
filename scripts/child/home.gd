@@ -15,11 +15,13 @@ const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 @onready var _room_view: RoomView = %RoomView
 @onready var _stage: ScrollContainer = %Stage
 @onready var _column: VBoxContainer = %Column
+@onready var _margin: MarginContainer = %Margin
 @onready var _grid: GridContainer = %Board
 @onready var _profiles_button: HoldButton = %ProfilesButton
 @onready var _speaker: Speaker = %Speaker
 @onready var _record_overlay: RecordOverlay = %RecordOverlay
 
+var _safe_rect: Rect2 = Rect2()
 var _profile: Profile = null
 var _board: Board = null
 var _room: Room = null
@@ -50,6 +52,13 @@ func show_profile(p: Profile) -> void:
 		show_board(p.boards[0])
 	else:
 		show_board(_all_gestalts_board(p))
+
+func set_safe_area(rect: Rect2) -> void:
+	_safe_rect = rect
+	SafeArea.fit_control(_margin, rect)
+	_room_view.set_safe_area(rect)
+	_record_overlay.set_safe_area(rect)
+	_layout_home.call_deferred()
 
 func show_room(r: Room) -> void:
 	_speaker.stop()
@@ -124,13 +133,14 @@ func _sync_room_inset() -> void:
 	_room_view.safe_top_px = maxf(bar_bottom + 16.0, 0.0)
 
 func _layout_home() -> void:
-	var compact: bool = size.x < 900.0 and size.y > size.x * 1.2
+	var available: Vector2 = _safe_rect.size if _safe_rect.has_area() else size
+	var compact: bool = available.x < 900.0 and available.y > available.x * 1.2
 	var parent: Node = _column if compact else _top_bar
 	if _strip.get_parent() != parent:
 		_strip.reparent(parent)
 		parent.move_child(_strip, 1)
 	_strip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_FILL
-	_strip.fit_width(size.x - 48.0 if compact else size.x * 0.55)
+	_strip.fit_width(available.x - 48.0 if compact else available.x * 0.55)
 	_layout_board()
 	_sync_room_inset.call_deferred()
 

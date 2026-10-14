@@ -70,6 +70,11 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 
 - `Main` preserves the window's aspect ratio. `UiGeometry.canvas_size` keeps its shorter logical side at least 640 units.
 - Handheld devices can rotate. Small windows keep large controls without inheriting a landscape layout.
+- Android and iOS use `DisplayServer.get_display_safe_area()`. `SafeArea` converts native window pixels through the inverse canvas transform once.
+- Mobile layouts also reserve 6% of the shorter window side at each edge for rounded corners. Native insets and this minimum overlap; they are not added together.
+- Headers, boards, profile forms, recording sheets, view controls, captions, and room objects stay inside those bounds. Backgrounds and the room viewport remain edge to edge.
+- Insets refresh on resize, focus, and every 250 ms on mobile. A 180° turn or a system-bar change can update them without resizing.
+- Desktop layouts use the full window and their existing control padding.
 - Canvas scaling is uniform. Circular controls and view icons stay square; the 3D viewport keeps the display area's aspect ratio.
 - The profile title truncates within the header. Place choices wrap onto a separate row in narrow portrait windows.
 - Place and view bars select exactly one item. Keyboard focus has a visible border.
@@ -88,6 +93,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - `just layout-probe` checks six viewport shapes in all three styles, all four camera views, caption bounds, tile bounds, and scrolling.
 - The sizes are 390×844, 844×390, 768×1024, 1280×800, 1920×1080, and 640×640.
 - Profile forms also run at 1280×360, 800×240, 640×360, 390×280, and 640×640 in every style. Native wheel input must reach the bottom actions after resizing.
+- Simulated phone and tablet bounds cover a portrait notch, camera island, left/right landscape cutouts, rounded corners, and gesture areas in every style. Probe-only masks make the exclusions visible in captures. Physical-device validation remains separate.
 - A 320×568 stress case checks a long profile name, long place titles, a 30-phrase board, ten additional profiles, native wheel and drag scrolling, scroll-cancelled holds, and recording focus.
 - `just visual-probe` saves room, caption, board, recording, review, and picker screenshots under `user://visual_probe_captures/`.
 - Pass `--capture=<directory>` to the probe to choose a different screenshot directory.
