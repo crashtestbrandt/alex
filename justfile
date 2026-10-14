@@ -102,6 +102,11 @@ export-linux: (_export "--export-release" "Linux" "linux/alex.x86_64")
 exports: export-android export-ios export-macos export-windows export-linux
     tools/check-exports.sh build/{{commit}}
 
+# Export iOS, build it and run it on the paired iPhone or iPad, with its log here (docs/exports.md "Run on a
+# device"). DEVICE is a name from `xcrun devicectl list devices`, needed only when several are paired.
+run-ios DEVICE="":
+    tools/run-ios.sh build/{{commit}} "{{DEVICE}}"
+
 # Export iOS, archive it and upload it for TestFlight (docs/exports.md "TestFlight"). Refuses uncommitted changes.
 testflight:
     tools/testflight.sh build/{{commit}}
