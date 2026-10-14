@@ -103,6 +103,10 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   skips at zero.
 - **Touch targets honor `StylePreset.tile_min_size`.** 160 px is the floor. In the room, picking takes the
   nearest object within half the floor when the ray misses, and the view buttons are the floor square.
+- **Screen-space graphics are distance fields** (docs/ui.md). A button, panel, tile or bar is an `SdfShape`,
+  an icon is an `SdfGlyph` figure, text is MSDF. Corners are concentric, bars are pills, relief comes from the
+  style preset. No `StyleBoxFlat`, no image, no `_draw` polyline on anything a user sees. A new control
+  extends `SdfButton` or `SdfPanel`; a new icon is a figure in `glyph.gdshader` plus a `SdfGlyph.Figure`.
 
 ## Data rules (docs/profiles.md)
 

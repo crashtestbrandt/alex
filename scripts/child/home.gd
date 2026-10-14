@@ -10,7 +10,7 @@ signal profiles_requested
 const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 
 @onready var _title: Label = %Title
-@onready var _strip: HBoxContainer = %PlaceStrip
+@onready var _strip: PillBar = %PlaceStrip
 @onready var _room_view: RoomView = %RoomView
 @onready var _grid: GridContainer = %Board
 @onready var _profiles_button: HoldButton = %ProfilesButton
@@ -21,6 +21,7 @@ var _profile: Profile = null
 var _board: Board = null
 var _room: Room = null
 var _tiles: Dictionary[String, GestaltTile] = {}
+var _places: Dictionary[String, SdfButton] = {}
 var _speaking_spot: Spot = null
 
 func _ready() -> void:
@@ -49,6 +50,7 @@ func show_room(r: Room) -> void:
 	_grid.visible = false
 	_room_view.visible = true
 	_room_view.show_room(_profile, r)
+	_show_place("room:" + r.id)
 
 func show_board(b: Board) -> void:
 	_speaker.stop()
@@ -67,24 +69,34 @@ func show_board(b: Board) -> void:
 		_grid.add_child(tile)
 		_tiles[g.id] = tile
 	_grid.columns = _columns_for(_tiles.size())
+	_show_place("board:" + b.id)
 
 func _build_strip() -> void:
-	for child: Node in _strip.get_children():
-		child.queue_free()
-	if _profile.rooms.size() + _profile.boards.size() < 2:
+	_strip.clear()
+	_places.clear()
+	_strip.visible = _profile.rooms.size() + _profile.boards.size() >= 2
+	if not _strip.visible:
 		return
 	for r: Room in _profile.rooms:
-		var button: Button = Button.new()
+		var button: SdfButton = SdfButton.new()
 		button.text = r.title
-		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(show_room.bind(r))
-		_strip.add_child(button)
+		_strip.add_item(button)
+		_places["room:" + r.id] = button
 	for b: Board in _profile.boards:
-		var button: Button = Button.new()
+		var button: SdfButton = SdfButton.new()
 		button.text = b.title
-		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(show_board.bind(b))
-		_strip.add_child(button)
+		_strip.add_item(button)
+		_places["board:" + b.id] = button
+
+func _show_place(key: String) -> void:
+	var button: SdfButton = _places.get(key, null)
+	if button == null:
+		return
+	button.set_pressed_no_signal(true)
+	for other: SdfButton in _places.values():
+		other.refresh()
 
 ## A profile with nothing to show lists every gestalt it has.
 static func _all_gestalts_board(p: Profile) -> Board:

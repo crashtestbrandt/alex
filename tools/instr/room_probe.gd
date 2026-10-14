@@ -91,8 +91,8 @@ func _run() -> void:
 
 	# Views: the widget offers front, side and top for `camera: views`, and the camera moves to each.
 	_check(widget.visible, "the view widget shows for a views room")
-	var turn: Node = widget.get_child(CameraFraming.View.TURN)
-	_check(turn is Control and not (turn as Control).visible, "turn is hidden until the room allows an orbit")
+	var turn: SdfButton = widget.items()[CameraFraming.View.TURN]
+	_check(not turn.visible, "turn is hidden until the room allows an orbit")
 	var front_pos: Vector3 = room_view.camera_position()
 	room_view.set_view(CameraFraming.View.SIDE, false)
 	_check(room_view.camera_position().x > front_pos.x + 1.0, "the side view stands to the right")
@@ -109,7 +109,7 @@ func _run() -> void:
 	p.rooms[0].camera = Room.Camera.ORBIT
 	home.show_room(p.rooms[0])
 	await get_tree().process_frame
-	_check(turn is Control and (turn as Control).visible, "turn shows for an orbit room")
+	_check(turn.visible, "turn shows for an orbit room")
 	room_view.orbit_by(Vector2(-100000.0, 100000.0))
 	var far: Vector3 = room_view.camera_position()
 	_check(room_view.view() == CameraFraming.View.TURN, "a drag puts the view in turn")

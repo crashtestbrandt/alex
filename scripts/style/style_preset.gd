@@ -36,6 +36,8 @@ const DIR: String = "res://styles"
 ## The smallest a tile can be, in pixels. A touch target for a child with motor delay is larger than a
 ## grown-up's, and 160 is a floor, never a ceiling.
 @export_range(96, 400, 4) var tile_min_size: int = 160
+## How much every shape stands off the screen: the lit rim and the shadow under a button or a panel. 0 is flat.
+@export_range(0.0, 1.0, 0.05) var relief: float = 0.6
 
 ## The preset ids on disk, sorted.
 static func list_ids() -> PackedStringArray:

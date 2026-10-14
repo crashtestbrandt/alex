@@ -12,6 +12,7 @@ text = Color(0.1333, 0.1333, 0.1333, 1)
 font_scale = 1.1
 motion = 2
 corner_radius = 24
+relief = 0.15
 tile_min_size = 200
 wood = Color(0.7, 0.62, 0.55, 1)
 cloth = Color(0.88, 0.86, 0.82, 1)

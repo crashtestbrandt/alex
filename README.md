@@ -30,6 +30,8 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
    phrase, let go, hear it back, keep it. Until you do, the device's own voice fills in.
 3. **Hand it over.**
 
+![The recording overlay: the phrase, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
+
 Everything stays on the device. There is no account, no network and no analytics.
 
 ## Why it is built this way
@@ -83,11 +85,12 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `scripts/speech/` | `Speaker` (a recording, else OS text to speech) and `Recorder` (the microphone). |
 | `scripts/geometry/` | Objects as recipes and the camera math: `Sdf`, `Mesher`, `Primitive`, `Recipe`, `RecipeBuilder`, `ObjectRecipes`, `Picker`, `CameraFraming`, `RoomSpace`. |
 | `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
-| `scripts/ui/` | Adult-facing screens and shared controls: `ProfilePicker`, `RecordOverlay`, `HoldButton`. |
+| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `UiGeometry`. |
+| `shaders/ui/` | `shape.gdshader` and `glyph.gdshader`, the two fields every control is drawn from. |
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
-| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md). |
+| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md). |
 
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.

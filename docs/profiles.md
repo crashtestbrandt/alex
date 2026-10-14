@@ -90,6 +90,7 @@ Packs are read with `DirAccess` at runtime, so **a shipped build needs `*.json` 
 | `motion` | `FULL`, `REDUCED` or `NONE`. Every tween multiplies by `Style.motion_scale()`; zero skips it. |
 | `corner_radius` | Tile and panel corners. |
 | `tile_min_size` | The smallest tile, in pixels. 160 is the floor. |
+| `relief` | How far every shape stands off the screen, 0 flat to 1. The lit rim and the shadow (docs/ui.md). |
 
 `Style.apply` builds a Theme from the preset at runtime and sets it on the root window. There is no theme
 file to keep in step. `calm`, `bold` and `quiet` ship; a fourth is a new `.tres`.

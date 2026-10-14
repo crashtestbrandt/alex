@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/ui/record_overlay.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/speech/recorder.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_panel.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_button.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_glyph.gd" id="5"]
 
 [node name="RecordOverlay" type="Control"]
 layout_mode = 3
@@ -39,6 +42,7 @@ grow_vertical = 2
 [node name="Panel" type="PanelContainer" parent="Center"]
 custom_minimum_size = Vector2(640, 0)
 layout_mode = 2
+script = ExtResource("3")
 
 [node name="Column" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2
@@ -60,9 +64,24 @@ autowrap_mode = 3
 
 [node name="RecordButton" type="Button" parent="Center/Panel/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 140)
+custom_minimum_size = Vector2(170, 170)
 layout_mode = 2
-text = "Hold to record"
+size_flags_horizontal = 4
+focus_mode = 0
+script = ExtResource("4")
+shape = 2
+
+[node name="Glyph" type="Control" parent="Center/Panel/Column/RecordButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5")
+figure = 5
+width_px = 4.0
 
 [node name="ReviewRow" type="HBoxContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true
@@ -75,12 +94,14 @@ alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 100)
 layout_mode = 2
+script = ExtResource("4")
 text = "Keep"
 
 [node name="AgainButton" type="Button" parent="Center/Panel/Column/ReviewRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 100)
 layout_mode = 2
+script = ExtResource("4")
 text = "Try again"
 
 [node name="Status" type="Label" parent="Center/Panel/Column"]
@@ -93,4 +114,7 @@ autowrap_mode = 3
 [node name="CancelButton" type="Button" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("4")
+shape = 1
 text = "Back"
