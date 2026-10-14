@@ -1,11 +1,11 @@
 extends Control
 class_name ProfilePicker
-## The adults' screen: pick a profile, or make one from a starter pack and a style. Everything a child sees
-## is a consequence of what is chosen here (docs/profiles.md). Each profile is one button; the starter and
-## the style are pill bars, so the choice is visible at a glance instead of inside a dropdown. Pressing a
-## style applies it at once, so the screen itself is the preview.
+## The adults' screen opens profiles, creates them from starter packs, and changes their saved looks.
+## Style pills preview immediately. An existing profile changes only when Save is pressed.
 
 signal profile_chosen(profile_id: String)
+
+enum Mode { PICK, CREATE, LOOK }
 
 @onready var _profiles: GridContainer = %Profiles
 @onready var _name_edit: SdfField = %NameEdit
@@ -13,34 +13,80 @@ signal profile_chosen(profile_id: String)
 @onready var _style_bar: PillBar = %StyleBar
 @onready var _create_button: SdfButton = %CreateButton
 @onready var _status: Label = %Status
+@onready var _heading: Label = %Heading
+@onready var _new_button: SdfButton = %NewProfileButton
+@onready var _starter_row: BoxContainer = %StarterRow
+@onready var _style_row: BoxContainer = %StyleRow
+@onready var _actions: Control = %Actions
+@onready var _sheet: SdfSheet = %Center
+@onready var _back_button: SdfButton = %BackButton
 
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
+var _editing_id: String = ""
+var _previous_style: StylePreset = null
+var _mode: Mode = Mode.PICK
 
 func _ready() -> void:
 	_create_button.pressed.connect(_on_create)
+	_back_button.pressed.connect(_on_back)
+	_new_button.pressed.connect(_on_new_profile)
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()
+	resized.connect(_layout_profiles)
+	_starter_row.resized.connect(_layout_choices)
+	_style_row.resized.connect(_layout_choices)
+	Style.changed.connect(func(_preset: StylePreset) -> void: _layout_choices.call_deferred())
 	refresh()
 
-## Re-read the profiles on disk: one button each, in the store's order.
+func _layout_profiles() -> void:
+	_profiles.columns = 1
+	_layout_choices.call_deferred()
+
+func _layout_choices() -> void:
+	for row: BoxContainer in [_starter_row, _style_row]:
+		var label: Control = row.get_child(0) as Control
+		var bar: PillBar = row.get_child(1) as PillBar
+		var natural: float = label.get_combined_minimum_size().x + 12.0 + PillBar.PAD_PX * 2.0
+		for button: SdfButton in bar.items():
+			natural += button.get_combined_minimum_size().x + PillBar.GAP_PX
+		row.vertical = row.size.x < natural - PillBar.GAP_PX
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+## Re-read the profiles on disk, with separate actions to open each profile or change its look.
 func refresh() -> void:
+	_editing_id = ""
+	_previous_style = null
 	for child: Node in _profiles.get_children():
 		_profiles.remove_child(child)
 		child.queue_free()
 	var ids: PackedStringArray = ProfileStore.list_ids()
 	for profile_id: String in ids:
 		var p: Profile = ProfileStore.load_profile(profile_id)
+		if p == null:
+			continue
+		var card: HBoxContainer = HBoxContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_theme_constant_override("separation", 12)
+		_profiles.add_child(card)
 		var button: SdfButton = SdfButton.new()
-		button.text = profile_id if p == null else p.display_name
-		button.focus_mode = Control.FOCUS_NONE
+		button.text = p.display_name
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size = Vector2(0, 88)
 		button.pressed.connect(_on_profile_pressed.bind(profile_id))
-		_profiles.add_child(button)
-	_profiles.visible = not ids.is_empty()
-	_status.text = "No profiles yet. Make one below." if ids.is_empty() else ""
+		card.add_child(button)
+		var edit: SdfButton = SdfButton.new()
+		edit.text = "Look"
+		edit.tooltip_text = "Change look"
+		edit.shape = SdfButton.Shape.PILL
+		edit.quiet = true
+		edit.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		edit.pressed.connect(_on_edit_profile.bind(profile_id))
+		card.add_child(edit)
+	_show_mode(Mode.PICK if _profiles.get_child_count() > 0 else Mode.CREATE)
+	_layout_profiles()
 	_style_bar.set_active(_current_style_index())
 
 func _fill_starters() -> void:
@@ -75,6 +121,62 @@ func _current_style_index() -> int:
 
 func _on_style_pressed(style_id: String) -> void:
 	Style.apply(StylePreset.load_by_id(style_id))
+	_style_bar.set_active(_current_style_index())
+
+func _show_mode(mode: Mode) -> void:
+	_mode = mode
+	_profiles.visible = mode == Mode.PICK
+	_new_button.visible = mode == Mode.PICK
+	_name_edit.visible = mode == Mode.CREATE
+	_starter_row.visible = mode == Mode.CREATE
+	_style_row.visible = mode != Mode.PICK
+	_actions.visible = mode != Mode.PICK
+	_back_button.visible = mode != Mode.PICK and _profiles.get_child_count() > 0
+	_create_button.text = "Save" if mode == Mode.LOOK else "Create"
+	_heading.text = "New profile" if mode == Mode.CREATE else "Choose a profile"
+	_status.hide()
+	_sheet.scroll_vertical = 0
+	_layout_choices.call_deferred()
+
+func _on_new_profile() -> void:
+	_previous_style = Style.current
+	_show_mode(Mode.CREATE)
+	_name_edit.grab_focus()
+
+func _on_edit_profile(profile_id: String) -> void:
+	var profile: Profile = ProfileStore.load_profile(profile_id)
+	if profile == null:
+		return
+	_editing_id = profile_id
+	_previous_style = Style.current
+	_show_mode(Mode.LOOK)
+	_heading.text = "Look for %s" % profile.display_name
+	_on_style_pressed(profile.style_id)
+	_style_bar.items()[_current_style_index()].grab_focus()
+
+func _on_back() -> void:
+	if _previous_style != null:
+		Style.apply(_previous_style)
+	refresh()
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if visible and _mode != Mode.PICK and _back_button.visible and event.is_action_pressed("ui_cancel"):
+		_on_back()
+		get_viewport().set_input_as_handled()
+
+func _save_look(style_id: String) -> void:
+	# Reload before saving so previewing a look cannot overwrite other profile changes.
+	var profile: Profile = ProfileStore.load_profile(_editing_id)
+	if profile == null:
+		_status.text = "Could not open the profile."
+		return
+	profile.style_id = style_id
+	if ProfileStore.save_profile(profile) != OK:
+		_status.text = "Could not save the look. Try again."
+		return
+	var profile_id: String = _editing_id
+	refresh()
+	profile_chosen.emit(profile_id)
 
 func _on_profile_pressed(profile_id: String) -> void:
 	profile_chosen.emit(profile_id)
@@ -83,6 +185,14 @@ func _on_name_submitted(_text: String) -> void:
 	_on_create()
 
 func _on_create() -> void:
+	_status.visible = true
+	var style_id: String = "calm"
+	var style_index: int = _style_bar.active_index()
+	if style_index >= 0 and style_index < _style_ids.size():
+		style_id = _style_ids[style_index]
+	if not _editing_id.is_empty():
+		_save_look(style_id)
+		return
 	var name: String = _name_edit.text.strip_edges()
 	if name.is_empty():
 		_status.text = "Give the profile a name."
@@ -92,10 +202,6 @@ func _on_create() -> void:
 	var starter_index: int = _starter_bar.active_index()
 	if starter_index >= 0 and starter_index < _starters.size():
 		starter = _starters[starter_index]
-	var style_id: String = "calm"
-	var style_index: int = _style_bar.active_index()
-	if style_index >= 0 and style_index < _style_ids.size():
-		style_id = _style_ids[style_index]
 	var p: Profile = ProfileStore.create_profile(name, starter, style_id)
 	if p == null:
 		_status.text = "Could not save the profile. Check the log."

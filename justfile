@@ -61,6 +61,14 @@ doc-size-check:
 room-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_probe.tscn
 
+# Responsive layout, scrolling and hold behavior across all styles and viewport shapes.
+layout-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/visual_probe.tscn
+
+# The same sweep with rendered screenshots under user://visual_probe_captures/.
+visual-probe:
+    "{{godot}}" --audio-driver Dummy --path . tools/instr/visual_probe.tscn -- --capture
+
 # The microphone on a real audio device: record ambient sound, save it, reload it (tools/instr/mic_probe.gd).
 # Windowed, because the dummy audio driver has no capture; out of `check` for the same reason.
 mic-probe:

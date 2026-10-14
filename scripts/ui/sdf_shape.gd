@@ -67,7 +67,7 @@ func _apply() -> void:
 	_material.set_shader_parameter("border_px", border_px)
 	_material.set_shader_parameter("relief", relief if relief >= 0.0 else preset.relief)
 	_material.set_shader_parameter("press", press)
-	_material.set_shader_parameter("shadow", Color(preset.text, 0.28))
+	_material.set_shader_parameter("shadow", Color(0.0, 0.0, 0.0, 0.28))
 	queue_redraw()
 
 func _on_style_changed(_preset: StylePreset) -> void:

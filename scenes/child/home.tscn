@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/ui/pill_bar.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/ui/sdf_glyph.gd" id="7"]
 
+[ext_resource type="Script" path="res://scripts/ui/sdf_scroll.gd" id="scroll"]
+
 [node name="ChildHome" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -31,6 +33,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -44,6 +47,7 @@ theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
 [node name="Column" type="VBoxContainer" parent="Margin"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
@@ -60,6 +64,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TitleLabel"
 text = "Profile"
+text_overrun_behavior = 3
 
 [node name="PlaceStrip" type="MarginContainer" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
@@ -68,9 +73,11 @@ script = ExtResource("6")
 
 [node name="ProfilesButton" type="Button" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(76, 76)
+custom_minimum_size = Vector2(96, 96)
+tooltip_text = "Hold for profiles"
+size_flags_vertical = 4
 layout_mode = 2
-focus_mode = 0
+focus_mode = 2
 script = ExtResource("2")
 shape = 2
 
@@ -85,21 +92,19 @@ mouse_filter = 2
 script = ExtResource("7")
 figure = 4
 
-[node name="Stage" type="Control" parent="Margin/Column"]
+[node name="Stage" type="ScrollContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+script = ExtResource("scroll")
 layout_mode = 2
 size_flags_vertical = 3
-mouse_filter = 2
 
 [node name="Board" type="GridContainer" parent="Margin/Column/Stage"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 mouse_filter = 2
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
 columns = 3

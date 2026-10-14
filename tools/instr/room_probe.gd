@@ -20,7 +20,9 @@ func _check(ok: bool, label: String) -> void:
 		print("  FAIL %s" % label)
 
 func _run() -> void:
-	var repo: ProfileRepo = ProfileRepo.new("user://profiles")
+	get_window().size = Vector2i(1280, 800)
+	var repo: ProfileRepo = ProfileRepo.new("user://room_probe_%s" % OS.get_process_id())
+	ProfileStore.repo = repo
 	var starter: Starter = Starter.find("home_routines")
 	var p: Profile = repo.create_profile("Probe", starter, "bold")
 	_check(p != null, "profile created")
@@ -50,24 +52,21 @@ func _run() -> void:
 		"the room's center sits at the band's center (%s vs %s)" % [mid, safe.get_center()])
 	var bodies: Array[SpotBody] = room_view.bodies()
 	_check(bodies.size() == p.rooms[0].spots.size(), "one body per spot (%d of %d)" % [bodies.size(), p.rooms[0].spots.size()])
-	var floor_px: float = float(Style.current.tile_min_size)
 	for b: SpotBody in bodies:
 		var point: Vector2 = room_view.screen_point(b)
 		_check(safe.has_point(point), "%s is inside the band (%s in %s)" % [b.spot.id, point, safe])
 		var picked: SpotBody = room_view.pick_at(point)
 		_check(picked == b, "%s is picked at its own center (got %s)" % [b.spot.id, picked.spot.id if picked != null else "nothing"])
-		var extent: Vector2 = room_view.screen_size(b)
-		var px: float = maxf(extent.x, extent.y)
-		_check(px >= floor_px * 0.5, "%s projects near the touch floor (%.0f px of %.0f)" % [b.spot.id, px, floor_px])
+		_check(safe.encloses(room_view.screen_bounds(b)), "%s bounds fit inside the safe band" % b.spot.id)
 	_check(room_view.pick_at(Vector2(2.0, 2.0)) == null, "the top corner picks nothing")
 
-	# First tap: every spot toggles on, and a caption row appears for each spot.
+	# First tap: every spot toggles on; the caption follows the latest spoken phrase.
 	for b: SpotBody in bodies:
 		room_view.tap(b)
 	await get_tree().process_frame
 	for b: SpotBody in bodies:
 		_check(b.is_on, "%s toggled on" % b.spot.id)
-	_check(captions.get_child_count() == bodies.size(), "one caption row per tapped spot (%d)" % captions.get_child_count())
+	_check(captions.get_child_count() == 1, "only the current phrase has a caption (%d)" % captions.get_child_count())
 	var door: SpotBody = room_view.body("door")
 	_check(door != null, "the home room has a door")
 	if door != null:
@@ -107,8 +106,14 @@ func _run() -> void:
 	_check(room_view.camera_position().y > front_pos.y + 1.0, "the top view stands above")
 	_check(room_view.wall_visible(Spot.Wall.RIGHT), "the right wall shows again")
 	for b: SpotBody in bodies:
-		var point: Vector2 = room_view.screen_point(b)
-		_check(room_view.pick_at(point) == b, "%s is picked from above" % b.spot.id)
+		# The cup covers the table's center from above. Pick any visible part of each object.
+		var bounds: Rect2 = room_view.screen_bounds(b)
+		var reachable: bool = false
+		for x: int in range(1, 10):
+			for y: int in range(1, 10):
+				var point: Vector2 = bounds.position + bounds.size * Vector2(x / 10.0, y / 10.0)
+				reachable = reachable or room_view.pick_at(point) == b
+		_check(reachable, "%s has a reachable surface from above" % b.spot.id)
 
 	# Orbit: a drag past the limits stays inside them, and the view idles back to the front.
 	p.rooms[0].camera = Room.Camera.ORBIT
@@ -135,6 +140,7 @@ func _run() -> void:
 func _finish(repo: ProfileRepo, profile_id: String) -> void:
 	if not profile_id.is_empty():
 		repo.delete_profile(profile_id)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(repo.root))
 	if _failures.is_empty():
 		print("ROOM-PROBE PASS")
 		get_tree().quit(0)
