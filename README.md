@@ -108,6 +108,7 @@ new kind of object is a `Spot.Kind` value and a recipe function in `ObjectRecipe
 ```sh
 just export-android   # one preset into build/<commit>/android/; also -ios, -macos, -windows, -linux
 just exports          # every preset, then check what each export holds
+just run-ios          # export iOS and run it on the paired iPhone or iPad
 just testflight       # export iOS, archive it and upload it for TestFlight
 ```
 
