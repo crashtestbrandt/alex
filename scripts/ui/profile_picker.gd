@@ -1,9 +1,10 @@
 extends Control
 class_name ProfilePicker
-## The adults' screen opens profiles, creates them from starter packs, and changes their saved looks.
-## Style pills preview immediately. An existing profile changes only when Save is pressed.
+## The adults' screen opens, creates and permanently deletes profiles, and changes their saved looks.
+## Style pills preview immediately. Saving a look or completing the delete hold changes a profile.
 
 signal profile_chosen(profile_id: String)
+signal profile_deleted(profile_id: String)
 
 enum Mode { PICK, CREATE, LOOK }
 
@@ -20,6 +21,8 @@ enum Mode { PICK, CREATE, LOOK }
 @onready var _actions: Control = %Actions
 @onready var _sheet: SdfSheet = %Center
 @onready var _back_button: SdfButton = %BackButton
+@onready var _delete_section: VBoxContainer = %DeleteSection
+@onready var _delete_button: HoldButton = %DeleteButton
 
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
@@ -31,6 +34,7 @@ func _ready() -> void:
 	_create_button.pressed.connect(_on_create)
 	_back_button.pressed.connect(_on_back)
 	_new_button.pressed.connect(_on_new_profile)
+	_delete_button.held.connect(_on_delete_held)
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()
@@ -78,8 +82,8 @@ func refresh() -> void:
 		button.pressed.connect(_on_profile_pressed.bind(profile_id))
 		card.add_child(button)
 		var edit: SdfButton = SdfButton.new()
-		edit.text = "Look"
-		edit.tooltip_text = "Change look"
+		edit.text = "Edit"
+		edit.tooltip_text = "Change look or delete profile"
 		edit.shape = SdfButton.Shape.PILL
 		edit.quiet = true
 		edit.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -131,6 +135,7 @@ func _show_mode(mode: Mode) -> void:
 	_starter_row.visible = mode == Mode.CREATE
 	_style_row.visible = mode != Mode.PICK
 	_actions.visible = mode != Mode.PICK
+	_delete_section.visible = mode == Mode.LOOK
 	_back_button.visible = mode != Mode.PICK and _profiles.get_child_count() > 0
 	_create_button.text = "Save" if mode == Mode.LOOK else "Create"
 	_heading.text = "New profile" if mode == Mode.CREATE else "Choose a profile"
@@ -150,7 +155,7 @@ func _on_edit_profile(profile_id: String) -> void:
 	_editing_id = profile_id
 	_previous_style = Style.current
 	_show_mode(Mode.LOOK)
-	_heading.text = "Look for %s" % profile.display_name
+	_heading.text = "Edit %s" % profile.display_name
 	_on_style_pressed(profile.style_id)
 	_style_bar.items()[_current_style_index()].grab_focus()
 
@@ -158,6 +163,23 @@ func _on_back() -> void:
 	if _previous_style != null:
 		Style.apply(_previous_style)
 	refresh()
+
+func _on_delete_held() -> void:
+	if not is_visible_in_tree() or _mode != Mode.LOOK or _editing_id.is_empty():
+		return
+	var profile_id: String = _editing_id
+	var err: Error = ProfileStore.delete_profile(profile_id)
+	if err != OK:
+		_status.text = "Could not delete everything. Try again."
+		_status.show()
+		_sheet.ensure_control_visible(_status)
+		return
+	profile_deleted.emit(profile_id)
+	_on_back()
+	if _mode == Mode.CREATE:
+		_name_edit.grab_focus()
+	else:
+		_new_button.grab_focus()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and _mode != Mode.PICK and _back_button.visible and event.is_action_pressed("ui_cancel"):

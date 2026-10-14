@@ -33,6 +33,9 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
 
 ![The recording overlay: the phrase, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
 
+To permanently remove a profile and all its recordings, choose **Edit** in the profile picker and hold
+**Hold 3 seconds to delete**. There is no undo.
+
 New recordings get local noise reduction, quiet-end trimming, and volume balancing before preview.
 
 Everything stays on the device. There is no account, no network and no analytics.

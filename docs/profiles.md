@@ -128,3 +128,12 @@ time.
 - Speech levels are balanced with a 4× gain limit and peak headroom. Short edge fades prevent clicks.
 - Stereo capture uses the stronger channel and saves mono, so inverted channels cannot cancel the voice.
 - Silent takes are rejected. Existing recordings are changed only after Keep.
+
+### Permanent deletion
+
+- Open the caregiver profile picker, choose Edit beside the profile, then hold “Hold 3 seconds to delete”.
+- The three-second hold removes the entire profile directory, including phrases, rooms, boards, name recordings, previous takes and hidden files.
+- There is no Trash entry or undo. Other profiles are unchanged.
+- Deleting the active profile also discards its loaded screen, recorder and playback references.
+- The last deletion opens the new-profile form. A failed deletion stays on the edit screen with an error; the profile metadata is removed last so a media failure can be retried.
+- Deletion accepts only a single profile directory name and never follows directory links.

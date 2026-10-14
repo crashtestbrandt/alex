@@ -53,9 +53,10 @@ for the shader to read.
 
 ## The profile picker
 
-- The first screen lists profile rows. The name opens the profile; an inline Look action edits its style.
+- The first screen lists profile rows. The name opens the profile; an inline Edit action opens its style and deletion controls.
 - New profile opens a separate form. An empty profile list opens that form directly.
 - The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
+- Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Nothing on the picker is drawn by a theme style box.

@@ -18,3 +18,6 @@ func create_profile(display_name: String, starter: Starter, style_id: String) ->
 
 func media_dir(profile_id: String) -> String:
 	return repo.media_dir(profile_id)
+
+func delete_profile(profile_id: String) -> Error:
+	return repo.delete_profile(profile_id)

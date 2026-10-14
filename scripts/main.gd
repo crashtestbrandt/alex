@@ -5,6 +5,8 @@ class_name Main
 ##
 ## `--profile=<id>` after `--` opens straight into a profile, for a smoke run or a kiosk device.
 
+const _HOME_SCENE: PackedScene = preload("res://scenes/child/home.tscn")
+
 @onready var _picker: ProfilePicker = %ProfilePicker
 @onready var _home: ChildHome = %ChildHome
 
@@ -21,6 +23,7 @@ func _ready() -> void:
 	resized.connect(_update_safe_area.call_deferred)
 	_update_canvas()
 	_picker.profile_chosen.connect(open_profile)
+	_picker.profile_deleted.connect(_on_profile_deleted)
 	_home.profiles_requested.connect(show_picker)
 	var requested: String = _profile_arg()
 	if not requested.is_empty() and ProfileStore.load_profile(requested) != null:
@@ -81,6 +84,22 @@ func open_profile(profile_id: String) -> void:
 	_home.show_profile(p)
 	_picker.visible = false
 	_home.visible = true
+
+## Discard the deleted profile's controls, playback and recorder references as well as its disk files.
+func _on_profile_deleted(profile_id: String) -> void:
+	if App.active_profile == null or App.active_profile.id != profile_id:
+		return
+	App.set_active_profile(null)
+	# Disconnect the old screen before the picker restores the previous style.
+	_home.free()
+	_home = _HOME_SCENE.instantiate() as ChildHome
+	_home.name = "ChildHome"
+	_home.visible = false
+	add_child(_home)
+	_home.owner = self
+	_home.unique_name_in_owner = true
+	_home.profiles_requested.connect(show_picker)
+	_home.set_safe_area(_safe_rect)
 
 func _update_canvas() -> void:
 	var canvas: Vector2i = UiGeometry.canvas_size(get_window().size)
