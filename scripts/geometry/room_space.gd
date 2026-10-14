@@ -12,10 +12,9 @@ const WALL: float = 0.06
 static func dims() -> Vector3:
 	return Vector3(WIDTH, HEIGHT, DEPTH)
 
-## What the camera looks at: a little under the box's center, because a raised camera sees more floor than
-## ceiling and the near floor edge projects larger.
+## The center of the room box.
 static func center() -> Vector3:
-	return Vector3(0.0, HEIGHT * 0.42, 0.0)
+	return Vector3(0.0, HEIGHT / 2.0, 0.0)
 
 ## The spot's longest extent in meters.
 static func spot_size_m(s: Spot) -> float:
@@ -56,6 +55,19 @@ static func wall_outward(w: Spot.Wall) -> Vector3:
 ## A wall is hidden when the camera stands outside it, so a side view looks into the room.
 static func wall_hidden(w: Spot.Wall, camera_position: Vector3) -> bool:
 	return (camera_position - wall_center(w)).dot(wall_outward(w)) > 0.05
+
+## The floor of what the camera must keep in frame: at least this much of the walls' height.
+const CONTENT_HEIGHT_MIN: float = 1.5
+
+## The box the camera frames: the room's footprint up to the tallest spot, never the whole wall. The walls
+## above it may run under the floating controls; the objects and the floor may not.
+static func content_dims(r: Room) -> Vector3:
+	var top: float = CONTENT_HEIGHT_MIN
+	if r != null:
+		for s: Spot in r.spots:
+			var base: float = s.height * HEIGHT if s.wall != Spot.Wall.NONE else 0.0
+			top = maxf(top, base + spot_size_m(s))
+	return Vector3(WIDTH, minf(top, HEIGHT), DEPTH)
 
 ## The smallest spot in the room, in meters; zero for an empty room.
 static func smallest_spot_m(r: Room) -> float:

@@ -36,3 +36,14 @@ func test_smallest_spot() -> void:
 		{"id": "a", "gestalt": "g", "size": 0.5}, {"id": "b", "gestalt": "g", "size": 0.1}]})
 	assert_almost_eq(RoomSpace.smallest_spot_m(r), 0.1 * RoomSpace.WIDTH, 0.0001, "the smallest, in meters")
 	assert_almost_eq(RoomSpace.smallest_spot_m(Room.new()), 0.0, 0.0001, "an empty room has none")
+
+func test_content_box_stops_at_the_tallest_spot() -> void:
+	var r: Room = Room.from_dict({"id": "r", "spots": [
+		{"id": "door", "gestalt": "g", "wall": "back", "size": 0.5},
+		{"id": "ball", "gestalt": "g", "size": 0.1}]})
+	assert_almost_eq(RoomSpace.content_dims(r).y, 2.0, 0.0001, "the door's top, 0.5 of the width")
+	var low: Room = Room.from_dict({"id": "r", "spots": [{"id": "ball", "gestalt": "g", "size": 0.1}]})
+	assert_almost_eq(RoomSpace.content_dims(low).y, RoomSpace.CONTENT_HEIGHT_MIN, 0.0001, "never under the floor")
+	var high: Room = Room.from_dict({"id": "r", "spots": [{"id": "w", "gestalt": "g", "wall": "back", "height": 0.9, "size": 0.6}]})
+	assert_almost_eq(RoomSpace.content_dims(high).y, RoomSpace.HEIGHT, 0.0001, "never above the wall")
+	assert_almost_eq(RoomSpace.content_dims(null).y, RoomSpace.CONTENT_HEIGHT_MIN, 0.0001, "no room, the floor")

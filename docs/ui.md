@@ -24,6 +24,18 @@ The shapes follow where platform interfaces have moved: rounded, concentric and 
   style preset's `relief` scales both; `quiet` is nearly flat. Translucency and refraction are left out on
   purpose: they cost contrast, and contrast is what a learner with a visual or motor difference needs most.
 
+## Floating over the room
+
+The room renders edge to edge, and the chrome floats over it: the title, the place pill and the profiles
+button at the top, the view pill at the bottom right. The camera frames the room's objects into the band the
+floating controls leave (`RoomView.safe_rect`, `CameraFraming.full_extent`, `CameraFraming.center_offset`),
+so the walls may run under a control and an object never does. The box framed is the footprint up to the
+tallest spot (`RoomSpace.content_dims`), not the whole wall. `just room-probe` checks every spot's center
+lies inside the band.
+
+Containers above the room are `MOUSE_FILTER_IGNORE`, so a tap between controls reaches the room; a pill bar
+is `PASS`, so a tap on its padding does not.
+
 ## The controls
 
 | Control | Extends | What it is |

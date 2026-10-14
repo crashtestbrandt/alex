@@ -109,8 +109,9 @@ Input rules (`RoomView._gui_input`):
 - A drag past `DRAG_PX` that started on an object cancels the press and does nothing more.
 - A drag that started on empty room turns the view only when `camera` is `orbit`.
 
-Framing (`CameraFraming`, pure): the frame extent is the vertical span of the world visible at the room's
-center. `fit_extent` projects the box's silhouette for the current angles; `frame_extent` pulls that in when
+Framing (`CameraFraming`, pure): the frame extent is the vertical span of the world visible at the framed
+box's center. The box is the room's footprint up to its tallest spot, framed into the band between the
+floating controls (docs/ui.md "Floating over the room"). `fit_extent` projects the box's silhouette for the current angles; `frame_extent` pulls that in when
 the smallest spot would project under the touch floor, by at most `MAX_PULL_IN`; `perspective_distance`
 turns the extent into a camera distance; `camera_transform` places the camera with an up vector that turns
 smoothly from the front view to straight down.

@@ -62,3 +62,9 @@ func test_camera_basis_is_continuous_and_looks_at_the_target() -> void:
 	var front: Transform3D = CameraFraming.camera_transform(target, 0.0, 0.0, 5.0)
 	assert_almost_eq(front.origin.z, 5.0, 0.0001, "azimuth 0 stands at the open front")
 	assert_almost_eq(front.basis.y.dot(Vector3.UP), 1.0, 0.0001, "level view is upright")
+
+func test_safe_band_scales_the_extent_and_shifts_the_center() -> void:
+	assert_almost_eq(CameraFraming.full_extent(3.0, 600.0, 800.0), 4.0, 0.0001, "a 600 px band of 800 needs a third more")
+	assert_almost_eq(CameraFraming.full_extent(3.0, 0.0, 800.0), 3.0, 0.0001, "no band, no change")
+	assert_almost_eq(CameraFraming.center_offset(100.0, 800.0, 4.0), 0.5, 0.0001, "100 px down of 800 is half a meter of 4, camera up")
+	assert_almost_eq(CameraFraming.center_offset(0.0, 800.0, 4.0), 0.0, 0.0001, "centered")

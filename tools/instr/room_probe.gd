@@ -42,13 +42,18 @@ func _run() -> void:
 	_check(room_view.visible, "the room is the first screen")
 	_check(room_view.size.x > 100.0 and room_view.size.y > 100.0, "the room view has a size (%s)" % room_view.size)
 
+	var safe: Rect2 = room_view.safe_rect()
+	_check(safe.position.y > 40.0 and safe.end.y < room_view.size.y - 40.0, "floating controls leave a band (%s of %s)" % [safe, room_view.size])
+	var camera: Camera3D = room_view.get_node("%Camera") as Camera3D
+	var mid: Vector2 = camera.unproject_position(Vector3(0.0, RoomSpace.content_dims(p.rooms[0]).y * 0.42, 0.0))
+	_check(absf(mid.y - safe.get_center().y) < 2.0 and absf(mid.x - safe.get_center().x) < 2.0,
+		"the room's center sits at the band's center (%s vs %s)" % [mid, safe.get_center()])
 	var bodies: Array[SpotBody] = room_view.bodies()
 	_check(bodies.size() == p.rooms[0].spots.size(), "one body per spot (%d of %d)" % [bodies.size(), p.rooms[0].spots.size()])
 	var floor_px: float = float(Style.current.tile_min_size)
 	for b: SpotBody in bodies:
 		var point: Vector2 = room_view.screen_point(b)
-		_check(point.x >= 0.0 and point.y >= 0.0 and point.x <= room_view.size.x and point.y <= room_view.size.y,
-			"%s is on screen (%s in %s)" % [b.spot.id, point, room_view.size])
+		_check(safe.has_point(point), "%s is inside the band (%s in %s)" % [b.spot.id, point, safe])
 		var picked: SpotBody = room_view.pick_at(point)
 		_check(picked == b, "%s is picked at its own center (got %s)" % [b.spot.id, picked.spot.id if picked != null else "nothing"])
 		var extent: Vector2 = room_view.screen_size(b)
