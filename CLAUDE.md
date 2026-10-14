@@ -108,7 +108,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   text color.
 - **A stage is optional, informs the caregiver only, and never appears on the learner's screen.**
 - **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
-  in profile data and off the learner's screen.
+  in profile data and off the learner's screen. Words is the whole bank, as Palette tiles or as Build, a
+  strip filled from chunk beginnings and endings (`ChunkBank`), chunk-first and never word-first.
 - **Adult screens sit behind a `HoldButton`.** A stray tap never leaves the board.
 - **Motion respects the style's `motion` setting.** Every tween multiplies by `Style.motion_scale()` and
   skips at zero.

@@ -15,7 +15,9 @@ The learner moves between two modes, Explore and Words.
 
 - **Explore** is a 3D scene of everyday objects. Touching an object plays its reaction and says its phrase
   in a familiar voice.
-- **Words** is a column of phrase tiles. Tapping a tile says its phrase.
+- **Words** holds every phrase. Palette is a column of phrase tiles, and tapping a tile says its phrase.
+  Build offers the beginnings of phrases beside their endings. Tapping a chunk puts it on a strip and says
+  it, and tapping the strip says the whole.
 - **Chunks** show on colored pills while a phrase plays, and each is marked as it is spoken. A chunk keeps
   its color everywhere it appears, so "Let's go" looks the same on every tile and caption.
 - **Views** look at the scene from the front and from above, and a drag or a pinch moves in closer. A
@@ -69,10 +71,10 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 Early and usable.
 
-- **Ships:** one starter pack with a nine-object scene and a Words column, three looks, and recording in
-  your own voice.
-- **Coming:** scene packs a profile can add, more objects and reactions, a Words mode for building phrases
-  from chunks, the learner's own songs and clips, and a bank view for caregivers.
+- **Ships:** one starter pack with a nine-object scene, a Words palette and a chunk builder, three looks,
+  and recording in your own voice.
+- **Coming:** scene packs a profile can add, more objects and reactions, recording each chunk so the
+  builder speaks in your voice, the learner's own songs and clips, and a bank view for caregivers.
 - **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording
   there is not yet tried.
 

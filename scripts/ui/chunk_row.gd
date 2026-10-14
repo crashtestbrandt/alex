@@ -73,6 +73,24 @@ func play(seconds: float) -> void:
 		_tween.tween_interval(per_chunk)
 		_tween.tween_callback(pill.set_spoken.bind(false))
 
+## Mark one chunk as spoken for `seconds`, then settle. For a chunk that has just landed on a strip.
+func play_one(index: int, seconds: float) -> void:
+	stop()
+	if index < 0 or index >= _pills.size():
+		return
+	var pill: Pill = _pills[index]
+	_tween = create_tween()
+	_tween.tween_callback(pill.set_spoken.bind(true))
+	_tween.tween_interval(maxf(seconds, MIN_PHRASE_SECONDS))
+	_tween.tween_callback(pill.set_spoken.bind(false))
+
+## The index of the pill under `point`, in this row's coordinates, or -1 between pills.
+func pill_at(point: Vector2) -> int:
+	for i: int in _pills.size():
+		if _pills[i].get_rect().has_point(point):
+			return i
+	return -1
+
 ## End a playback early and put every pill back at rest.
 func stop() -> void:
 	if _tween != null:

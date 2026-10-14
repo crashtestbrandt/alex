@@ -39,11 +39,27 @@ is `PASS`, so a tap on its padding does not.
 
 - The learner's strip has two pills, Explore and Words, in that order.
 - Explore shows the profile's first room.
-- Words shows every tile the profile's boards name, each once, in board order (`Profile.words_gestalts`).
-- When the boards name nothing the bank holds, Words shows the whole bank.
+- Words shows the whole bank: the boards' phrases first, in board order, then the rest in bank order
+  (`Profile.words_gestalts`). A room's phrases are in the bank, so they are in Words.
 - A mode with nothing to show has no pill. With one pill, the strip hides.
 - Room and board titles stay in profile data and never reach the learner's screen.
 - Room choice inside Explore and a caregiver label for Explore wait until a profile has a second room.
+
+## Words
+
+Words has two modes on a glyph widget floating at the bottom right, like the room's view widget
+(`WordsWidget`, a `GlyphBar`). The columns under it leave its height clear, so their last row scrolls above
+it. Words reopens in the mode the learner last used.
+
+- **Palette** is every phrase in the bank as a tile in a scrolling column. Tap says it. Hold records it.
+- **Build** is a strip and two columns (`BuildView`). The left column holds the bank's beginnings, the first
+  chunk of every phrase; the right holds its endings, every later chunk; each once by its color key
+  (`ChunkBank`). Every chunk is a `ChunkButton` in its own color, at the tile floor.
+- A tap on a chunk lands it on the strip and says it. A tap on the strip says the whole. A tap on a chunk in
+  the strip takes it off. There is no send button and no clear button.
+- A strip that says a phrase the bank holds is that phrase (`ChunkBank.match`), so it plays in the
+  caregiver's voice. Any other strip is said as itself, by the OS voice until per-chunk takes exist (#24).
+- The strip keeps what the learner built until they change it, across Explore and back.
 
 ## Chunk colors
 
@@ -66,10 +82,12 @@ is `PASS`, so a tap on its padding does not.
 | Control | Extends | What it is |
 | --- | --- | --- |
 | `SdfShape` | `Control` | The field itself: fill, border, rim, shadow. Never takes input. |
-| `SdfGlyph` | `Control` | One figure of the glyph shader: front, side, top, turn, dots, microphone. |
+| `SdfGlyph` | `Control` | One figure of the glyph shader: front, side, top, tilt, dots, microphone, palette, build. |
 | `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. `danger` uses red with white text across styles. |
 | `SdfPanel` | `PanelContainer` | A panel with an `SdfShape` behind its content, a larger radius, and `inner_radius()` for what sits in it. |
-| `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the mode strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
+| `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the mode strip. |
+| `GlyphBar` | `PillBar` | A pill bar of glyph buttons, one of them the current state: the view widget, the Words widget. A glyph button is seven tenths of the tile floor, never under 96 px, and emits on every tap so the current one can reset. |
+| `ChunkButton` | `SdfButton` | A chunk the learner taps in Build: a pill in its chunk's color at the tile floor, text in the style's text color. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
 | `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
 | `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. `floating` gives the pills the style's relief. |

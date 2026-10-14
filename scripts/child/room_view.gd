@@ -242,7 +242,7 @@ func set_view(target: CameraFraming.View, animate: bool = true) -> void:
 	_clear_captions()
 	var crosses_tilt: bool = _view == CameraFraming.View.TILT or target == CameraFraming.View.TILT
 	_view = target
-	_widget.show_current(target)
+	_widget.show_view(target)
 	var angles: Vector2 = CameraFraming.view_angles(target)
 	_move_camera(angles.x, angles.y, animate, crosses_tilt)
 

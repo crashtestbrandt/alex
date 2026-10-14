@@ -9,7 +9,7 @@ uniform vec2 rect_px = vec2(1.0);
 // The glyph's radius: half of the figure's longer side, in control units.
 uniform float radius_px = 20.0;
 uniform float width_px = 3.0;
-// 0 front, 1 side, 2 top, 3 tilt (a circular arrow), 4 dots, 5 microphone.
+// 0 front, 1 side, 2 top, 3 tilt (a circular arrow), 4 dots, 5 microphone, 6 palette, 7 build.
 uniform int figure = 0;
 uniform vec4 tint : source_color = vec4(1.0);
 
@@ -106,6 +106,20 @@ float microphone(vec2 p, float r, float w, float fw) {
 	return max(max(head, cradle), max(stem, base));
 }
 
+float palette_view(vec2 p, float r, float w, float fw) {
+	// A column of two tiles.
+	float upper = stroke(box_edge(p, vec2(0.0, -0.48 * r), vec2(0.9 * r, 0.34 * r), 0.12 * r), w, fw);
+	float lower = stroke(box_edge(p, vec2(0.0, 0.48 * r), vec2(0.9 * r, 0.34 * r), 0.12 * r), w, fw);
+	return max(upper, lower);
+}
+
+float build_view(vec2 p, float r, float w, float fw) {
+	// A chunk on the strip beside the slot for the next one.
+	float placed = fill(box_edge(p, vec2(-0.5 * r, 0.0), vec2(0.42 * r, 0.26 * r), 0.26 * r), fw);
+	float slot = stroke(box_edge(p, vec2(0.52 * r, 0.0), vec2(0.42 * r, 0.26 * r), 0.26 * r), w, fw);
+	return max(placed, slot);
+}
+
 void vertex() {
 	v_modulate = COLOR;
 }
@@ -124,6 +138,10 @@ void fragment() {
 		a = dots(p, radius_px, fw);
 	} else if (figure == 5) {
 		a = microphone(p, radius_px, width_px, fw);
+	} else if (figure == 6) {
+		a = palette_view(p, radius_px, width_px, fw);
+	} else if (figure == 7) {
+		a = build_view(p, radius_px, width_px, fw);
 	} else {
 		a = front_view(p, radius_px, width_px, fw);
 	}
