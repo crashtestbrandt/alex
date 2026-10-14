@@ -58,7 +58,9 @@ app's name, no screen speaks it, and the app has no persona.
 - A configurable app for children who are gestalt language processors. **Not one child's app**: nothing
   about a specific child is in code (docs/design.md, docs/profiles.md).
 - **Godot 4.7-stable**, GDScript only (no C#); pass the `godot-docs` MCP `version: "4.7"`.
-- **Mobile renderer** on every platform; landscape tablet is the primary device; mouse emulates touch.
+- **Mobile renderer** on every platform; phones and tablets are the targets; mouse emulates touch.
+- **Five export presets** (docs/exports.md): Android, iOS, macOS, Windows, Linux. `just exports` builds and
+  checks them.
 - No ADRs. Record decisions in the README, a `docs/` page or a script header comment.
 
 ## Hard GDScript rules (`project.godot` promotes these warnings to errors)
@@ -117,7 +119,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   A migration is a function that takes the old dictionary and returns the new one, with a unit test.
 - **A bad row is skipped, never fatal.** One malformed gestalt does not lose a profile.
 - **Starter packs are JSON under `starters/`**, written for non-developers. `starter_test.gd` checks every
-  board names gestalts the pack holds. A shipped build needs `*.json` in its export filter.
+  board names gestalts the pack holds. Every export preset includes `starters/*.json`
+  (`tools/check-export-presets.sh`).
 - **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
   preset also carries the room's materials (`wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`,
   `wall_color`).
@@ -127,7 +130,7 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **Pure logic gets a `tests/unit/*_test.gd` suite** (`extends UnitTest`, `test_*` methods). A suite declares
   what it needs through `needs()`; the runner fails a suite that declared nothing and left a Node alive.
 - **Something that genuinely needs a live scene gets a probe under `tools/instr/`**, never on a PR.
-- `just check` is the PR gate: doc caps, lint, unit suites. Deterministic, no clock.
+- `just check` is the PR gate: doc caps, export presets, lint, unit suites. Deterministic, no clock.
 - A file-writing test uses a temporary root under `user://` and removes it in `teardown()`.
 
 ## Licensing
@@ -140,7 +143,7 @@ Anything not MIT, Apache-2.0, BSD or MPL-2.0 needs a conversation first.
 
 - Adding an addon to `addons/`.
 - Touching the `project.godot` input map, autoloads or renderer.
-- Adding `export_presets.cfg`, a deploy target, or a secret.
+- Adding a deploy target, a signing key, or a secret. Signing secrets come from environment variables.
 - Adding any AI or network call. The app is offline and local by design; an AI seam, if one comes, is
   adult-facing only and never talks to the child.
 - Raising either doc size cap.

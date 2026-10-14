@@ -8,6 +8,8 @@ config_version=5
 
 config/name="Alex"
 config/description="A configurable companion for children who acquire language in gestalts."
+; The version every export preset reports (docs/exports.md). The iOS build number comes from the archive step.
+config/version="0.1.0"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 ; No engine logo. The app opens on the active style's background, and the first frame matches it.
@@ -22,6 +24,9 @@ driver/enable_input=true
 ; Text to speech is the fallback voice for a gestalt with no recording. The OS voice is never the goal; a
 ; familiar adult's recording is. Off by default in Godot, so it is pinned on here.
 general/text_to_speech=true
+; iOS records only under the Play and Record session category (2). The default, Ambient, has no microphone
+; and is muted by the phone's silent switch.
+general/ios/session_category=2
 
 [autoload]
 
@@ -60,6 +65,9 @@ pointing/emulate_touch_from_mouse=true
 
 [rendering]
 
-; Mobile renderer on every platform: 3D and motion graphics stay available, and a tablet is the target.
+; Mobile renderer on every platform: 3D and motion graphics stay available, and phones and tablets are the
+; targets.
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
+; Android and iOS need ETC2/ASTC textures, and an Android export refuses to start without them.
+textures/vram_compression/import_etc2_astc=true

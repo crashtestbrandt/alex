@@ -76,7 +76,8 @@ A profile **copies** the pack at creation (`Starter.seed`) and never reads it ag
 nothing for an existing child. `starter_test.gd` checks every shipped pack parses and that every board names
 gestalts the pack holds.
 
-Packs are read with `DirAccess` at runtime, so **a shipped build needs `*.json` in its export filter**.
+Packs are read with `DirAccess` at runtime. **Every export preset includes `starters/*.json`**, so a build
+ships the packs under any export mode (docs/exports.md).
 
 ## Style presets
 
@@ -109,5 +110,6 @@ is written before Keep, and the overlay closes itself after twenty idle seconds.
 Until a recording exists, `Speaker` voices the gestalt with the OS text-to-speech voice for the device's
 language.
 
-The microphone needs `audio/driver/enable_input` (on in `project.godot`) and, on iOS and Android, a
-microphone permission in the export preset. macOS asks the first time.
+The microphone needs `audio/driver/enable_input` (on in `project.godot`). The Android, iOS and macOS presets
+declare it, and iOS records under the Play and Record audio session (docs/exports.md). macOS asks the first
+time.

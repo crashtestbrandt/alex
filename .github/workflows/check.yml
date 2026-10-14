@@ -1,7 +1,7 @@
 name: check
 
-# The PR gate: doc caps, GDScript lint, unit suites. GitHub-hosted runners, so a fork PR never reaches a
-# machine of ours. `pull_request` rather than `pull_request_target`, so a fork PR gets no secrets.
+# The PR gate: doc caps, export presets, GDScript lint, unit suites. GitHub-hosted runners, so a fork PR never
+# reaches a machine of ours. `pull_request` rather than `pull_request_target`, so a fork PR gets no secrets.
 
 on:
   push:
@@ -25,6 +25,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Doc size caps
         run: tools/check-doc-size.sh
+
+      - name: Export presets
+        run: tools/check-export-presets.sh
 
   godot:
     runs-on: ubuntu-latest
