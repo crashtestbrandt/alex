@@ -2,7 +2,7 @@
 
 A room to explore, that speaks in voices you love.
 
-Alex, A Language EXplorer, is a small app for children who acquire language in whole chunks: autistic
+Alex Language EXplorer is a small app for children who acquire language in whole chunks: autistic
 children, children with developmental delays, and any child whose first speech is echolalia. It is not a
 clinical tool and not a substitute for one. It is something a learner can pick up and discover on their own,
 after a caregiver spends a few minutes setting it up.
