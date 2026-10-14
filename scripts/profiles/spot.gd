@@ -5,8 +5,8 @@ class_name Spot
 ## door says "Let's go outside" and then "Let's go inside".
 ##
 ## Positions are fractions of the room box (RoomSpace), so one room fits every screen. A floor spot stands at
-## `x` across the width and `y` from the back wall; a wall spot hangs at `x` along its wall with its base at
-## `height`. `size` is the object's longest extent as a fraction of the room's width, and the camera is
+## `x` across the width and `y` from the back wall; a wall spot hangs at `x` along its wall. Either has its
+## base at `height`, which is how a cup stands on a table. `size` is the object's longest extent as a fraction of the room's width, and the camera is
 ## framed so that no spot projects smaller than the style's touch floor (CameraFraming).
 
 ## What the spot looks like. ObjectRecipes builds each kind from primitives; no art asset is needed.
@@ -21,6 +21,7 @@ enum Kind {
 	SHOES = 7,
 	TUB = 8,
 	STAR = 9,
+	TABLE = 10,
 }
 
 ## How the spot moves when tapped. Every reaction multiplies by `Style.motion_scale()`.
@@ -44,7 +45,7 @@ enum Wall {
 const _KIND_NAMES: Dictionary[String, int] = {
 	"circle": Kind.CIRCLE, "door": Kind.DOOR, "light": Kind.LIGHT, "window": Kind.WINDOW,
 	"ball": Kind.BALL, "bed": Kind.BED, "cup": Kind.CUP, "shoes": Kind.SHOES, "tub": Kind.TUB,
-	"star": Kind.STAR,
+	"star": Kind.STAR, "table": Kind.TABLE,
 }
 const _REACTION_NAMES: Dictionary[String, int] = {
 	"bounce": Reaction.BOUNCE, "open": Reaction.OPEN, "glow": Reaction.GLOW, "spin": Reaction.SPIN,
@@ -61,7 +62,7 @@ var x: float = 0.5
 var y: float = 0.5
 var size: float = 0.18
 var wall: Wall = Wall.NONE
-## The base of a wall spot as a fraction of the room's height. A floor spot ignores it.
+## The base of the object as a fraction of the room's height: up a wall, or on top of something on the floor.
 var height: float = 0.0
 var gestalt_id: String = ""
 var alt_gestalt_id: String = ""

@@ -33,6 +33,8 @@ static func make(kind: Spot.Kind, size_m: float, preset: StylePreset) -> Recipe:
 			_tub(r, s, preset)
 		Spot.Kind.STAR:
 			_star(r, s, preset)
+		Spot.Kind.TABLE:
+			_table(r, s, preset)
 		_:
 			_circle(r, s, preset)
 	return r
@@ -193,3 +195,16 @@ static func _star(r: Recipe, s: float, preset: StylePreset) -> void:
 	var outer: float = s / 2.0
 	r.add(Primitive.extrude(Mesher.star(5, outer, outer * 0.42), 0.1 * s, _at(0.0, outer, 0.0), preset.accent))
 	r.height = s
+
+## A small table: a top on four legs. `size` is the width; the top stands at 0.9 of it, which is the `height`
+## a cup on it takes.
+static func _table(r: Recipe, s: float, preset: StylePreset) -> void:
+	var depth: float = 0.7 * s
+	var top_y: float = 0.9 * s
+	var thick: float = 0.05 * s
+	var leg: float = 0.06 * s
+	r.add(Primitive.box(Vector3(s, thick, depth), _at(0.0, top_y - thick / 2.0, 0.0), preset.wood, 0.01 * s))
+	for sx: int in [-1, 1]:
+		for sz: int in [-1, 1]:
+			r.add(Primitive.box(Vector3(leg, top_y - thick, leg), _at(sx * (s / 2.0 - leg), (top_y - thick) / 2.0, sz * (depth / 2.0 - leg)), preset.wood.darkened(0.1)))
+	r.height = top_y

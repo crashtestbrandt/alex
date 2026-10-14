@@ -7,13 +7,13 @@ children, children with developmental delays, and any child whose first speech i
 clinical tool and not a substitute for one. It is something a learner can pick up and discover on their own,
 after a caregiver spends a few minutes setting it up.
 
-![The home room: a door swung open, a lit lamp, a window, a bed, a tub, a ball, a cup and shoes, with two phrases floating in chunks](docs/img/room.png)
+![The bedroom: a door swung open on the left wall, a lit lamp, a bed under the window, a cup on the nightstand, a rug with a ball on it, and shoes by the door, with two phrases floating in chunks](docs/img/room.png)
 
 ## What the learner sees
 
-A room. A door, a lamp, a window, a ball, a cup, a bed, a pair of shoes, a tub. Touch the door and it swings
-open as a familiar voice says "Let's go outside." Touch it again and it closes: "Let's go inside." The lamp
-lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
+A bedroom. A door, a lamp, a window, a bed, a cup on the nightstand, a rug, a ball, a pair of shoes by the
+door. Touch the door and it swings open as a familiar voice says "Let's go outside." Touch it again and it
+closes: "Let's go inside." The lamp lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
 up one after another, so the learner sees where a phrase comes apart without being told.
 
 Three buttons under the room look at it from the front, the side and above. A caregiver can add a fourth that
@@ -56,7 +56,7 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 ## Status
 
-Early and usable. One 3D room with eight objects, a plain board for phrases with no object, three looks, and
+Early and usable. One 3D room with nine objects, a plain board for phrases with no object, three looks, and
 recording in your own voice. Coming: more rooms and reactions, the learner's own songs and clips, a remix board
 that offers chunk beginnings beside chunk endings, and a bank view for caregivers. Desktop only until an export
 preset exists; the target device is a tablet.

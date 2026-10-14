@@ -5,9 +5,11 @@ func _spot(wall: String, x: float, y: float, height: float) -> Spot:
 	return Spot.from_dict({"id": "s", "gestalt": "g", "wall": wall, "x": x, "y": y, "height": height, "size": 0.2})
 
 func test_floor_spot() -> void:
-	var xf: Transform3D = RoomSpace.place(_spot("none", 0.5, 0.5, 0.3))
+	var xf: Transform3D = RoomSpace.place(_spot("none", 0.5, 0.5, 0.0))
 	assert_almost_eq(xf.origin.x, 0.0, 0.0001, "centered across")
-	assert_almost_eq(xf.origin.y, 0.0, 0.0001, "on the floor, height ignored")
+	assert_almost_eq(xf.origin.y, 0.0, 0.0001, "on the floor")
+	var raised: Transform3D = RoomSpace.place(_spot("none", 0.5, 0.5, 0.25))
+	assert_almost_eq(raised.origin.y, RoomSpace.HEIGHT * 0.25, 0.0001, "a floor spot can stand on something")
 	assert_almost_eq(xf.origin.z, 0.0, 0.0001, "mid depth")
 	assert_almost_eq((xf.basis * Vector3.BACK).z, 1.0, 0.0001, "faces the open front")
 

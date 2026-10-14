@@ -25,7 +25,7 @@ static func center() -> Vector3:
 static func spot_size_m(s: Spot) -> float:
 	return s.size * WIDTH
 
-## Where the spot's object stands: on the floor, or against a wall with its back to it, base at `height`.
+## Where the spot's object stands: on the floor or against a wall with its back to it, its base at `height`.
 static func place(s: Spot) -> Transform3D:
 	match s.wall:
 		Spot.Wall.BACK:
@@ -35,7 +35,7 @@ static func place(s: Spot) -> Transform3D:
 		Spot.Wall.RIGHT:
 			return Transform3D(Basis(Vector3.UP, -PI / 2.0), Vector3(WIDTH / 2.0 - WALL / 2.0, s.height * HEIGHT, -DEPTH / 2.0 + s.x * DEPTH))
 		_:
-			return Transform3D(Basis.IDENTITY, Vector3(s.x * WIDTH - WIDTH / 2.0, 0.0, -DEPTH / 2.0 + s.y * DEPTH))
+			return Transform3D(Basis.IDENTITY, Vector3(s.x * WIDTH - WIDTH / 2.0, s.height * HEIGHT, -DEPTH / 2.0 + s.y * DEPTH))
 
 ## The center of a wall's inner face.
 static func wall_center(w: Spot.Wall) -> Vector3:
@@ -70,8 +70,7 @@ static func content_dims(r: Room) -> Vector3:
 	var top: float = CONTENT_HEIGHT_MIN
 	if r != null:
 		for s: Spot in r.spots:
-			var base: float = s.height * HEIGHT if s.wall != Spot.Wall.NONE else 0.0
-			top = maxf(top, base + spot_size_m(s))
+			top = maxf(top, s.height * HEIGHT + spot_size_m(s))
 	return Vector3(WIDTH, minf(top, HEIGHT), DEPTH)
 
 ## The smallest spot in the room, in meters; zero for an empty room.
