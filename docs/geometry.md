@@ -16,7 +16,10 @@ live in `RoomSpace`:
 | `HEIGHT` | 2.6 m |
 | `WALL` | 0.06 m thick |
 
-The floor is `y = 0`, the back wall is at `-Z`, the open front faces `+Z`. A spot's `x`, `y` and `height`
+The floor is `y = 0`, the back wall is at `-Z`, the open front faces `+Z`. The drawn shell is bigger than the
+box: the floor and the side walls run `APRON` past the open front toward the camera, and every wall rises
+`WALL_RISE` past the room's height, so the world reaches every edge of the screen instead of stopping at the
+box. Spots and the camera's framing use the box; only the shell uses the apron and the rise. A spot's `x`, `y` and `height`
 are fractions of this box, so a starter pack never names a meter. `RoomSpace.place` turns a spot into a
 transform: a floor spot stands at `x` across and `y` back to front; a wall spot hangs on its wall at `x` along
 it with its base at `height`, turned to face into the room. A wall hides while the camera stands outside it

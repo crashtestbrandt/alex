@@ -62,7 +62,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
 	_build_shell()
-	_sun.look_at_from_position(Vector3(2.5, 5.0, 4.0), Vector3.ZERO, Vector3.UP)
+	# From the front and high, so the raised side walls throw their shadow onto the apron, not the back wall.
+	_sun.look_at_from_position(Vector3(0.8, 6.0, 5.0), Vector3.ZERO, Vector3.UP)
 	_sun.shadow_enabled = true
 	_sun.light_energy = 0.75
 	_env.environment = _make_environment(Style.current)
@@ -360,15 +361,18 @@ func _layout() -> void:
 
 # --- the room box -----------------------------------------------------------------------------------------
 
+## The floor and the side walls run an apron past the open front, and every wall rises past the room's height,
+## so the world fills the screen from the camera's side of the room (docs/geometry.md "The room").
 func _build_shell() -> void:
 	var w: float = RoomSpace.WIDTH
-	var h: float = RoomSpace.HEIGHT
-	var d: float = RoomSpace.DEPTH
+	var h: float = RoomSpace.HEIGHT + RoomSpace.WALL_RISE
+	var d: float = RoomSpace.DEPTH + RoomSpace.APRON
 	var t: float = RoomSpace.WALL
-	_floor = _slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, -t / 2.0), Style.current.floor_color)
-	_walls[Spot.Wall.BACK] = _slab(Vector3(w + 2.0 * t, h, t), Vector3(0.0, h / 2.0, -d / 2.0 - t / 2.0), Style.current.wall_color)
-	_walls[Spot.Wall.LEFT] = _slab(Vector3(t, h, d), Vector3(-w / 2.0 - t / 2.0, h / 2.0, 0.0), Style.current.wall_color.darkened(0.06))
-	_walls[Spot.Wall.RIGHT] = _slab(Vector3(t, h, d), Vector3(w / 2.0 + t / 2.0, h / 2.0, 0.0), Style.current.wall_color.darkened(0.06))
+	var mid_z: float = RoomSpace.APRON / 2.0
+	_floor = _slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, mid_z - t / 2.0), Style.current.floor_color)
+	_walls[Spot.Wall.BACK] = _slab(Vector3(w + 2.0 * t, h, t), Vector3(0.0, h / 2.0, -RoomSpace.DEPTH / 2.0 - t / 2.0), Style.current.wall_color)
+	_walls[Spot.Wall.LEFT] = _slab(Vector3(t, h, d), Vector3(-w / 2.0 - t / 2.0, h / 2.0, mid_z), Style.current.wall_color.darkened(0.06))
+	_walls[Spot.Wall.RIGHT] = _slab(Vector3(t, h, d), Vector3(w / 2.0 + t / 2.0, h / 2.0, mid_z), Style.current.wall_color.darkened(0.06))
 
 func _slab(size_m: Vector3, at: Vector3, color: Color) -> MeshInstance3D:
 	var batch: MeshBatch = Mesher.box(size_m / 2.0, 0.0, color)

@@ -44,7 +44,7 @@ is `PASS`, so a tap on its padding does not.
 | `SdfGlyph` | `Control` | One figure of the glyph shader: front, side, top, turn, dots, microphone. |
 | `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. |
 | `SdfPanel` | `PanelContainer` | A panel with an `SdfShape` behind its content, a larger radius, and `inner_radius()` for what sits in it. |
-| `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the place strip, the view widget. |
+| `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the place strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
 | `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
 
 The background quad an `SdfShape` paints is the control grown by `SdfShape.PAD_PX` on each side, so the

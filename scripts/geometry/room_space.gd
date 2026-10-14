@@ -8,6 +8,11 @@ const WIDTH: float = 4.0
 const HEIGHT: float = 2.6
 const DEPTH: float = 3.0
 const WALL: float = 0.06
+## How far the floor and the side walls run past the open front, toward the camera, so the world reaches the
+## screen's edges and bottom instead of stopping at the room's box.
+const APRON: float = 4.0
+## How far the walls rise past the room's height, so their top edge runs off the top of the screen.
+const WALL_RISE: float = 1.5
 
 static func dims() -> Vector3:
 	return Vector3(WIDTH, HEIGHT, DEPTH)

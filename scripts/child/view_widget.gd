@@ -2,9 +2,13 @@ extends PillBar
 class_name ViewWidget
 ## The learner's view buttons: Front, Side, Top, and Turn when the room allows an orbit. Front is the default
 ## and the way back. The pressed pill is the current view, so the widget reads as a state, not a menu. Each
-## button is a distance-field glyph in a distance-field pill, and honors the style's touch floor.
+## button is a distance-field glyph in a distance-field pill, sized from the style's touch floor: a view
+## button is a secondary control, so it takes `BUTTON_SCALE` of a tile, never under `MIN_PX`.
 
 signal view_chosen(view: CameraFraming.View)
+
+const BUTTON_SCALE: float = 0.7
+const MIN_PX: float = 96.0
 
 const _FIGURES: Dictionary[int, SdfGlyph.Figure] = {
 	CameraFraming.View.FRONT: SdfGlyph.Figure.FRONT,
@@ -42,7 +46,7 @@ func _on_pressed(view: CameraFraming.View) -> void:
 	view_chosen.emit(view)
 
 func _size_buttons() -> void:
-	var px: float = float(Style.current.tile_min_size)
+	var px: float = maxf(Style.current.tile_min_size * BUTTON_SCALE, MIN_PX)
 	for button: ViewButton in _buttons.values():
 		button.custom_minimum_size = Vector2(px, px)
 
