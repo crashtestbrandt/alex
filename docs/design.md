@@ -59,9 +59,10 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
   look around. Every view is reversible: a tap on its button puts it back, and a long idle returns to
   Front. A room can be set to no view buttons at all. Views are the first step in scene complexity a
   caregiver can grow.
-- **Explore and Words.** The learner's strip has two pills. Explore is the room. Words is the plainer
-  alternative: large tiles that say a phrase, useful for phrases with no object. The tiles come from the
-  profile's boards.
+- **Explore and Words.** The learner's strip has two pills. Explore is the room. Words is the whole bank in
+  two modes: Palette, large tiles that say a phrase, and Build, a strip the learner fills by tapping chunk
+  beginnings and endings. Build is chunk-first and never word-first: the units are the seams the caregiver
+  authored, not words or symbols (docs/ui.md "Words").
 - **A gestalt bank.** Every phrase, with its chunks, where it came from, what it does for the learner, and
   the recording that voices it.
 - **One caregiver gesture.** Hold any object or tile to record its phrase in your own voice. Hold the big
@@ -69,7 +70,7 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
 - **Starter packs and style presets.** Seed content and a look, chosen once at profile creation.
 
 Planned, in rough order: more rooms and more reactions; the learner's own songs and clips, since so much
-echolalia comes from them; a remix board that offers chunk beginnings beside chunk endings; video
+echolalia comes from them; per-chunk recordings so Build speaks in a familiar voice; video
 self-modeling; a bank view for caregivers. Assessment features stay off the list unless a caregiver asks,
 and never reach the learner's screen.
 

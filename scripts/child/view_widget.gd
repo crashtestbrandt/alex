@@ -1,15 +1,10 @@
-extends PillBar
+extends GlyphBar
 class_name ViewWidget
 ## The learner's view buttons: Front, Top, and Tilt when the room allows it. Front is the default and the
 ## way back. A tap on the current view's pill resets that view, so the pill emits on every tap. The pressed
-## pill is the current view, so the widget reads as a state, not a menu. Each button is a distance-field
-## glyph in a distance-field pill, sized from the style's touch floor: a view button is a secondary control,
-## so it takes `BUTTON_SCALE` of a tile, never under `MIN_PX`.
+## pill is the current view, so the widget reads as a state, not a menu ([GlyphBar]).
 
 signal view_chosen(view: CameraFraming.View)
-
-const BUTTON_SCALE: float = 0.7
-const MIN_PX: float = 96.0
 
 const _FIGURES: Dictionary[int, SdfGlyph.Figure] = {
 	CameraFraming.View.FRONT: SdfGlyph.Figure.FRONT,
@@ -17,20 +12,16 @@ const _FIGURES: Dictionary[int, SdfGlyph.Figure] = {
 	CameraFraming.View.TILT: SdfGlyph.Figure.TILT,
 }
 
-var _buttons: Dictionary[int, ViewButton] = {}
+var _buttons: Dictionary[int, GlyphBar.GlyphButton] = {}
 
 func _ready() -> void:
 	super()
 	for v: int in CameraFraming.View.values():
 		var view: CameraFraming.View = v as CameraFraming.View
-		var button: ViewButton = ViewButton.new()
-		button.figure = _FIGURES[v]
 		var view_name: String = CameraFraming.View.keys()[v]
-		button.tooltip_text = view_name.capitalize()
+		var button: GlyphBar.GlyphButton = add_glyph(_FIGURES[v], view_name.capitalize())
 		button.pressed.connect(_on_pressed.bind(view))
-		add_item(button)
 		_buttons[v] = button
-	_size_buttons()
 
 ## Which buttons the room offers. FIXED hides the widget.
 func set_mode(camera: Room.Camera) -> void:
@@ -38,46 +29,8 @@ func set_mode(camera: Room.Camera) -> void:
 	_buttons[CameraFraming.View.TILT].visible = camera == Room.Camera.TILT
 
 ## Show `view` as the current one without emitting.
-func show_current(view: CameraFraming.View) -> void:
-	for button: ViewButton in _buttons.values():
-		button.set_pressed_no_signal(button == _buttons[view])
-		button.refresh()
-		button.update_glyph()
+func show_view(view: CameraFraming.View) -> void:
+	show_current(_buttons[view])
 
 func _on_pressed(view: CameraFraming.View) -> void:
 	view_chosen.emit(view)
-
-func _size_buttons() -> void:
-	var px: float = maxf(Style.current.tile_min_size * BUTTON_SCALE, MIN_PX)
-	for button: ViewButton in _buttons.values():
-		button.custom_minimum_size = Vector2(px, px)
-
-func _on_style_changed(preset: StylePreset) -> void:
-	super(preset)
-	_size_buttons()
-
-## A pill that shows one view's glyph, in the pressed font color while it is the current view.
-class ViewButton extends SdfButton:
-	var figure: SdfGlyph.Figure = SdfGlyph.Figure.FRONT
-	var _glyph: SdfGlyph = null
-
-	func _ready() -> void:
-		super()
-		_glyph = SdfGlyph.new()
-		_glyph.name = "Glyph"
-		_glyph.figure = figure
-		_glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		add_child(_glyph)
-		button_down.connect(update_glyph)
-		button_up.connect(update_glyph)
-		toggled.connect(func(_on: bool) -> void: update_glyph())
-		update_glyph()
-
-	func update_glyph() -> void:
-		if _glyph == null:
-			return
-		_glyph.tint = Style.current.surface if is_active() else Style.current.text
-
-	func _on_style_changed(preset: StylePreset) -> void:
-		super(preset)
-		update_glyph()

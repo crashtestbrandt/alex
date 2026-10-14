@@ -26,21 +26,25 @@ func test_board_gestalts_follow_board_order_and_skip_unknown_ids() -> void:
 	assert_eq(listed.size(), 2, "the missing id is skipped")
 	assert_eq(listed[0].id, "b", "board order, not bank order")
 
-func test_words_join_every_board_in_order_once() -> void:
+func test_words_are_the_boards_first_then_the_rest_of_the_bank() -> void:
 	var p: Profile = _sample()
 	p.put_gestalt(Gestalt.from_text("c", "See you | later"))
+	p.put_gestalt(Gestalt.from_text("d", "All done"))
 	p.boards.push_back(Board.make("more", "More", PackedStringArray(["a", "c"])))
 	var ids: PackedStringArray = PackedStringArray()
 	for g: Gestalt in p.words_gestalts():
 		ids.push_back(g.id)
-	assert_eq(ids, PackedStringArray(["b", "a", "c"]), "board order, a repeat dropped, a missing id skipped")
+	assert_eq(ids, PackedStringArray(["b", "a", "c", "d"]), "board order, a repeat dropped, a missing id skipped, the rest of the bank after")
 
-func test_words_fall_back_to_the_bank() -> void:
+func test_words_hold_the_whole_bank() -> void:
 	var p: Profile = _sample()
 	p.boards.clear()
 	assert_eq(p.words_gestalts().size(), 2, "no boards: the whole bank")
 	p.boards.push_back(Board.make("gone", "Gone", PackedStringArray(["missing"])))
-	assert_eq(p.words_gestalts().size(), 2, "boards that name nothing held: the whole bank")
+	assert_eq(p.words_gestalts().size(), 2, "boards that name nothing held: still the whole bank")
+	p.boards.push_back(Board.make("one", "One", PackedStringArray(["b"])))
+	assert_eq(p.words_gestalts()[0].id, "b", "a board's phrase comes first")
+	assert_eq(p.words_gestalts().size(), 2, "and a room's phrase is never left out")
 	assert_true(Profile.make("p2", "Empty").words_gestalts().is_empty(), "an empty bank has no words")
 
 func test_dict_round_trip() -> void:

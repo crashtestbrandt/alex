@@ -16,6 +16,8 @@ enum Figure {
 	TILT = 3,
 	DOTS = 4,
 	MICROPHONE = 5,
+	PALETTE = 6,
+	BUILD = 7,
 }
 
 @export var figure: Figure = Figure.FRONT:

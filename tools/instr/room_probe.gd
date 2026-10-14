@@ -220,6 +220,7 @@ func _run() -> void:
 	_check(room_view.visible and not grid.visible, "Explore brings the room back")
 	_check(home.mode_button(ChildHome.Mode.EXPLORE).button_pressed, "Explore is the pressed pill again")
 	await _check_chunks(home, room_view)
+	await _check_build(home, p)
 	home.show_words()
 	await get_tree().process_frame
 
@@ -284,6 +285,74 @@ func _check_chunks(home: ChildHome, room_view: RoomView) -> void:
 	Style.apply(previous)
 	home.show_explore()
 	await get_tree().create_timer(0.3).timeout
+
+## Build: the bank's beginnings and endings as chunk buttons, a strip that fills, says and empties, and a
+## built phrase the bank holds speaking as that phrase.
+func _check_build(home: ChildHome, p: Profile) -> void:
+	home.show_palette()
+	await get_tree().process_frame
+	_check(home._tiles.size() == p.gestalts.size(), "Palette holds the whole bank (%d of %d)" % [home._tiles.size(), p.gestalts.size()])
+	_check(home._tiles.has("lets_go_outside"), "a room's phrase is in Palette")
+	var widget: WordsWidget = home.get_node("%WordsWidget") as WordsWidget
+	_check(widget.visible, "the Words widget shows in Words")
+	var build_button: SdfButton = widget.items()[WordsWidget.Mode.BUILD]
+	var pill_px: Vector2 = build_button.get_global_rect().get_center()
+	get_viewport().push_input(_mouse(pill_px, true))
+	get_viewport().push_input(_mouse(pill_px, false))
+	await get_tree().process_frame
+	_check(home.words_mode() == WordsWidget.Mode.BUILD and home.build_view().visible, "a tap on Build shows the strip")
+	var build: BuildView = home.build_view()
+	var beginnings: Array[ChunkButton] = build.beginning_buttons()
+	var endings: Array[ChunkButton] = build.ending_buttons()
+	_check(beginnings.size() == ChunkBank.beginnings(p.gestalts).size(), "one button per beginning (%d)" % beginnings.size())
+	_check(endings.size() == ChunkBank.endings(p.gestalts).size(), "one button per ending (%d)" % endings.size())
+	var go: ChunkButton = null
+	for button: ChunkButton in beginnings:
+		if button.chunk == "Let's go":
+			go = button
+	var outside: ChunkButton = null
+	for button: ChunkButton in endings:
+		if button.chunk == "outside":
+			outside = button
+	_check(go != null and outside != null, "the door's chunks are on offer")
+	if go == null or outside == null:
+		return
+	_check(go.custom_minimum_size.y >= Style.current.tile_min_size, "a chunk button honors the touch floor")
+	var go_shape: SdfShape = go.get_node("Shape") as SdfShape
+	_check(go_shape != null and go_shape.fill == ChunkColors.color_for("Let's go", Style.current.chunk_palette), "a chunk button wears its chunk's color")
+	var speaker: Speaker = home.get_node("%Speaker") as Speaker
+	var heard: Array[Gestalt] = []
+	speaker.started.connect(func(g: Gestalt, _seconds: float) -> void: heard.push_back(g))
+	go.pressed.emit()
+	await get_tree().process_frame
+	_check(build.chunks() == PackedStringArray(["Let's go"]), "a tapped beginning lands on the strip")
+	_check(heard.size() == 1 and heard[0].text == "Let's go", "and is said on its own")
+	outside.pressed.emit()
+	await get_tree().process_frame
+	_check(build.chunks() == PackedStringArray(["Let's go", "outside"]), "a tapped ending follows it")
+	_check(build.strip_row().pills().size() == 2, "the strip shows both pills")
+	build._on_strip_down()
+	build._press_point = Vector2(-100.0, -100.0)
+	build._on_strip_pressed()
+	await get_tree().process_frame
+	_check(heard.size() == 3 and heard[2].id == "lets_go_outside", "a tap on the strip says the bank's own phrase")
+	build._press_point = build.strip_row().pills()[0].get_rect().get_center()
+	build._on_strip_pressed()
+	await get_tree().process_frame
+	_check(build.chunks() == PackedStringArray(["outside"]), "a tap on a strip pill takes it off")
+	build._press_point = Vector2(-100.0, -100.0)
+	build._on_strip_pressed()
+	await get_tree().process_frame
+	_check(heard.size() == 4 and heard[3].id == ChunkBank.BUILD_ID and heard[3].text == "outside", "a strip the bank does not hold is said as itself")
+	home.show_explore()
+	await get_tree().process_frame
+	_check(not widget.visible, "the Words widget hides in Explore")
+	home.show_words()
+	await get_tree().process_frame
+	_check(home.words_mode() == WordsWidget.Mode.BUILD and build.chunks() == PackedStringArray(["outside"]), "Words returns to Build with the strip kept")
+	build.clear()
+	speaker.stop()
+	await get_tree().create_timer(0.2).timeout
 
 ## The strip reads Explore then Words, whatever the room and the board are called.
 func _check_strip(home: ChildHome, p: Profile) -> void:

@@ -4,9 +4,10 @@ class_name ChildHome
 ## back to the adults' picker. No scores, no timers, no wrong answers (docs/design.md).
 ##
 ## The strip reads Explore and Words, never a room's or a board's title. Explore is the profile's first room;
-## room choice inside it waits until a profile has a second room. Words is every tile the boards name
-## (`Profile.words_gestalts`). Holding a spot or a tile opens the caregiver's recording overlay for that
-## gestalt.
+## room choice inside it waits until a profile has a second room. Words is the whole bank
+## (`Profile.words_gestalts`) in two modes on a floating widget: Palette, a column of tiles, and Build, a
+## strip the learner fills from the bank's chunks ([BuildView]). Holding a spot or a tile opens the
+## caregiver's recording overlay for that gestalt.
 
 signal profiles_requested
 
@@ -18,6 +19,7 @@ enum Mode {
 
 const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 const _MODE_LABELS: Dictionary[int, String] = {Mode.EXPLORE: "Explore", Mode.WORDS: "Words"}
+const WIDGET_MARGIN: float = 10.0
 
 @onready var _title: HoldButton = %Title
 @onready var _name_slot: Control = %NameSlot
@@ -28,6 +30,9 @@ const _MODE_LABELS: Dictionary[int, String] = {Mode.EXPLORE: "Explore", Mode.WOR
 @onready var _column: VBoxContainer = %Column
 @onready var _margin: MarginContainer = %Margin
 @onready var _grid: HFlowContainer = %Board
+@onready var _board_spacer: Control = %BoardSpacer
+@onready var _build: BuildView = %Build
+@onready var _words_widget: WordsWidget = %WordsWidget
 @onready var _profiles_button: HoldButton = %ProfilesButton
 @onready var _speaker: Speaker = %Speaker
 @onready var _record_overlay: RecordOverlay = %RecordOverlay
@@ -35,10 +40,14 @@ const _MODE_LABELS: Dictionary[int, String] = {Mode.EXPLORE: "Explore", Mode.WOR
 var _safe_rect: Rect2 = Rect2()
 var _profile: Profile = null
 var _mode: Mode = Mode.EXPLORE
+var _words_mode: WordsWidget.Mode = WordsWidget.Mode.PALETTE
 var _room: Room = null
 var _tiles: Dictionary[String, GestaltTile] = {}
 var _modes: Dictionary[int, SdfButton] = {}
 var _speaking_spot: Spot = null
+## Whether Build asked for the current utterance, and which strip chunk it was, or -1 for the whole strip.
+var _speaking_build: bool = false
+var _build_index: int = -1
 
 func _ready() -> void:
 	var name_padding: StyleBoxEmpty = StyleBoxEmpty.new()
@@ -54,6 +63,10 @@ func _ready() -> void:
 	_room_view.spot_tapped.connect(_on_spot_tapped)
 	_room_view.spot_held.connect(_on_spot_held)
 	_record_overlay.kept.connect(_on_recording_kept)
+	_words_widget.mode_chosen.connect(_on_words_mode_chosen)
+	_words_widget.resized.connect(_layout_home)
+	_build.chunk_added.connect(_on_chunk_added)
+	_build.strip_tapped.connect(_on_strip_tapped)
 	_top_bar.item_rect_changed.connect(_sync_room_inset)
 	Style.changed.connect(_on_style_changed)
 	resized.connect(_layout_home)
@@ -89,17 +102,24 @@ func show_room(r: Room) -> void:
 	_room = r
 	_grid.visible = false
 	_stage.visible = false
+	_build.visible = false
+	_words_widget.visible = false
 	_room_view.visible = true
 	_room_view.show_room(_profile, r)
 	_show_mode(Mode.EXPLORE)
 	_layout_home()
 
-## Words: every tile the profile's boards name, or its whole bank (`Profile.words_gestalts`).
+## Words, in whichever of its modes the learner last used.
 func show_words() -> void:
-	_speaker.stop()
-	_mode = Mode.WORDS
-	_room = null
-	_room_view.visible = false
+	if _words_mode == WordsWidget.Mode.BUILD:
+		show_build()
+	else:
+		show_palette()
+
+## Palette: every gestalt in the bank as a tile (`Profile.words_gestalts`).
+func show_palette() -> void:
+	_enter_words(WordsWidget.Mode.PALETTE)
+	_build.visible = false
 	_grid.visible = true
 	_stage.visible = true
 	_stage.scroll_vertical = 0
@@ -115,8 +135,39 @@ func show_words() -> void:
 		_grid.add_child(tile)
 		_tiles[g.id] = tile
 	_layout_board()
-	_show_mode(Mode.WORDS)
 	_layout_home()
+
+## Build: the bank's beginnings and endings, and the strip the learner fills from them ([BuildView]).
+func show_build() -> void:
+	_enter_words(WordsWidget.Mode.BUILD)
+	_grid.visible = false
+	_stage.visible = false
+	_build.visible = true
+	_build.set_bank(_profile.gestalts)
+	_layout_home()
+
+func build_view() -> BuildView:
+	return _build
+
+func words_mode() -> WordsWidget.Mode:
+	return _words_mode
+
+func _enter_words(words: WordsWidget.Mode) -> void:
+	_speaker.stop()
+	_mode = Mode.WORDS
+	_words_mode = words
+	_room = null
+	_speaking_build = false
+	_room_view.visible = false
+	_words_widget.visible = true
+	_words_widget.show_mode(words)
+	_show_mode(Mode.WORDS)
+
+func _on_words_mode_chosen(words: WordsWidget.Mode) -> void:
+	if words == WordsWidget.Mode.BUILD:
+		show_build()
+	else:
+		show_palette()
 
 ## The pill a mode shows on the strip, or null when the profile has nothing for that mode.
 func mode_button(m: Mode) -> SdfButton:
@@ -165,7 +216,19 @@ func _layout_home() -> void:
 	_strip.fit_width(available.x - 48.0 if compact else available.x * 0.55)
 	_layout_name.call_deferred()
 	_layout_board()
+	_layout_words_widget()
 	_sync_room_inset.call_deferred()
+
+## The Words widget floats over the bottom right corner, like the room's view widget, and the columns under
+## it leave it clear so their last row can scroll above it.
+func _layout_words_widget() -> void:
+	var safe: Rect2 = _safe_rect if _safe_rect.has_area() else Rect2(Vector2.ZERO, size)
+	_words_widget.fit_width(maxf(safe.size.x - WIDGET_MARGIN * 2.0, 1.0))
+	_words_widget.reset_size()
+	_words_widget.position = safe.end - _words_widget.size - Vector2.ONE * WIDGET_MARGIN
+	var clearance: float = _words_widget.size.y + WIDGET_MARGIN * 2.0
+	_board_spacer.custom_minimum_size.y = clearance
+	_build.set_bottom_clearance(clearance)
 
 ## Only the displayed name receives taps; unused header space passes through to the room.
 func _layout_name() -> void:
@@ -189,15 +252,37 @@ func _say(g: Gestalt) -> void:
 
 func _on_spot_tapped(s: Spot, g: Gestalt) -> void:
 	_speaking_spot = s
+	_speaking_build = false
 	_say(g)
 
 func _on_tile_tapped(g: Gestalt) -> void:
 	_speaking_spot = null
+	_speaking_build = false
 	_say(g)
+
+## A chunk that landed on the strip is said on its own. Until per-chunk takes exist, that is the OS voice.
+func _on_chunk_added(chunk: String, index: int) -> void:
+	_speaking_spot = null
+	_speaking_build = true
+	_build_index = index
+	_say(ChunkBank.phrase(PackedStringArray([chunk])))
+
+## The strip is said whole: in the caregiver's voice when the bank holds that phrase, as itself otherwise.
+func _on_strip_tapped(chunks: PackedStringArray) -> void:
+	_speaking_spot = null
+	_speaking_build = true
+	_build_index = -1
+	_say(ChunkBank.voice(_profile.gestalts, chunks))
 
 func _on_speech_started(g: Gestalt, seconds: float) -> void:
 	if _speaking_spot != null and _room != null:
 		_room_view.show_chunks(_speaking_spot, g, seconds)
+		return
+	if _speaking_build and _mode == Mode.WORDS and _words_mode == WordsWidget.Mode.BUILD:
+		if _build_index >= 0:
+			_build.play_chunk(_build_index, seconds)
+		else:
+			_build.play(seconds)
 		return
 	# The name utterance is separate even if a bank entry also has the id "name".
 	if _profile.gestalt(g.id) != g:
@@ -239,6 +324,7 @@ func _on_name_tapped() -> void:
 	if _profile == null or _title.consumed_by_hold():
 		return
 	_speaking_spot = null
+	_speaking_build = false
 	_say(_profile.name_gestalt())
 
 func _on_name_held() -> void:

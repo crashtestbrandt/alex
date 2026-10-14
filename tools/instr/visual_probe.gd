@@ -146,7 +146,18 @@ func _run() -> void:
 				selected += 1 if button.button_pressed else 0
 			_check(selected == 1, "exactly one selected mode")
 			_check(home.mode_button(ChildHome.Mode.WORDS).button_pressed, "Words is the selected mode")
+			_inside(home.get_node("%WordsWidget") as Control, screen, "words widget")
 			_shot("board")
+			home.show_build()
+			await _settle()
+			var build: BuildView = home.build_view()
+			_inside(build, screen, "build view")
+			for button: ChunkButton in build.beginning_buttons() + build.ending_buttons():
+				_check(button.size.y >= Style.current.tile_min_size, "chunk button meets touch floor")
+				_check(button.get_global_rect().end.x <= screen.end.x + 1.0, "chunk button fits horizontally")
+			_shot("build")
+			home.show_palette()
+			await _settle()
 			overlay.open(Gestalt.from_text("long", "Let's go outside together and look at the trees in the garden"), profile)
 			await _settle()
 			_square(overlay.get_node("%RecordButton") as Control, "record button")
