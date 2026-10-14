@@ -79,19 +79,32 @@ mic-probe:
 screenshot:
     "{{godot}}" --path . tools/instr/screenshot_probe.tscn
 
+# The export presets keep the rules docs/exports.md lists: starter packs, the microphone, no signing secret.
+export-presets-check:
+    tools/check-export-presets.sh
+
 # Everything the PR gate runs, in its order, then the headless scene probes.
-check: doc-size-check lint test room-probe
+check: doc-size-check export-presets-check lint test room-probe
 
-# Desktop exports into build/<commit>/<platform>/. Each needs the matching 4.7 export template installed and
-# a preset of that name in export_presets.cfg, which does not exist yet (README "Exports").
-export-macos:
-    mkdir -p build/{{commit}}/macos
-    "{{godot}}" --headless --path . --export-release "macOS" build/{{commit}}/macos/alex.zip
+# Exports into build/<commit>/<platform>/ (docs/exports.md). Each needs export templates of the same Godot
+# version. Android also needs an Android SDK and a JDK, and iOS needs a Mac with Xcode and a Team ID.
+export-android: (_export "--export-debug" "Android" "android/alex.apk")
 
-export-linux:
-    mkdir -p build/{{commit}}/linux
-    "{{godot}}" --headless --path . --export-release "Linux" build/{{commit}}/linux/alex.x86_64
+export-ios: (_export "--export-release" "iOS" "ios/alex.xcodeproj")
 
-export-windows:
-    mkdir -p build/{{commit}}/windows
-    "{{godot}}" --headless --path . --export-release "Windows Desktop" build/{{commit}}/windows/alex.exe
+export-macos: (_export "--export-release" "macOS" "macos/alex.zip")
+
+export-windows: (_export "--export-release" "Windows Desktop" "windows/alex.exe")
+
+export-linux: (_export "--export-release" "Linux" "linux/alex.x86_64")
+
+# Every preset, then the checks on what each one wrote (tools/check-exports.sh).
+exports: export-android export-ios export-macos export-windows export-linux
+    tools/check-exports.sh build/{{commit}}
+
+# Install the Android export on the one device `adb devices` lists.
+install-android:
+    adb install -r build/{{commit}}/android/alex.apk
+
+_export MODE PRESET OUT:
+    tools/export.sh {{MODE}} "{{PRESET}}" "build/{{commit}}/{{OUT}}"

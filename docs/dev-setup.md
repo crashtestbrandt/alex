@@ -6,6 +6,8 @@
   `/Applications/Godot.app` on macOS (`tools/godot-bin.sh`). Homebrew's cask puts a `godot` on PATH.
 - **just**, the command runner. `just` with no argument lists every recipe.
 - **git-lfs**, for any binary media the repository ships (`.gitattributes`). Nothing is tracked yet.
+- **For exports:** export templates of the same Godot version, plus a JDK and an Android SDK for Android and
+  Xcode for iOS (docs/exports.md "Machine setup").
 
 ```sh
 just setup     # import pass; registers every class_name. Run once after cloning.

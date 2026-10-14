@@ -22,12 +22,16 @@ Suites are hand-rolled, no GUT or GdUnit4. `tests/run_unit_tests.gd` discovers t
 | Step | What |
 | --- | --- |
 | doc caps | `tools/check-doc-size.sh`, no Godot. |
+| export presets | `tools/check-export-presets.sh`, no Godot. The rules are in docs/exports.md. |
 | lint | `tools/lint-gdscript.sh`: import, then load the main scene; fail on any script error. |
 | test | `tests/run_unit_tests.gd`. |
 
-`just check` runs the same three locally, then the headless scene probes (`just room-probe`, which picks,
+`just check` runs the same four locally, then the headless scene probes (`just room-probe`, which picks,
 taps, walks the views and idles back; docs/geometry.md "Gates"). A probe stays out of the PR gate. `just lint` also loads every `tools/instr/*.gd` so a probe that does not compile fails
 there rather than at a run.
+
+`just exports` builds every export preset and checks what each one holds (docs/exports.md "Validation"). It
+needs export templates and SDKs, so it stays out of `just check`.
 
 ## Doc size caps
 
