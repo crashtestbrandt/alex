@@ -6,7 +6,7 @@ class_name SdfButton
 ## against.
 ##
 ## `quiet` is for a pill inside a bar: no fill, no relief, until it is the active one. `primary` is the one
-## button on a screen that does the thing: always the accent.
+## button on a screen that does the thing: always the accent. `danger` marks destructive actions in red.
 
 enum Shape {
 	ROUNDED = 0,
@@ -17,6 +17,7 @@ enum Shape {
 const CONTENT_MARGIN_PX: float = 20.0
 const HOVER_BORDER_PX: float = 3.0
 const PRESS_SECONDS: float = 0.08
+const DANGER_FILL: Color = Color("b4232d")
 
 @export var shape: Shape = Shape.ROUNDED:
 	set(value):
@@ -29,6 +30,10 @@ const PRESS_SECONDS: float = 0.08
 @export var primary: bool = false:
 	set(value):
 		primary = value
+		refresh()
+@export var danger: bool = false:
+	set(value):
+		danger = value
 		refresh()
 ## Below zero, the style preset's corner radius. A bar or a panel sets a concentric one.
 @export var radius_px: float = -1.0:
@@ -96,6 +101,8 @@ func refresh() -> void:
 			_shape.radius_px = UiGeometry.rounded_radius(size, shape_radius)
 	if disabled:
 		_shape.fill = preset.surface.lerp(preset.background, 0.5)
+	elif danger:
+		_shape.fill = DANGER_FILL.darkened(0.15) if active else DANGER_FILL
 	elif active or primary:
 		_shape.fill = preset.accent
 	elif quiet:
@@ -104,11 +111,16 @@ func refresh() -> void:
 		_shape.fill = preset.surface
 	_shape.border_px = HOVER_BORDER_PX if (_hover or has_focus()) and not disabled else 0.0
 	_shape.border_color = preset.surface if primary or active else preset.accent
+	if danger:
+		_shape.border_color = Color.WHITE
 	_shape.relief = 0.0 if quiet else -1.0
-	if primary:
-		add_theme_color_override("font_focus_color", preset.surface)
-		add_theme_color_override("font_color", preset.surface)
-		add_theme_color_override("font_hover_color", preset.surface)
+	for color_name: String in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
+		if danger:
+			add_theme_color_override(color_name, Color.WHITE)
+		elif primary:
+			add_theme_color_override(color_name, preset.surface)
+		else:
+			remove_theme_color_override(color_name)
 
 # Named for the shape so a subclass with its own press handlers, HoldButton, never overrides these.
 func _on_shape_down() -> void:

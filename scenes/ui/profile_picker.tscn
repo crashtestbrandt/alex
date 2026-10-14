@@ -146,5 +146,6 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 88)
 script = ExtResource("hold")
 hold_seconds = 3.0
+danger = true
 text = "Hold 3 seconds to delete"
 autowrap_mode = 3

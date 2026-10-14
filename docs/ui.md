@@ -41,7 +41,7 @@ is `PASS`, so a tap on its padding does not.
 | --- | --- | --- |
 | `SdfShape` | `Control` | The field itself: fill, border, rim, shadow. Never takes input. |
 | `SdfGlyph` | `Control` | One figure of the glyph shader: front, side, top, turn, dots, microphone. |
-| `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. |
+| `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. `danger` uses red with white text across styles. |
 | `SdfPanel` | `PanelContainer` | A panel with an `SdfShape` behind its content, a larger radius, and `inner_radius()` for what sits in it. |
 | `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the place strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
