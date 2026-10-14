@@ -24,8 +24,9 @@ The learner moves between two modes, Explore and Words.
   caregiver can add a third view that stands the learner in the middle of the room to look around, or
   remove all of them. A tap on a view's button puts it back, and a room left alone returns to the front.
 
-The shipped starter pack's scene is a bedroom. Touching the door opens it to "Let's go outside" and closes it
-to "Let's go inside". Scenes, objects and phrases are data in a pack, so a pack can describe any place.
+Two scene packs ship. The bedroom's door opens to "Let's go outside" and closes to "Let's go inside"; the
+bathroom's tub fills to "Water on". A profile starts with one pack and adds the other from the adults'
+screen. Scenes, objects and phrases are data in a pack, so a pack can describe any place.
 
 There are no questions, no right answers, no scores, no timers and no rewards. Touching the same thing forty
 times is fine. Nothing on the learner's screen can delete anything, buy anything, or leave the device.
@@ -71,9 +72,9 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 Early and usable.
 
-- **Ships:** one starter pack with a nine-object scene, a Words palette and a chunk builder, three looks,
-  and recording in your own voice.
-- **Coming:** scene packs a profile can add, more objects and reactions, recording each chunk so the
+- **Ships:** two scene packs, a bedroom and a bathroom, that a profile can start with or add, a Words
+  palette and a chunk builder, three looks, and recording in your own voice.
+- **Coming:** moving between a profile's rooms, more objects and reactions, recording each chunk so the
   builder speaks in your voice, the learner's own songs and clips, and a bank view for caregivers.
 - **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording
   there is not yet tried.

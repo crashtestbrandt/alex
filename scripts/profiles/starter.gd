@@ -1,10 +1,14 @@
 extends RefCounted
 class_name Starter
-## A starter pack: the gestalts and boards a new profile is seeded with. Shipped as JSON under res://starters/
-## so a parent or clinician can write one without touching code (docs/profiles.md). A profile copies the
-## pack at creation and never reads it again, so editing a pack changes nothing for an existing child.
+## A starter pack: a scene, its room, its gestalts and its boards. Shipped as JSON under res://starters/ so a
+## parent or clinician can write one without touching code (docs/profiles.md). A profile copies the pack at
+## creation (`seed`) or adds it later (`add_to`) and never reads it again, so editing a pack changes nothing
+## for an existing child.
 
 const DIR: String = "res://starters"
+## Joins a pack id to a local id when a pack is added to a profile. A gestalt id names a recording file, so
+## the separator is one every file system takes.
+const SCOPE_MARK: String = "."
 
 var id: String = ""
 var title: String = ""
@@ -69,9 +73,66 @@ static func from_dict(d: Dictionary) -> Starter:
 			s.rooms.push_back(r)
 	return s
 
-## Copy this pack's gestalts, rooms and boards into `p`. Existing entries with the same id are replaced.
+## Whether this pack is a scene a profile can add: it holds at least one gestalt.
+func is_scene() -> bool:
+	return not gestalts.is_empty()
+
+## Add this pack to `p` as a scene. Its gestalts, rooms and boards are copied in with ids prefixed by the
+## pack's id, so nothing collides with what the profile holds. A phrase the bank already says, by its chunk
+## key, is not copied again; the pack's spots and boards point at the bank's own. Returns false, changing
+## nothing, when the profile already holds the pack.
+func add_to(p: Profile) -> bool:
+	if p.has_scene(id):
+		return false
+	var ids: Dictionary[String, String] = {}
+	for g: Gestalt in gestalts:
+		var own: Gestalt = p.gestalt_by_text(g.authored_text())
+		if own != null:
+			ids[g.id] = own.id
+			continue
+		var copy: Gestalt = Gestalt.from_dict(g.to_dict())
+		copy.id = scoped(g.id)
+		p.put_gestalt(copy)
+		ids[g.id] = copy.id
+	for r: Room in rooms:
+		var room: Room = Room.from_dict(r.to_dict())
+		room.id = scoped(r.id)
+		for s: Spot in room.spots:
+			s.gestalt_id = _mapped(ids, s.gestalt_id)
+			if not s.alt_gestalt_id.is_empty():
+				s.alt_gestalt_id = _mapped(ids, s.alt_gestalt_id)
+		var existing_room: Room = p.room(room.id)
+		if existing_room != null:
+			p.rooms.erase(existing_room)
+		p.rooms.push_back(room)
+	for b: Board in boards:
+		var mapped: PackedStringArray = PackedStringArray()
+		for gid: String in b.gestalt_ids:
+			mapped.push_back(_mapped(ids, gid))
+		var board: Board = Board.make(scoped(b.id), b.title, mapped)
+		var existing: Board = p.board(board.id)
+		if existing != null:
+			p.boards.erase(existing)
+		p.boards.push_back(board)
+	p.scenes.push_back(id)
+	return true
+
+## The id a pack-local gestalt id became in the profile, or itself when the map has no entry.
+static func _mapped(ids: Dictionary[String, String], local_id: String) -> String:
+	if ids.has(local_id):
+		return ids[local_id]
+	return local_id
+
+## A pack's local id, scoped to the pack: `home_routines.lets_go_outside`.
+func scoped(local_id: String) -> String:
+	return "%s%s%s" % [id, SCOPE_MARK, local_id]
+
+## Copy this pack's gestalts, rooms and boards into `p` as its first scene. Existing entries with the same
+## id are replaced.
 func seed(p: Profile) -> void:
 	p.starter_id = id
+	if not p.has_scene(id):
+		p.scenes.push_back(id)
 	for g: Gestalt in gestalts:
 		p.put_gestalt(Gestalt.from_dict(g.to_dict()))
 	for b: Board in boards:

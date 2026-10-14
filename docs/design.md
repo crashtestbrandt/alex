@@ -67,7 +67,9 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
   the recording that voices it.
 - **One caregiver gesture.** Hold any object or tile to record its phrase in your own voice. Hold the big
   button, say it, let go, hear it back, keep it. The previous take is kept beside the new one.
-- **Starter packs and style presets.** Seed content and a look, chosen once at profile creation.
+- **Scene packs and style presets.** A pack is a scene: a room and its phrases. A profile starts with one
+  and adds any number from the adults' screen; its bank is the union, with a phrase held once however many
+  scenes say it. A look is chosen at creation and changed on the adults' screen.
 
 Planned, in rough order: more rooms and more reactions; the learner's own songs and clips, since so much
 echolalia comes from them; per-chunk recordings so Build speaks in a familiar voice; video

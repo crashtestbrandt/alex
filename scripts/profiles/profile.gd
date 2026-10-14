@@ -6,7 +6,7 @@ class_name Profile
 ## A profile is the unit of configurability (docs/profiles.md). Everything a family or clinician tailors
 ## lives here or in the style preset it names. Nothing about one child is in code.
 
-const SCHEMA_VERSION: int = 2
+const SCHEMA_VERSION: int = 3
 
 var id: String = ""
 var display_name: String = ""
@@ -16,6 +16,9 @@ var stage: NlaStage.Stage = NlaStage.Stage.UNKNOWN
 var style_id: String = "calm"
 ## The starter pack this profile was seeded from, for the record. Empty for a blank start.
 var starter_id: String = ""
+## Every pack this profile holds, the starter first, in the order they were added (`Starter.add_to`). A pack
+## is added once.
+var scenes: PackedStringArray = PackedStringArray()
 ## Unix time of creation.
 var created_at: int = 0
 var gestalts: Array[Gestalt] = []
@@ -35,6 +38,18 @@ func gestalt(gestalt_id: String) -> Gestalt:
 		if g.id == gestalt_id:
 			return g
 	return null
+
+## The gestalt that says `text`, by the chunk key, or null. Chunk marks and casing do not matter.
+func gestalt_by_text(text: String) -> Gestalt:
+	var wanted: String = ChunkColors.key(Gestalt.from_text("", text).text)
+	for g: Gestalt in gestalts:
+		if ChunkColors.key(g.text) == wanted:
+			return g
+	return null
+
+## Whether this profile holds the pack `scene_id`.
+func has_scene(scene_id: String) -> bool:
+	return scene_id in scenes
 
 ## A separate utterance; its recording uses media/name/ to avoid bank filename collisions.
 func name_gestalt() -> Gestalt:
@@ -107,6 +122,7 @@ func to_dict() -> Dictionary:
 		"stage": int(stage),
 		"style": style_id,
 		"starter": starter_id,
+		"scenes": Array(scenes),
 		"created_at": created_at,
 		"gestalts": gestalt_dicts,
 		"boards": board_dicts,
@@ -119,6 +135,8 @@ static func from_dict(d: Dictionary) -> Profile:
 	var schema: int = JsonValue.to_int(d.get("schema"), 0)
 	if schema == 1:
 		return from_dict(migrate_v1(d))
+	if schema == 2:
+		return from_dict(migrate_v2(d))
 	if schema != SCHEMA_VERSION:
 		return null
 	var profile_id: String = JsonValue.to_text(d.get("id")).strip_edges()
@@ -131,6 +149,10 @@ static func from_dict(d: Dictionary) -> Profile:
 	p.stage = NlaStage.from_value(d.get("stage"))
 	p.style_id = JsonValue.to_text(d.get("style"), "calm")
 	p.starter_id = JsonValue.to_text(d.get("starter"))
+	for item: Variant in JsonValue.to_array(d.get("scenes")):
+		var scene_id: String = JsonValue.to_text(item).strip_edges()
+		if not scene_id.is_empty() and not scene_id in p.scenes:
+			p.scenes.push_back(scene_id)
 	p.created_at = JsonValue.to_int(d.get("created_at"), 0)
 	for row: Dictionary in JsonValue.to_dict_rows(d.get("gestalts")):
 		var g: Gestalt = Gestalt.from_dict(row)
@@ -149,6 +171,14 @@ static func from_dict(d: Dictionary) -> Profile:
 ## Version 1 had no name recording. Preserve the bank, rooms and media references.
 static func migrate_v1(d: Dictionary) -> Dictionary:
 	var migrated: Dictionary = d.duplicate(true)
-	migrated["schema"] = SCHEMA_VERSION
+	migrated["schema"] = 2
 	migrated["name_recording"] = ""
+	return migrated
+
+## Version 2 had no scene list. The starter it was seeded from is its one scene.
+static func migrate_v2(d: Dictionary) -> Dictionary:
+	var migrated: Dictionary = d.duplicate(true)
+	migrated["schema"] = 3
+	var starter: String = JsonValue.to_text(d.get("starter")).strip_edges()
+	migrated["scenes"] = [starter] if not starter.is_empty() else []
 	return migrated

@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "id": "bath_time",
+  "title": "Bath time",
+  "description": "A bathroom to explore: a tub that fills, a lamp, a window, a star on the wall, a ball, a cup, a rug. Bath-time phrases in chunks. Add it to a profile from the adults' screen, or start with it.",
+  "gestalts": [
+    {
+      "id": "time_for_a_bath",
+      "text": "It's time for | a bath",
+      "function": "routine"
+    },
+    {
+      "id": "all_clean",
+      "text": "All | clean",
+      "function": "comment"
+    },
+    {
+      "id": "lets_get_in_the_tub",
+      "text": "Let's get | in the tub",
+      "function": "routine"
+    },
+    {
+      "id": "water_on",
+      "text": "Water | on",
+      "function": "routine"
+    },
+    {
+      "id": "water_off",
+      "text": "Water | off",
+      "function": "routine"
+    },
+    {
+      "id": "lights_on",
+      "text": "Lights | on",
+      "function": "routine"
+    },
+    {
+      "id": "lights_off",
+      "text": "Lights | off",
+      "function": "routine"
+    },
+    {
+      "id": "splash_splash",
+      "text": "Splash | splash",
+      "function": "comment"
+    },
+    {
+      "id": "wash_your_hands",
+      "text": "Wash | your hands",
+      "function": "routine"
+    },
+    {
+      "id": "look_at_the_star",
+      "text": "Look at | the star",
+      "function": "comment"
+    },
+    {
+      "id": "so_warm",
+      "text": "So | warm",
+      "function": "comment"
+    },
+    {
+      "id": "lets_get_dry",
+      "text": "Let's get | dry",
+      "function": "routine"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "bath",
+      "title": "Bath time",
+      "camera": "tilt",
+      "spots": [
+        {
+          "id": "door",
+          "kind": "door",
+          "reaction": "open",
+          "wall": "left",
+          "x": 0.25,
+          "height": 0.0,
+          "size": 0.5,
+          "gestalt": "time_for_a_bath",
+          "alt_gestalt": "all_clean"
+        },
+        {
+          "id": "tub",
+          "kind": "tub",
+          "reaction": "wobble",
+          "x": 0.65,
+          "y": 0.25,
+          "size": 0.5,
+          "gestalt": "water_on",
+          "alt_gestalt": "water_off"
+        },
+        {
+          "id": "light",
+          "kind": "light",
+          "reaction": "glow",
+          "x": 0.22,
+          "y": 0.15,
+          "size": 0.4,
+          "gestalt": "lights_on",
+          "alt_gestalt": "lights_off"
+        },
+        {
+          "id": "window",
+          "kind": "window",
+          "reaction": "glow",
+          "wall": "back",
+          "x": 0.7,
+          "height": 0.45,
+          "size": 0.26,
+          "gestalt": "so_warm"
+        },
+        {
+          "id": "star",
+          "kind": "star",
+          "reaction": "spin",
+          "wall": "back",
+          "x": 0.3,
+          "height": 0.65,
+          "size": 0.12,
+          "gestalt": "look_at_the_star"
+        },
+        {
+          "id": "rug",
+          "kind": "circle",
+          "reaction": "grow",
+          "x": 0.5,
+          "y": 0.7,
+          "size": 0.32,
+          "gestalt": "lets_get_dry"
+        },
+        {
+          "id": "ball",
+          "kind": "ball",
+          "reaction": "bounce",
+          "x": 0.58,
+          "y": 0.78,
+          "size": 0.11,
+          "gestalt": "splash_splash"
+        },
+        {
+          "id": "cup",
+          "kind": "cup",
+          "reaction": "wobble",
+          "x": 0.9,
+          "y": 0.7,
+          "size": 0.09,
+          "gestalt": "wash_your_hands"
+        }
+      ]
+    }
+  ],
+  "boards": [
+    {
+      "id": "bath",
+      "title": "Bath",
+      "gestalts": [
+        "lets_get_in_the_tub",
+        "wash_your_hands",
+        "all_clean",
+        "lets_get_dry"
+      ]
+    }
+  ]
+}
