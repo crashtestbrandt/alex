@@ -28,7 +28,10 @@ var _gestalt: Gestalt = null
 var _profile: Profile = null
 var _take: AudioStreamWAV = null
 var _idle: float = 0.0
+var _recording_name: bool = false
 var _previous_focus: Control = null
+var _cleanup_thread: Thread = null
+var _cleanup_cancelled: bool = false
 
 func _ready() -> void:
 	visible = false
@@ -41,8 +44,9 @@ func _ready() -> void:
 	get_window().focus_exited.connect(_cancel_capture)
 	set_process(false)
 
-func open(g: Gestalt, p: Profile) -> void:
+func open(g: Gestalt, p: Profile, recording_name: bool = false) -> void:
 	_previous_focus = get_viewport().gui_get_focus_owner()
+	_recording_name = recording_name
 	_gestalt = g
 	_profile = p
 	_phrase.text = g.text
@@ -60,18 +64,35 @@ func set_safe_area(rect: Rect2) -> void:
 	SafeArea.fit_control(_sheet, rect)
 
 func close() -> void:
+	_cleanup_cancelled = true
 	if _recorder.is_recording():
 		_recorder.stop()
 	_preview.stop()
 	_take = null
 	visible = false
-	set_process(false)
+	set_process(_cleanup_thread != null)
 	if is_instance_valid(_previous_focus) and _previous_focus.is_visible_in_tree():
 		_previous_focus.grab_focus()
 	_previous_focus = null
 	closed.emit()
 
 func _process(delta: float) -> void:
+	if _cleanup_thread != null:
+		_idle = 0.0
+		if not _cleanup_thread.is_alive():
+			var result: Variant = _cleanup_thread.wait_to_finish()
+			_cleanup_thread = null
+			if _cleanup_cancelled or not visible:
+				if visible:
+					_reset()
+				else:
+					set_process(false)
+			elif result is AudioStreamWAV:
+				var cleaned: AudioStreamWAV = result
+				_review_take(cleaned)
+			else:
+				_review_take(null)
+		return
 	if _recorder.is_recording() or _preview.playing:
 		_idle = 0.0
 		return
@@ -87,18 +108,23 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _cancel_capture() -> void:
+	if _cleanup_thread != null:
+		_cleanup_cancelled = true
 	if _recorder.is_recording():
 		_recorder.stop()
 		_reset()
 
 func _reset() -> void:
+	_cleanup_cancelled = true
 	_take = null
 	_preview.stop()
 	_review_row.visible = false
 	_record_button.visible = true
-	_record_button.disabled = false
+	_record_button.disabled = _cleanup_thread != null
 	(_record_button as SdfButton).refresh()
 	_status.text = "Hold the button, say it, let go."
+	if _cleanup_thread != null:
+		_status.text = "Finishing the previous take…"
 	if visible:
 		_focus_controls()
 
@@ -134,6 +160,25 @@ func _on_record_up() -> void:
 	if take == null or take.get_length() < MIN_TAKE_SECONDS:
 		_status.text = "That was very short. Hold the button while you speak."
 		return
+	_clean_take(take)
+
+func _clean_take(take: AudioStreamWAV) -> void:
+	_status.text = "Cleaning up the recording…"
+	_record_button.disabled = true
+	(_record_button as SdfButton).refresh()
+	_cleanup_cancelled = false
+	_cleanup_thread = Thread.new()
+	var err: Error = _cleanup_thread.start(RecordingCleanup.process.bind(take))
+	if err != OK:
+		_cleanup_thread = null
+		_review_take(RecordingCleanup.process(take))
+
+func _review_take(take: AudioStreamWAV) -> void:
+	_record_button.disabled = false
+	(_record_button as SdfButton).refresh()
+	if take == null:
+		_status.text = "That was too quiet. Try again closer to the microphone."
+		return
 	_take = take
 	_preview.stream = take
 	_preview.play()
@@ -142,13 +187,23 @@ func _on_record_up() -> void:
 	_review_row.visible = true
 	_focus_controls()
 
+func _exit_tree() -> void:
+	if _cleanup_thread != null:
+		_cleanup_thread.wait_to_finish()
+
 func _on_keep() -> void:
 	if _take == null:
 		return
-	var err: Error = Recorder.save(_take, _gestalt, ProfileStore.media_dir(_profile.id))
+	var media_dir: String = ProfileStore.media_dir(_profile.id)
+	if _recording_name:
+		media_dir = media_dir.path_join("name")
+	var err: Error = Recorder.save(_take, _gestalt, media_dir)
 	if err != OK:
 		_status.text = "Could not save the recording (%s)." % error_string(err)
 		return
+	if _recording_name:
+		_gestalt.recording = "name/" + _gestalt.recording
+		_profile.name_recording = _gestalt.recording
 	err = ProfileStore.save_profile(_profile)
 	if err != OK:
 		_status.text = "Saved the sound, but not the profile (%s)." % error_string(err)

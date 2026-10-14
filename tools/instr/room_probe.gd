@@ -51,6 +51,8 @@ func _run() -> void:
 	_check(absf(mid.y - safe.get_center().y) < 2.0 and absf(mid.x - safe.get_center().x) < 2.0,
 		"the room's center sits at the band's center (%s vs %s)" % [mid, safe.get_center()])
 	var bodies: Array[SpotBody] = room_view.bodies()
+	var initial_door: SpotBody = room_view.body("door")
+	_check(room_view.recording_gestalt_for(initial_door.spot).id == "lets_go_outside", "untapped door records its first phrase")
 	_check(bodies.size() == p.rooms[0].spots.size(), "one body per spot (%d of %d)" % [bodies.size(), p.rooms[0].spots.size()])
 	for b: SpotBody in bodies:
 		var point: Vector2 = room_view.screen_point(b)
@@ -71,6 +73,12 @@ func _run() -> void:
 	_check(door != null, "the home room has a door")
 	if door != null:
 		_check(room_view.gestalt_for(door.spot).id == "lets_go_inside", "an open door says the alternate gestalt")
+		_check(room_view.recording_gestalt_for(door.spot).id == "lets_go_outside", "hold records the phrase heard before the door opened")
+		home._on_spot_held(door.spot, room_view.recording_gestalt_for(door.spot))
+		var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
+		_check((overlay.get_node("%Phrase") as Label).text == "Let's go outside", "recording prompt matches the spoken caption")
+		_check(overlay._gestalt.id == "lets_go_outside", "Keep targets the displayed phrase")
+		overlay.close()
 	var tub: SpotBody = room_view.body("tub")
 	if tub != null:
 		var water: Node = tub.get_node_or_null("Object/water")
@@ -91,6 +99,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	for b: SpotBody in bodies:
 		_check(not b.is_on, "%s toggled off" % b.spot.id)
+	_check(room_view.recording_gestalt_for(door.spot).id == "lets_go_inside", "second tap and hold record the alternate")
 	await get_tree().create_timer(1.0).timeout
 
 	# Views: the widget offers front, side and top for `camera: views`, and the camera moves to each.
@@ -131,11 +140,82 @@ func _run() -> void:
 
 	home.show_board(p.boards[0])
 	await get_tree().process_frame
-	var grid: GridContainer = home.get_node("%Board") as GridContainer
+	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
 	_check(grid.visible and not room_view.visible, "the board replaces the room")
 	_check(grid.get_child_count() == p.boards[0].gestalt_ids.size(), "one tile per board gestalt (%d)" % grid.get_child_count())
 
+	await _check_name(home, p)
+	await _check_cleanup(home, p)
 	_finish(repo, p.id)
+
+func _check_name(home: ChildHome, p: Profile) -> void:
+	var title: HoldButton = home.get_node("%Title") as HoldButton
+	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
+	var speaker: Speaker = home.get_node("%Speaker") as Speaker
+	var heard: Array[Gestalt] = []
+	speaker.started.connect(func(g: Gestalt, _seconds: float) -> void: heard.push_back(g))
+	title.button_down.emit()
+	title.button_up.emit()
+	title.pressed.emit()
+	_check(heard.size() == 1 and heard[0].text == p.display_name, "tap speaks the name before a recording exists")
+	title.button_down.emit()
+	title._process(title.hold_seconds)
+	title.button_up.emit()
+	title.pressed.emit()
+	_check(overlay.visible, "holding the name opens the recorder")
+	_check(heard.size() == 1, "hold release does not also speak the name")
+	overlay.close()
+	_check(p.name_recording.is_empty(), "cancel leaves the name unchanged")
+	home._on_name_held()
+	var take: AudioStreamWAV = AudioStreamWAV.new()
+	take.format = AudioStreamWAV.FORMAT_16_BITS
+	take.mix_rate = 16000
+	var data: PackedByteArray = PackedByteArray()
+	data.resize(16000)
+	take.data = data
+	overlay._take = take
+	overlay._on_keep()
+	var saved: Profile = ProfileStore.load_profile(p.id)
+	_check(saved.name_recording == "name/name.wav", "name recording survives profile reload")
+	_check(FileAccess.file_exists(ProfileStore.media_dir(p.id).path_join(saved.name_recording)), "name audio saved in its own directory")
+	home.show_profile(saved)
+	title.button_down.emit()
+	title.button_up.emit()
+	title.pressed.emit()
+	_check(speaker._player.playing and speaker._player.stream is AudioStreamWAV, "name tap plays the saved WAV")
+	home._on_name_held()
+	overlay._take = take
+	overlay._on_keep()
+	_check(FileAccess.file_exists(ProfileStore.media_dir(p.id).path_join("name/name.prev.wav")), "previous name take retained")
+	speaker.stop()
+	speaker._player.stream = null
+	await get_tree().create_timer(0.1).timeout
+
+func _check_cleanup(home: ChildHome, p: Profile) -> void:
+	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
+	var take: AudioStreamWAV = AudioStreamWAV.new()
+	take.format = AudioStreamWAV.FORMAT_16_BITS
+	take.mix_rate = 16000
+	var data: PackedByteArray = PackedByteArray()
+	data.resize(32000)
+	for i: int in 16000:
+		data.encode_s16(i * 2, int(5000.0 * sin(TAU * 700.0 * i / 16000.0)))
+	take.data = data
+	overlay.open(p.name_gestalt(), p, true)
+	overlay._clean_take(take)
+	overlay.close()
+	overlay.open(p.gestalts[0], p)
+	while overlay._cleanup_thread != null:
+		await get_tree().process_frame
+	_check(overlay._take == null and not overlay._preview.playing, "cancelled cleanup cannot preview in a reopened recorder")
+	overlay._clean_take(take)
+	while overlay._cleanup_thread != null:
+		await get_tree().process_frame
+	_check(overlay._take != null and overlay._preview.stream == overlay._take, "preview uses the cleaned worker result")
+	_check(overlay._take != take, "raw capture is not used as the saved take")
+	overlay.close()
+	overlay._preview.stream = null
+	await get_tree().create_timer(0.1).timeout
 
 func _finish(repo: ProfileRepo, profile_id: String) -> void:
 	if not profile_id.is_empty():

@@ -65,3 +65,25 @@ func test_json_round_trip_keeps_stage_as_int() -> void:
 	var back: Profile = Profile.from_dict(parsed)
 	assert_eq(back.stage, NlaStage.Stage.MITIGATION, "stage survives JSON")
 	assert_eq(back.gestalts[0].stage, NlaStage.Stage.UNKNOWN, "an unstaged gestalt stays unstaged")
+
+func test_name_recording_round_trip_is_separate_from_bank() -> void:
+	var p: Profile = _sample()
+	p.name_recording = "name/name.wav"
+	var back: Profile = Profile.from_dict(p.to_dict())
+	assert_eq(back.name_gestalt().text, "Sam", "name utterance")
+	assert_eq(back.name_gestalt().recording, "name/name.wav", "name recording survives reload")
+	assert_eq(back.gestalts.size(), 2, "name never adds a Words tile")
+
+func test_v1_migration_preserves_existing_recordings() -> void:
+	var p: Profile = _sample()
+	p.gestalts[0].recording = "a.wav"
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 1
+	old.erase("name_recording")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 1 loads")
+	assert_eq(back.name_recording, "", "old profile starts with synthetic name")
+	assert_eq(back.gestalts[0].recording, "a.wav", "familiar recordings preserved")
+	assert_eq(back.rooms[0].to_dict(), p.rooms[0].to_dict(), "room configuration preserved")
+	assert_eq(old["schema"], 1, "migration does not mutate its input")
+	assert_eq(back.to_dict()["schema"], 2, "next save writes version 2")

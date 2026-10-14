@@ -79,7 +79,7 @@ func _run() -> void:
 	var home: ChildHome = main.get_node("%ChildHome") as ChildHome
 	var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
 	var room: RoomView = home.get_node("%RoomView") as RoomView
-	var grid: GridContainer = home.get_node("%Board") as GridContainer
+	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
 	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
 	for style_id: String in ["calm", "bold", "quiet"]:
 		if OS.get_cmdline_user_args().has("--quick") and style_id != "calm":
@@ -132,6 +132,7 @@ func _run() -> void:
 			_check(grid.size.x <= screen.size.x, "board fits horizontally")
 			for child: Node in grid.get_children():
 				var tile: GestaltTile = child as GestaltTile
+				_check(tile.size.x <= 320.0, "Words tiles do not stretch to fill a row")
 				_check(tile.size.x >= Style.current.tile_min_size and tile.size.y >= Style.current.tile_min_size, "tile meets touch floor")
 				_inside(tile.get_node("%Chunks") as Control, tile.get_global_rect(), "tile chunks")
 			var places: PillBar = home.get_node("%PlaceStrip") as PillBar
@@ -290,7 +291,7 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	home.show_board(board)
 	await _settle()
 	var screen: Rect2 = home.get_global_rect()
-	var grid: GridContainer = home.get_node("%Board") as GridContainer
+	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
 	var stage: ScrollContainer = home.get_node("%Stage") as ScrollContainer
 	var wheel: InputEventMouseButton = InputEventMouseButton.new()
 	wheel.position = stage.get_global_rect().get_center()

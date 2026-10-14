@@ -99,3 +99,11 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Pass `--capture=<directory>` to the probe to choose a different screenshot directory.
 - The probe uses an isolated profile repository and deletes its fixtures. It never records audio.
 - These probes run locally. CI keeps its deterministic lint and unit-test gates.
+
+## Words and application identity
+
+- Words tiles keep a bounded width and their content height. They wrap into rows in a vertically scrolling column.
+- The profile name is a hold-capable button: tap for speech, hold for recording.
+- Boot and native application artwork live in `assets/brand/`; see [branding.md](branding.md) for generation prompts.
+- The room uses 4× MSAA and a 4096 px directional shadow map with medium soft filtering on desktop and mobile.
+- Shadow filtering is configured separately from geometry anti-aliasing; see [Godot's project settings](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-lights-and-shadows-directional-shadow-soft-shadow-filter-quality).

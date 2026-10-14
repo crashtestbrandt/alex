@@ -10,10 +10,15 @@ config/name="Alex"
 config/description="A configurable companion for children who acquire language in gestalts."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
-; No engine logo. The app opens on the active style's background, and the first frame matches it.
-boot_splash/show_image=false
+; The exploration mark appears only while loading, with no artificial delay.
+boot_splash/show_image=true
+boot_splash/image="res://assets/brand/splash.png"
+boot_splash/fullsize=false
+boot_splash/use_filter=true
 boot_splash/bg_color=Color(0.97, 0.96, 0.93, 1)
-config/icon="res://icon.svg"
+config/icon="res://assets/brand/icon.png"
+config/macos_native_icon="res://assets/brand/icon.icns"
+config/windows_native_icon="res://assets/brand/icon.ico"
 
 [audio]
 
@@ -63,3 +68,8 @@ pointing/emulate_touch_from_mouse=true
 ; Mobile renderer on every platform: 3D and motion graphics stay available, and a tablet is the target.
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
+; PCF filtering also applies on tablets, where Godot otherwise uses hard shadows.
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/size.mobile=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality.mobile=3

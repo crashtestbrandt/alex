@@ -9,14 +9,14 @@ signal profiles_requested
 
 const _TILE_SCENE: PackedScene = preload("res://scenes/child/gestalt_tile.tscn")
 
-@onready var _title: Label = %Title
+@onready var _title: HoldButton = %Title
 @onready var _top_bar: HBoxContainer = %TopBar
 @onready var _strip: PillBar = %PlaceStrip
 @onready var _room_view: RoomView = %RoomView
 @onready var _stage: ScrollContainer = %Stage
 @onready var _column: VBoxContainer = %Column
 @onready var _margin: MarginContainer = %Margin
-@onready var _grid: GridContainer = %Board
+@onready var _grid: HFlowContainer = %Board
 @onready var _profiles_button: HoldButton = %ProfilesButton
 @onready var _speaker: Speaker = %Speaker
 @onready var _record_overlay: RecordOverlay = %RecordOverlay
@@ -31,6 +31,8 @@ var _speaking_spot: Spot = null
 
 func _ready() -> void:
 	_profiles_button.held.connect(_on_profiles_held)
+	_title.pressed.connect(_on_name_tapped)
+	_title.held.connect(_on_name_held)
 	_speaker.started.connect(_on_speech_started)
 	_room_view.spot_tapped.connect(_on_spot_tapped)
 	_room_view.spot_held.connect(_on_spot_held)
@@ -45,6 +47,8 @@ func _ready() -> void:
 func show_profile(p: Profile) -> void:
 	_profile = p
 	_title.text = p.display_name
+	_title.disabled = p.display_name.is_empty()
+	_title.custom_minimum_size = Vector2(Style.current.tile_min_size, Style.current.tile_min_size)
 	_build_strip()
 	if not p.rooms.is_empty():
 		show_room(p.rooms[0])
@@ -134,7 +138,7 @@ func _sync_room_inset() -> void:
 
 func _layout_home() -> void:
 	var available: Vector2 = _safe_rect.size if _safe_rect.has_area() else size
-	var compact: bool = available.x < 900.0 and available.y > available.x * 1.2
+	var compact: bool = available.x < 740.0 or (available.x < 900.0 and available.y > available.x * 1.2)
 	var parent: Node = _column if compact else _top_bar
 	if _strip.get_parent() != parent:
 		_strip.reparent(parent)
@@ -145,7 +149,9 @@ func _layout_home() -> void:
 	_sync_room_inset.call_deferred()
 
 func _layout_board() -> void:
-	_grid.columns = UiGeometry.grid_columns(_stage.size.x - 16.0, _tiles.size(), Style.current.tile_min_size)
+	var width: float = clampf(_stage.size.x - 16.0, Style.current.tile_min_size, 320.0)
+	for tile: GestaltTile in _tiles.values():
+		tile.custom_minimum_size.x = width
 
 ## A profile with nothing to show lists every gestalt it has.
 static func _all_gestalts_board(p: Profile) -> Board:
@@ -169,14 +175,19 @@ func _on_speech_started(g: Gestalt, seconds: float) -> void:
 	if _speaking_spot != null and _room != null:
 		_room_view.show_chunks(_speaking_spot, g, seconds)
 		return
+	# The name utterance is separate even if a bank entry also has the id "name".
+	if _profile.gestalt(g.id) != g:
+		return
 	var tile: GestaltTile = _tiles.get(g.id, null)
 	if tile != null:
 		tile.play_split(seconds)
 
-func _on_spot_held(_s: Spot, g: Gestalt) -> void:
+func _on_spot_held(s: Spot, g: Gestalt) -> void:
+	_speaking_spot = s
 	_open_recorder(g)
 
 func _on_tile_held(tile: GestaltTile) -> void:
+	_speaking_spot = null
 	if tile.gestalt != null:
 		_open_recorder(tile.gestalt)
 
@@ -199,3 +210,16 @@ func _on_style_changed(_preset: StylePreset) -> void:
 		show_room(_room)
 	elif _board != null:
 		show_board(_board)
+
+func _on_name_tapped() -> void:
+	if _profile == null or _title.consumed_by_hold():
+		return
+	_speaking_spot = null
+	_say(_profile.name_gestalt())
+
+func _on_name_held() -> void:
+	if _profile == null:
+		return
+	_speaking_spot = null
+	_speaker.stop()
+	_record_overlay.open(_profile.name_gestalt(), _profile, true)
