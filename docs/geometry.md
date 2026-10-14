@@ -75,9 +75,10 @@ mesh vertices lie on its field's zero set, which is what keeps the two in step.
 The field is used for:
 
 - **Tap picking** (`Picker`). A ray from the camera is sphere-traced through each body's field and the nearest
-  hit wins. When the ray hits nothing, `RoomView.pick_at` takes the nearest body whose center is within half
-  the style's `tile_min_size`, so the touch floor holds even where the camera could not make an object that
-  large.
+  hit wins. A body's target also carries its wall opening (`ObjectRecipes.opening`) as a pick-only rectangle,
+  so a tap through the empty doorway still picks the open door; the recipe and its field are untouched. When
+  the ray hits nothing, `RoomView.pick_at` takes the nearest body whose center is within half the style's
+  `tile_min_size`, so the touch floor holds even where the camera could not make an object that large.
 - **An editor, later.** Plan and elevation views over a field, with drag-and-drop primitives, is the Tinkercad
   model. It is adult-facing, sits behind a hold, previews by raymarching the one object being edited, and
   writes nothing until Keep. Subtraction and smooth union arrive with it, baked to a mesh with surface nets the
@@ -148,7 +149,7 @@ Framing (`CameraFraming`, pure):
 | `sdf_test.gd` | every distance at known points, the axis rule, rounding never grows a box |
 | `mesher_test.gd` | every mesh is closed, fronts outward, unit normals, vertices on the field, deterministic |
 | `object_recipes_test.gd` | every kind builds, stands on the floor, fits its size, within the triangle budget, same fingerprint twice |
-| `picker_test.gd` | nearest hit, the gap between objects, a swung part |
+| `picker_test.gd` | nearest hit, the gap between objects, a swung part, the doorway behind it |
 | `camera_framing_test.gd` | fit, zoom and pan limits, zoom about a point, Tilt's limits and basis, a continuous up vector |
 | `room_space_test.gd` | placement per wall, facing, wall hiding, the smallest spot, where Tilt stands |
 

@@ -92,6 +92,8 @@ func _run() -> void:
 		var leaf: Node = door.get_node_or_null("Object/leaf")
 		_check(leaf is MeshInstance3D and absf((leaf as MeshInstance3D).rotation.y - SpotBody.OPEN_RAD) < 0.01, "the door leaf swung open")
 		_check(room_view.pick_at(room_view.screen_point(door)) == door, "an open door is still picked")
+		var doorway: Vector2 = camera.unproject_position(door.to_global(Vector3(0.0, door.size_m * 0.5, 0.0)))
+		_check(room_view.pick_at(doorway) == door, "the empty doorway picks the open door")
 
 	# Second tap toggles back.
 	for b: SpotBody in bodies:
