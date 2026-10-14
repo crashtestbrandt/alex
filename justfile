@@ -102,6 +102,10 @@ export-linux: (_export "--export-release" "Linux" "linux/alex.x86_64")
 exports: export-android export-ios export-macos export-windows export-linux
     tools/check-exports.sh build/{{commit}}
 
+# Export iOS, archive it and upload it for TestFlight (docs/exports.md "TestFlight"). Refuses uncommitted changes.
+testflight:
+    tools/testflight.sh build/{{commit}}
+
 # Install the Android export on the one device `adb devices` lists.
 install-android:
     adb install -r build/{{commit}}/android/alex.apk

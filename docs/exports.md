@@ -81,6 +81,26 @@ Two project settings serve the mobile presets:
   Then open `build/<commit>/ios/alex.xcodeproj`, pick a device as the run destination, and run. The iOS
   simulator cannot run the Mobile renderer.
 
+## TestFlight
+
+`just testflight` exports the iOS preset, archives it and uploads it to App Store Connect
+(`tools/testflight.sh`).
+
+- It refuses a working tree with uncommitted changes, so every upload maps to a commit.
+- The build number is the commit count. Xcode raises it when App Store Connect already holds that number.
+- `tools/testflight.sh build/<commit> --export-only` signs the `.ipa` into `build/<commit>/ipa/` and uploads
+  nothing.
+
+Once per Apple account and app:
+
+| Step | Where |
+| --- | --- |
+| Accept the latest Program License Agreement. | developer.apple.com/account |
+| Sign Xcode in to the account. | Xcode > Settings > Accounts |
+| Create the app record with the preset's bundle ID. The first upload registers the ID, so run `--export-only` first if the ID is not listed. | App Store Connect > Apps > + > New App |
+| Create an internal testing group with automatic distribution, and add testers. | App Store Connect > the app > TestFlight |
+| Each tester accepts the emailed invitation on the device, then installs from the TestFlight app. | The tester's phone |
+
 ## Validation
 
 `just exports` exports every preset, then runs `tools/check-exports.sh build/<commit>`:

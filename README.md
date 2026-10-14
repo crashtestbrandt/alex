@@ -108,6 +108,7 @@ new kind of object is a `Spot.Kind` value and a recipe function in `ObjectRecipe
 ```sh
 just export-android   # one preset into build/<commit>/android/; also -ios, -macos, -windows, -linux
 just exports          # every preset, then check what each export holds
+just testflight       # export iOS, archive it and upload it for TestFlight
 ```
 
 Each needs the Godot export templates of the same version. Android also needs a JDK and an Android SDK, and iOS
