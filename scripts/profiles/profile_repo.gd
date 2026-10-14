@@ -74,26 +74,40 @@ func create_profile(display_name: String, starter: Starter, style_id: String) ->
 
 ## Remove a profile and everything in its directory.
 func delete_profile(profile_id: String) -> Error:
+	if profile_id.is_empty() or profile_id in [".", ".."] or not profile_id.is_valid_filename():
+		return ERR_INVALID_PARAMETER
 	var dir_path: String = profile_dir(profile_id)
+	var parent: DirAccess = DirAccess.open(root)
+	if parent != null and parent.is_link(profile_id):
+		return ERR_INVALID_PARAMETER
 	if not DirAccess.dir_exists_absolute(dir_path):
 		return ERR_DOES_NOT_EXIST
-	return _remove_tree(dir_path)
+	# Keep the profile listed for a retry if a recording cannot be removed.
+	return _remove_tree(dir_path, PROFILE_FILE)
 
 ## A new profile id: the creation time plus a random suffix, safe as a directory name.
 static func new_id() -> String:
 	var stamp: String = Time.get_datetime_string_from_system(true).replace(":", "").replace("-", "")
 	return "%s-%04x" % [stamp, randi() % 0x10000]
 
-static func _remove_tree(dir_path: String) -> Error:
+static func _remove_tree(dir_path: String, last_file: String = "") -> Error:
 	var dir: DirAccess = DirAccess.open(dir_path)
 	if dir == null:
 		return DirAccess.get_open_error()
+	dir.include_hidden = true
 	for sub: String in dir.get_directories():
-		var err: Error = _remove_tree("%s/%s" % [dir_path, sub])
+		# Unlink directory shortcuts without deleting data outside this profile.
+		var err: Error = dir.remove(sub) if dir.is_link(sub) else _remove_tree("%s/%s" % [dir_path, sub])
 		if err != OK:
 			return err
 	for file: String in dir.get_files():
+		if file == last_file:
+			continue
 		var err: Error = dir.remove(file)
+		if err != OK:
+			return err
+	if not last_file.is_empty() and dir.file_exists(last_file):
+		var err: Error = dir.remove(last_file)
 		if err != OK:
 			return err
 	return DirAccess.remove_absolute(dir_path)

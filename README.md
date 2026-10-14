@@ -28,9 +28,15 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
 1. **Make a profile.** A name, a starter pack, a look. One minute.
 2. **Record the phrases in your own voice.** Hold any object for two seconds, hold the big button, say the
    phrase, let go, hear it back, keep it. Until you do, the device's own voice fills in.
-3. **Hand it over.**
+3. **Record the name.** Hold the profile name to record it; tap the name to hear it.
+4. **Hand it over.**
 
 ![The recording overlay: the phrase, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
+
+To permanently remove a profile and all its recordings, choose **Edit** in the profile picker and hold
+**Hold 3 seconds to delete**. There is no undo.
+
+New recordings get local noise reduction, quiet-end trimming, and volume balancing before preview.
 
 Everything stays on the device. There is no account, no network and no analytics.
 
@@ -66,6 +72,7 @@ phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording there
 **Godot 4.7**, GDScript only, strict typing promoted to errors. Organized around a `justfile`.
 
 ```sh
+git lfs pull   # application artwork
 just setup     # the import pass that registers every class; run once after cloning
 just editor    # open the project
 just run       # profile picker, then the room

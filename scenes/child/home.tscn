@@ -58,17 +58,29 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Margin/Column/TopBar"]
+[node name="NameSlot" type="Control" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Title" type="Button" parent="Margin/Column/TopBar/NameSlot"]
+unique_name_in_owner = true
+layout_mode = 0
 theme_type_variation = &"TitleLabel"
 text = "Profile"
 text_overrun_behavior = 3
+script = ExtResource("2")
+quiet = true
+radius_px = 6.0
+clip_text = true
+alignment = 0
+tooltip_text = "Tap to hear your name; hold to record"
 
 [node name="PlaceStrip" type="MarginContainer" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 4
 script = ExtResource("6")
 
 [node name="ProfilesButton" type="Button" parent="Margin/Column/TopBar"]
@@ -98,16 +110,19 @@ script = ExtResource("scroll")
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Board" type="GridContainer" parent="Margin/Column/Stage"]
+[node name="Rows" type="VBoxContainer" parent="Margin/Column/Stage"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Board" type="HFlowContainer" parent="Margin/Column/Stage/Rows"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
+size_flags_vertical = 0
 mouse_filter = 2
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
-columns = 3
 
 [node name="RecordOverlay" parent="." instance=ExtResource("5")]
 unique_name_in_owner = true

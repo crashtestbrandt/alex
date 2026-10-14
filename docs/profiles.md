@@ -15,9 +15,10 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` reads only its own version. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates version 1 to version 2 before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
+| `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
 | `stage` | `NlaStage`, 0 for not staged. Informs the adults; gates nothing. |
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
@@ -113,3 +114,26 @@ language.
 The microphone needs `audio/driver/enable_input` (on in `project.godot`). The Android, iOS and macOS presets
 declare it, and iOS records under the Play and Record audio session (docs/exports.md). macOS asks the first
 time.
+
+### Name and recording cleanup
+
+- Tap the profile name to hear it. Hold it for two seconds to record it.
+- Name takes use `media/name/name.wav` and `name.prev.wav`, separate from the phrase bank.
+- Version 1 profiles migrate without changing existing phrases, rooms or recordings.
+- Holding a room object records its last spoken phrase. Before the first tap, it records the first phrase.
+- New takes are cleaned before preview. Keep saves exactly the previewed audio.
+- Cleanup removes low-frequency rumble and reduces steady background noise using a quiet part of the take.
+- Continuous speech without a quiet interval skips noise estimation. This is not voice isolation; other speakers and changing background sounds can remain.
+- Only leading and trailing quiet are trimmed, with 100 ms padding. Internal pauses remain.
+- Speech levels are balanced with a 4× gain limit and peak headroom. Short edge fades prevent clicks.
+- Stereo capture uses the stronger channel and saves mono, so inverted channels cannot cancel the voice.
+- Silent takes are rejected. Existing recordings are changed only after Keep.
+
+### Permanent deletion
+
+- Open the caregiver profile picker, choose Edit beside the profile, then hold “Hold 3 seconds to delete”.
+- The three-second hold removes the entire profile directory, including phrases, rooms, boards, name recordings, previous takes and hidden files.
+- There is no Trash entry or undo. Other profiles are unchanged.
+- Deleting the active profile also discards its loaded screen, recorder and playback references.
+- The last deletion opens the new-profile form. A failed deletion stays on the edit screen with an error; the profile metadata is removed last so a media failure can be retried.
+- Deletion accepts only a single profile directory name and never follows directory links.

@@ -41,7 +41,7 @@ is `PASS`, so a tap on its padding does not.
 | --- | --- | --- |
 | `SdfShape` | `Control` | The field itself: fill, border, rim, shadow. Never takes input. |
 | `SdfGlyph` | `Control` | One figure of the glyph shader: front, side, top, turn, dots, microphone. |
-| `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. |
+| `SdfButton` | `Button` | A Button with empty style boxes and an `SdfShape` behind its text. Hover adds a border, a press pulls the shape in, active fills with the accent. `shape` is rounded, pill or circle. `quiet` is a bar item. `danger` uses red with white text across styles. |
 | `SdfPanel` | `PanelContainer` | A panel with an `SdfShape` behind its content, a larger radius, and `inner_radius()` for what sits in it. |
 | `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the place strip, the view widget. A view button is seven tenths of the tile floor, never under 96 px. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
@@ -53,9 +53,10 @@ for the shader to read.
 
 ## The profile picker
 
-- The first screen lists profile rows. The name opens the profile; an inline Look action edits its style.
+- The first screen lists profile rows. The name opens the profile; an inline Edit action opens its style and deletion controls.
 - New profile opens a separate form. An empty profile list opens that form directly.
 - The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
+- Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Nothing on the picker is drawn by a theme style box.
@@ -99,3 +100,12 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Pass `--capture=<directory>` to the probe to choose a different screenshot directory.
 - The probe uses an isolated profile repository and deletes its fixtures. It never records audio.
 - These probes run locally. CI keeps its deterministic lint and unit-test gates.
+
+## Words and application identity
+
+- Words tiles keep a bounded width and their content height. They wrap into rows in a vertically scrolling column.
+- The profile name is a hold-capable button: tap for speech, hold for recording.
+- Its hit area fits the displayed name with 4 px padding. Long names truncate within the space left by the other header controls.
+- Boot and native application artwork live in `assets/brand/`; see [branding.md](branding.md) for generation prompts.
+- The room uses 4× MSAA and a 4096 px directional shadow map with medium soft filtering on desktop and mobile.
+- Shadow filtering is configured separately from geometry anti-aliasing; see [Godot's project settings](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-lights-and-shadows-directional-shadow-soft-shadow-filter-quality).

@@ -31,6 +31,7 @@ var _device_safe: Rect2 = Rect2()
 var _profile: Profile = null
 var _room: Room = null
 var _bodies: Dictionary[String, SpotBody] = {}
+var _spoken_gestalts: Dictionary[String, Gestalt] = {}
 var _walls: Dictionary[int, Node3D] = {}
 var _shell: Node3D = null
 var _material: StandardMaterial3D = RecipeBuilder.make_material()
@@ -82,6 +83,7 @@ func show_room(p: Profile, r: Room) -> void:
 	for body: SpotBody in _bodies.values():
 		body.queue_free()
 	_bodies.clear()
+	_spoken_gestalts.clear()
 	for s: Spot in r.spots:
 		if p.gestalt(s.gestalt_id) == null:
 			continue
@@ -113,6 +115,10 @@ func bodies() -> Array[SpotBody]:
 	for body: SpotBody in _bodies.values():
 		out.push_back(body)
 	return out
+
+## Record the phrase last heard at this spot, before its reaction changed the next tap's phrase.
+func recording_gestalt_for(s: Spot) -> Gestalt:
+	return _spoken_gestalts.get(s.id, gestalt_for(s))
 
 func body(spot_id: String) -> SpotBody:
 	return _bodies.get(spot_id, null)
@@ -196,6 +202,7 @@ func tap(b: SpotBody) -> void:
 	var g: Gestalt = gestalt_for(b.spot)
 	b.react()
 	if g != null:
+		_spoken_gestalts[b.spot.id] = g
 		spot_tapped.emit(b.spot, g)
 
 ## Move the camera to a view, animated unless `animate` is false or the style's motion is none.
@@ -336,7 +343,7 @@ func _process(delta: float) -> void:
 			if _down_for >= HOLD_SECONDS:
 				var held: SpotBody = _press_body
 				_cancel_press()
-				var g: Gestalt = gestalt_for(held.spot)
+				var g: Gestalt = recording_gestalt_for(held.spot)
 				if g != null:
 					spot_held.emit(held.spot, g)
 		return

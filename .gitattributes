@@ -28,3 +28,7 @@ docs/img/*.png -filter -diff -merge
 *.glb     filter=lfs diff=lfs merge=lfs -text
 *.gltf    filter=lfs diff=lfs merge=lfs -text
 *.blend   filter=lfs diff=lfs merge=lfs -text
+
+# Native application icon containers.
+*.ico     filter=lfs diff=lfs merge=lfs -text
+*.icns    filter=lfs diff=lfs merge=lfs -text

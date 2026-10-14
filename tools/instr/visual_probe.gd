@@ -2,6 +2,10 @@ extends Control
 ## Live layout and render sweep. Fixtures use an isolated profile directory and never record audio.
 ## Optional --capture[=<directory>] saves screenshots. Run with a real renderer for captures.
 
+class DeleteFailureRepo extends ProfileRepo:
+	func delete_profile(_profile_id: String) -> Error:
+		return ERR_FILE_CANT_WRITE
+
 const MAIN: PackedScene = preload("res://scenes/main.tscn")
 const SIZES: Array[Vector2i] = [Vector2i(390, 844), Vector2i(844, 390), Vector2i(768, 1024), Vector2i(1280, 800), Vector2i(1920, 1080), Vector2i(640, 640)]
 var _failures: PackedStringArray = []
@@ -79,7 +83,7 @@ func _run() -> void:
 	var home: ChildHome = main.get_node("%ChildHome") as ChildHome
 	var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
 	var room: RoomView = home.get_node("%RoomView") as RoomView
-	var grid: GridContainer = home.get_node("%Board") as GridContainer
+	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
 	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
 	for style_id: String in ["calm", "bold", "quiet"]:
 		if OS.get_cmdline_user_args().has("--quick") and style_id != "calm":
@@ -132,6 +136,7 @@ func _run() -> void:
 			_check(grid.size.x <= screen.size.x, "board fits horizontally")
 			for child: Node in grid.get_children():
 				var tile: GestaltTile = child as GestaltTile
+				_check(tile.size.x <= 320.0, "Words tiles do not stretch to fill a row")
 				_check(tile.size.x >= Style.current.tile_min_size and tile.size.y >= Style.current.tile_min_size, "tile meets touch floor")
 				_inside(tile.get_node("%Chunks") as Control, tile.get_global_rect(), "tile chunks")
 			var places: PillBar = home.get_node("%PlaceStrip") as PillBar
@@ -192,11 +197,83 @@ func _run() -> void:
 	(picker.get_node("%NameEdit") as LineEdit).text = "New profile fixture"
 	(picker.get_node("%CreateButton") as SdfButton).pressed.emit()
 	_check(not picker.visible and App.active_profile.display_name == "New profile fixture", "creation opens the new profile")
-	ProfileStore.repo.delete_profile(App.active_profile.id)
+	await _profile_deletion(main, picker, App.active_profile)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ProfileStore.repo.root))
 	ProfileStore.repo = previous_repo
 	print("VISUAL-PROBE %s (%d failures)" % ["PASS" if _failures.is_empty() else "FAIL", _failures.size()])
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+func _profile_deletion(main: Main, picker: ProfilePicker, target: Profile) -> void:
+	_label = "profile-deletion"
+	var other: Profile = ProfileStore.create_profile("Keep this profile", null, "calm")
+	var media: String = ProfileStore.media_dir(target.id).path_join("name")
+	DirAccess.make_dir_recursive_absolute(media)
+	var file: FileAccess = FileAccess.open(media.path_join("name.prev.wav"), FileAccess.WRITE)
+	file.store_string("synthetic deletion fixture")
+	file.close()
+	main.show_picker()
+	picker._on_edit_profile(target.id)
+	await _settle()
+	var button: HoldButton = picker.get_node("%DeleteButton") as HoldButton
+	var sheet: ScrollContainer = picker.get_node("%Center") as ScrollContainer
+	sheet.ensure_control_visible(button)
+	await _settle()
+	_inside(button, picker.get_global_rect(), "delete action reachable")
+	_shot("delete-profile")
+	button.button_down.emit()
+	button._process(button.hold_seconds - 0.1)
+	button.button_up.emit()
+	button.pressed.emit()
+	_check(ProfileStore.load_profile(target.id) != null, "short press does not delete")
+	for notification: int in [Control.NOTIFICATION_SCROLL_BEGIN]:
+		button.button_down.emit()
+		button.notification(notification)
+		button._process(button.hold_seconds)
+		button.button_up.emit()
+		_check(ProfileStore.load_profile(target.id) != null, "scroll cancels deletion")
+	button.button_down.emit()
+	button.mouse_exited.emit()
+	button._process(button.hold_seconds)
+	button.button_up.emit()
+	_check(ProfileStore.load_profile(target.id) != null, "leaving the button cancels deletion")
+	button.button_down.emit()
+	get_window().focus_exited.emit()
+	button._process(button.hold_seconds)
+	button.button_up.emit()
+	_check(ProfileStore.load_profile(target.id) != null, "losing window focus cancels deletion")
+	var real_repo: ProfileRepo = ProfileStore.repo
+	ProfileStore.repo = DeleteFailureRepo.new(real_repo.root)
+	button.button_down.emit()
+	button._process(button.hold_seconds)
+	button.button_up.emit()
+	_check((picker.get_node("%Status") as Label).visible, "deletion errors remain on the caregiver screen")
+	_check(real_repo.load_profile(target.id) != null and App.active_profile != null, "failed delete preserves selection and disk data")
+	ProfileStore.repo = real_repo
+	sheet.ensure_control_visible(button)
+	await _settle()
+	var previous_home: ChildHome = main.get_node("%ChildHome") as ChildHome
+	button.button_down.emit()
+	button._process(button.hold_seconds)
+	button.button_up.emit()
+	button.pressed.emit()
+	await _settle()
+	_check(not DirAccess.dir_exists_absolute(real_repo.profile_dir(target.id)), "successful hold removes profile and all recordings")
+	_check(App.active_profile == null, "deleted active profile is cleared")
+	_check(not is_instance_valid(previous_home), "deleted profile's playback and recorder controls are discarded")
+	_check(real_repo.load_profile(other.id) != null, "other profile is untouched")
+	_check(picker.visible and not button.is_visible_in_tree(), "delete returns to the profile list")
+	main.open_profile(other.id)
+	_check(App.active_profile != null and App.active_profile.id == other.id, "another profile opens after deletion")
+	main.show_picker()
+	picker._on_edit_profile(other.id)
+	await _settle()
+	button.button_down.emit()
+	button._process(button.hold_seconds)
+	button.button_up.emit()
+	await _settle()
+	_check(ProfileStore.list_ids().is_empty(), "last profile is removed")
+	_check((picker.get_node("%NameEdit") as Control).is_visible_in_tree(), "deleting the last profile opens creation")
+	_check(not button.is_visible_in_tree(), "creation never exposes delete")
 
 func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void:
 	_label = "profile-looks"
@@ -290,7 +367,7 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	home.show_board(board)
 	await _settle()
 	var screen: Rect2 = home.get_global_rect()
-	var grid: GridContainer = home.get_node("%Board") as GridContainer
+	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
 	var stage: ScrollContainer = home.get_node("%Stage") as ScrollContainer
 	var wheel: InputEventMouseButton = InputEventMouseButton.new()
 	wheel.position = stage.get_global_rect().get_center()
