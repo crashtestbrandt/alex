@@ -75,6 +75,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Long phrases wrap within tiles. Larger boards scroll without reducing touch targets. Swipes beginning on buttons reach their scroll container.
 - `SdfSheet` centers caregiver forms, limits their line length, and scrolls tall content. `SdfScroll` draws its scrollbar with `SdfShape`.
 - Recording actions wrap. Back and Create stay reachable after rotation and with long content.
+- Each profile has a Change look action. Its editor previews styles immediately, saves only the selected profile's look, and offers Back to discard the preview.
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
 - The current phrase has one opaque caption panel. Repeated taps replace it; view changes clear it.

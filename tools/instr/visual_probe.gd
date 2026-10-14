@@ -8,6 +8,7 @@ var _failures: PackedStringArray = []
 var _capture: bool = false
 var _out: String = "user://visual_probe_captures"
 var _label: String = ""
+var _profile_looks_complete: bool = false
 
 func _ready() -> void:
 	_run()
@@ -165,13 +166,58 @@ func _run() -> void:
 			await _settle()
 			_inside(create, screen, "create reachable by scrolling")
 			_shot("picker")
+			var profile_card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+			(profile_card.get_child(1) as SdfButton).pressed.emit()
+			await _settle()
+			_inside(picker.get_node("%StyleBar") as Control, screen, "existing profile look choices")
+			_inside(create, screen, "save look reachable")
+			_shot("profile-look")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 			print("VISUAL checked %s" % _label)
+	await _profile_looks(main, picker, profile)
+	_check(_profile_looks_complete, "profile look flow completed")
 	await _stress(main, home, picker, overlay, profile)
 	ProfileStore.repo.delete_profile(profile.id)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ProfileStore.repo.root))
 	ProfileStore.repo = previous_repo
 	print("VISUAL-PROBE %s (%d failures)" % ["PASS" if _failures.is_empty() else "FAIL", _failures.size()])
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void:
+	_label = "profile-looks"
+	var saved: Profile = ProfileStore.load_profile(profile.id)
+	var expected: String = JSON.stringify(saved.to_dict())
+	var other: Profile = ProfileStore.create_profile("Another profile", null, "quiet")
+	main.show_picker()
+	await _settle()
+	var styles: PillBar = picker.get_node("%StyleBar") as PillBar
+	var ids: PackedStringArray = StylePreset.list_ids()
+	styles.items()[ids.find("bold")].pressed.emit()
+	_check(Style.current == StylePreset.load_by_id("bold"), "new-profile look previews immediately")
+	_check(ProfileStore.load_profile(profile.id).style_id == saved.style_id, "preview leaves existing profile unchanged")
+	var card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	(card.get_child(1) as SdfButton).pressed.emit()
+	_check(styles.active_index() == ids.find(saved.style_id), "editing selects the saved look")
+	styles.items()[ids.find("calm")].pressed.emit()
+	_check(Style.current == StylePreset.load_by_id("calm"), "existing-profile look previews immediately")
+	_check(JSON.stringify(ProfileStore.load_profile(profile.id).to_dict()) == expected, "preview writes nothing")
+	(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+	_check(Style.current == StylePreset.load_by_id("bold"), "Back restores the previous preview")
+	_check(JSON.stringify(ProfileStore.load_profile(profile.id).to_dict()) == expected, "Back preserves the profile")
+	card = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	(card.get_child(1) as SdfButton).pressed.emit()
+	styles.items()[ids.find("bold")].pressed.emit()
+	(picker.get_node("%CreateButton") as SdfButton).pressed.emit()
+	saved.style_id = "bold"
+	expected = JSON.stringify(saved.to_dict())
+	_check(JSON.stringify(ProfileStore.load_profile(profile.id).to_dict()) == expected, "Save changes only the profile's look")
+	_check(ProfileStore.load_profile(other.id).style_id == "quiet", "other profile look is unchanged")
+	_check(not picker.visible, "Save opens the updated profile")
+	Style.apply(StylePreset.load_by_id("calm"))
+	main.open_profile(profile.id)
+	_check(Style.current == StylePreset.load_by_id("bold"), "reopening loads the saved look")
+	ProfileStore.repo.delete_profile(other.id)
+	_profile_looks_complete = true
 
 func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: RecordOverlay, profile: Profile) -> void:
 	_label = "long-content"

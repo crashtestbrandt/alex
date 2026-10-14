@@ -39,6 +39,7 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="Heading" type="Label" parent="Center/Panel/Column"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 text = "Choose a profile"
@@ -58,10 +59,12 @@ text = ""
 autowrap_mode = 3
 
 [node name="Gap" type="Control" parent="Center/Panel/Column"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="NewHeading" type="Label" parent="Center/Panel/Column"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "New profile"
 theme_type_variation = &"TitleLabel"
@@ -73,6 +76,7 @@ placeholder_text = "Name"
 script = ExtResource("4")
 
 [node name="StarterRow" type="VBoxContainer" parent="Center/Panel/Column"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
@@ -100,7 +104,21 @@ unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("5")
 
-[node name="CreateButton" type="Button" parent="Center/Panel/Column"]
+[node name="Actions" type="HFlowContainer" parent="Center/Panel/Column"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 12
+
+[node name="BackButton" type="Button" parent="Center/Panel/Column/Actions"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("3")
+shape = 1
+text = "Back"
+
+[node name="CreateButton" type="Button" parent="Center/Panel/Column/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
