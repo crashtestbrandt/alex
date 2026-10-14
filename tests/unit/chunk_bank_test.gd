@@ -25,13 +25,13 @@ func test_a_whole_gestalt_is_a_beginning_with_no_ending() -> void:
 
 func test_match_finds_the_bank_phrase_by_key() -> void:
 	var bank: Array[Gestalt] = _bank()
-	var hit: Gestalt = ChunkBank.match(bank, PackedStringArray(["Let's go", "outside"]))
+	var hit: Gestalt = ChunkBank.find(bank, PackedStringArray(["Let's go", "outside"]))
 	assert_not_null(hit, "found")
 	assert_eq(hit.id, "a", "the first match in bank order")
-	assert_eq(ChunkBank.match(bank, PackedStringArray(["let's go", "OUTSIDE"])).id, "a", "casing does not matter")
-	assert_null(ChunkBank.match(bank, PackedStringArray(["outside", "Let's go"])), "order matters")
-	assert_null(ChunkBank.match(bank, PackedStringArray(["Let's go"])), "a beginning alone is not the phrase")
-	assert_null(ChunkBank.match(bank, PackedStringArray()), "an empty strip matches nothing")
+	assert_eq(ChunkBank.find(bank, PackedStringArray(["let's go", "OUTSIDE"])).id, "a", "casing does not matter")
+	assert_null(ChunkBank.find(bank, PackedStringArray(["outside", "Let's go"])), "order matters")
+	assert_null(ChunkBank.find(bank, PackedStringArray(["Let's go"])), "a beginning alone is not the phrase")
+	assert_null(ChunkBank.find(bank, PackedStringArray()), "an empty strip matches nothing")
 
 func test_voice_is_the_bank_gestalt_or_a_transient_one() -> void:
 	var bank: Array[Gestalt] = _bank()

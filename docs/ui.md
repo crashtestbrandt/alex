@@ -57,7 +57,7 @@ it. Words reopens in the mode the learner last used.
   (`ChunkBank`). Every chunk is a `ChunkButton` in its own color, at the tile floor.
 - A tap on a chunk lands it on the strip and says it. A tap on the strip says the whole. A tap on a chunk in
   the strip takes it off. There is no send button and no clear button.
-- A strip that says a phrase the bank holds is that phrase (`ChunkBank.match`), so it plays in the
+- A strip that says a phrase the bank holds is that phrase (`ChunkBank.find`), so it plays in the
   caregiver's voice. Any other strip is said as itself, by the OS voice until per-chunk takes exist (#24).
 - The strip keeps what the learner built until they change it, across Explore and back.
 

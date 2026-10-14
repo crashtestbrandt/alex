@@ -28,7 +28,7 @@ static func endings(gestalts: Array[Gestalt]) -> PackedStringArray:
 
 ## The gestalt whose text is `chunks` said in order, by the chunk key, or null. The first match in bank order
 ## wins, so a recorded phrase speaks in the voice the caregiver gave it.
-static func match(gestalts: Array[Gestalt], chunks: PackedStringArray) -> Gestalt:
+static func find(gestalts: Array[Gestalt], chunks: PackedStringArray) -> Gestalt:
 	if chunks.is_empty():
 		return null
 	var wanted: String = ChunkColors.key(" ".join(chunks))
@@ -44,7 +44,7 @@ static func phrase(chunks: PackedStringArray) -> Gestalt:
 
 ## The gestalt that voices `chunks`: the bank's own when it has one, a transient one otherwise.
 static func voice(gestalts: Array[Gestalt], chunks: PackedStringArray) -> Gestalt:
-	var own: Gestalt = match(gestalts, chunks)
+	var own: Gestalt = find(gestalts, chunks)
 	return own if own != null else phrase(chunks)
 
 static func _add_once(chunk: String, out: PackedStringArray, seen: Dictionary[String, bool]) -> void:
