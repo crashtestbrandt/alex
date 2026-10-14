@@ -60,4 +60,4 @@ are the only rasterized shapes left.
 ## Gates
 
 `ui_geometry_test.gd` covers the pure numbers. The shaders have no headless gate; `just screenshot` renders
-`docs/img/room.png` and `docs/img/record.png`, which is where they are checked.
+`docs/img/room.png` (the Bold style, one object triggered) and `docs/img/record.png`, which is where they are checked.

@@ -1,5 +1,5 @@
 extends Control
-## Screenshots: seed a profile from the home starter, open its room, swing the door and light the lamp, and
+## Screenshots: seed a profile from the home starter in the Bold style, open its room, swing the door, and
 ## save the viewport to docs/img/room.png; then open the recording overlay for the door's phrase and save
 ## docs/img/record.png (`just screenshot`). Windowed, because it needs a renderer. The
 ## profile it makes is deleted on the way out. Re-run it whenever the room changes so the README stays true.
@@ -10,14 +10,17 @@ extends Control
 const _MAIN: PackedScene = preload("res://scenes/main.tscn")
 const _OUT: String = "res://docs/img/room.png"
 const _OUT_RECORD: String = "res://docs/img/record.png"
-const _TAPPED: PackedStringArray = ["door", "light"]
+const _STYLE: String = "bold"
+const _TAPPED: PackedStringArray = ["door"]
 
 func _ready() -> void:
 	_run()
 
 func _run() -> void:
 	var repo: ProfileRepo = ProfileRepo.new("user://profiles")
-	var p: Profile = repo.create_profile("Sam", Starter.find("home_routines"), "calm")
+	var p: Profile = repo.create_profile("Sam", Starter.find("home_routines"), _STYLE)
+	# The window opens under the real cursor, which would hover a button into its bordered state.
+	Input.warp_mouse(Vector2(4.0, 4.0))
 	var main: Main = _MAIN.instantiate() as Main
 	add_child(main)
 	await get_tree().process_frame

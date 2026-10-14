@@ -7,7 +7,7 @@ children, children with developmental delays, and any child whose first speech i
 clinical tool and not a substitute for one. It is something a learner can pick up and discover on their own,
 after a caregiver spends a few minutes setting it up.
 
-![The bedroom: a door swung open on the left wall, a lit lamp, a bed under the window, a cup on the nightstand, a rug with a ball on it, and shoes by the door, with two phrases floating in chunks](docs/img/room.png)
+![The bedroom in the Bold style: the door swung open on the left wall as "Let's go outside" floats in chunks, a lamp, a bed under the window, a cup on the nightstand, a rug with a ball on it, and shoes by the door](docs/img/room.png)
 
 ## What the learner sees
 
