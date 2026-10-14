@@ -16,7 +16,8 @@ door. Touch the door and it swings open as a familiar voice says "Let's go outsi
 closes: "Let's go inside." The lamp lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
 up one after another, so the learner sees where a phrase comes apart without being told.
 
-Three buttons under the room look at it from the front, the side and above. A caregiver can add a fourth that
+Two pills at the top switch between Explore, the room, and Words, a column of phrase tiles. Three buttons
+under the room look at it from the front, the side and above. A caregiver can add a fourth that
 turns the room, or take all of them away. Whatever the learner does with them, the room comes back to the front
 on its own.
 

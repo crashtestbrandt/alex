@@ -23,8 +23,8 @@ this repository.
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
 | `gestalts` | The bank. See below. |
-| `rooms` | Explorable screens of spots. See below. |
-| `boards` | Plain screens of gestalt ids. |
+| `rooms` | Explorable screens of spots. The first is the learner's Explore. See below. |
+| `boards` | Lists of gestalt ids. Together they are the learner's Words tiles (docs/ui.md "The mode strip"). |
 
 A gestalt row:
 
@@ -38,7 +38,8 @@ A gestalt row:
 | `recording` | A file under `media/`, or empty. `wav`, `ogg` or `mp3`. |
 
 A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front,
-Side, Top; the default) or `orbit` (adds Turn and a drag). A spot row:
+Side, Top; the default) or `orbit` (adds Turn and a drag). A room's and a board's `title` is for the adults.
+The learner's strip reads Explore and Words. A spot row:
 
 | Field | Meaning |
 | --- | --- |

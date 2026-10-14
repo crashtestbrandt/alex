@@ -73,6 +73,20 @@ func board_gestalts(b: Board) -> Array[Gestalt]:
 			out.push_back(g)
 	return out
 
+## The tiles behind the learner's Words pill: every gestalt the boards name, in board order, each once. When
+## the boards name nothing the bank holds, the whole bank in bank order.
+func words_gestalts() -> Array[Gestalt]:
+	var out: Array[Gestalt] = []
+	var seen: Dictionary[String, bool] = {}
+	for b: Board in boards:
+		for g: Gestalt in board_gestalts(b):
+			if not seen.has(g.id):
+				seen[g.id] = true
+				out.push_back(g)
+	if out.is_empty():
+		out.assign(gestalts)
+	return out
+
 func to_dict() -> Dictionary:
 	var gestalt_dicts: Array[Dictionary] = []
 	for g: Gestalt in gestalts:

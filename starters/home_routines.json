@@ -88,7 +88,7 @@
   "rooms": [
     {
       "id": "home",
-      "title": "Home",
+      "title": "Explore",
       "camera": "views",
       "spots": [
         {

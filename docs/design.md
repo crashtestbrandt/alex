@@ -58,7 +58,9 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
   Turn button and a drag that orbits. Every view is reversible, every view returns to Front after a short
   idle, and a room can be set to no view buttons at all. Views are the first step in scene complexity a
   caregiver can grow.
-- **Boards.** The plainer alternative: large tiles that say a phrase. Useful for phrases with no object.
+- **Explore and Words.** The learner's strip has two pills. Explore is the room. Words is the plainer
+  alternative: large tiles that say a phrase, useful for phrases with no object. The tiles come from the
+  profile's boards.
 - **A gestalt bank.** Every phrase, with its chunks, where it came from, what it does for the learner, and
   the recording that voices it.
 - **One caregiver gesture.** Hold any object or tile to record its phrase in your own voice. Hold the big

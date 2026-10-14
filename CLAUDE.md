@@ -100,6 +100,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **Gestalts are authored with `|` chunk marks** (`Gestalt.from_text`). The chunks are the mitigation
   model; a Stage 1 gestalt with no bar stays whole, on purpose.
 - **A stage is optional, informs the caregiver only, and never appears on the learner's screen.**
+- **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
+  in profile data and off the learner's screen.
 - **Adult screens sit behind a `HoldButton`.** A stray tap never leaves the board.
 - **Motion respects the style's `motion` setting.** Every tween multiplies by `Style.motion_scale()` and
   skips at zero.
