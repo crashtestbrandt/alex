@@ -56,7 +56,7 @@ Two project settings serve the mobile presets:
   `sdkmanager --sdk_root=<sdk> "platform-tools" "build-tools;35.0.1"` installs both. Set Editor Settings >
   Export > Android > Java SDK Path and Android SDK Path. A new editor settings file takes them from `JAVA_HOME`
   and `ANDROID_HOME`.
-- **iOS: a Mac with Xcode, and an Apple Developer Team ID** (see "Signing").
+- **iOS: a Mac with Xcode, signed in to the Apple account of the preset's Team ID** (see "Signing").
 
 ## Signing
 
@@ -65,9 +65,10 @@ Two project settings serve the mobile presets:
 - **Android release.** Set `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `_USER` and `_PASSWORD`, then run
   `tools/export.sh --export-release Android build/release/android/alex.apk`. The Play Store takes an AAB, which
   needs a Gradle build. That is not set up yet.
-- **iOS.** Godot refuses the export without `application/app_store_team_id`, a 10-character Apple Developer
-  Team ID. The repository leaves it empty. Set it in the iOS preset to commit it. To keep it out of git, set it
-  in `.godot/export_credentials.cfg`, where `preset.1` is the iOS preset's index:
+- **iOS.** The iOS preset carries the owner's Apple Developer Team ID, `9RM79FMS9B`. Godot refuses the export
+  without one. Xcode signs automatically with that team once Xcode is signed in to its account (Xcode >
+  Settings > Accounts). To sign with another account without committing it, set your own Team ID in
+  `.godot/export_credentials.cfg`, which git ignores. `preset.1` is the iOS preset's index:
 
   ```ini
   [preset.1.options]
@@ -75,8 +76,8 @@ Two project settings serve the mobile presets:
   application/app_store_team_id="ABCDE12345"
   ```
 
-  Then open `build/<commit>/ios/alex.xcodeproj`, pick the team under Signing & Capabilities, and run on a
-  device. The iOS simulator cannot run the Mobile renderer.
+  Then open `build/<commit>/ios/alex.xcodeproj`, pick a device as the run destination, and run. The iOS
+  simulator cannot run the Mobile renderer.
 
 ## Validation
 
