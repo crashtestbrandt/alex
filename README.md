@@ -76,8 +76,7 @@ Early and usable.
   palette and a chunk builder, three looks, and recording in your own voice.
 - **Coming:** moving between a profile's rooms, more objects and reactions, recording each chunk so the
   builder speaks in your voice, the learner's own songs and clips, and a bank view for caregivers.
-- **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording
-  there is not yet tried.
+- **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux.
 
 ## For developers
 
