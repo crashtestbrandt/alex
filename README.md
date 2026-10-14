@@ -18,8 +18,9 @@ The learner moves between two modes, Explore and Words.
 - **Words** is a column of phrase tiles. Tapping a tile says its phrase.
 - **Chunks** show on colored pills while a phrase plays, and each is marked as it is spoken. A chunk keeps
   its color everywhere it appears, so "Let's go" looks the same on every tile and caption.
-- **Views** move the camera to the front, the side and above. A caregiver can add a turning view or remove
-  all of them. A moved view returns to the front on its own.
+- **Views** look at the scene from the front and from above, and a drag or a pinch moves in closer. A
+  caregiver can add a third view that stands the learner in the middle of the room to look around, or
+  remove all of them. A tap on a view's button puts it back, and a room left alone returns to the front.
 
 The shipped starter pack's scene is a bedroom. Touching the door opens it to "Let's go outside" and closes it
 to "Let's go inside". Scenes, objects and phrases are data in a pack, so a pack can describe any place.

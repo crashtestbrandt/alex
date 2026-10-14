@@ -99,6 +99,8 @@ func _run() -> void:
 		var leaf: Node = door.get_node_or_null("Object/leaf")
 		_check(leaf is MeshInstance3D and absf((leaf as MeshInstance3D).rotation.y - SpotBody.OPEN_RAD) < 0.01, "the door leaf swung open")
 		_check(room_view.pick_at(room_view.screen_point(door)) == door, "an open door is still picked")
+		var doorway: Vector2 = camera.unproject_position(door.to_global(Vector3(0.0, door.size_m * 0.5, 0.0)))
+		_check(room_view.pick_at(doorway) == door, "the empty doorway picks the open door")
 
 	# Second tap toggles back.
 	for b: SpotBody in bodies:
@@ -109,18 +111,19 @@ func _run() -> void:
 	_check(room_view.recording_gestalt_for(door.spot).id == "lets_go_inside", "second tap and hold record the alternate")
 	await get_tree().create_timer(1.0).timeout
 
-	# Views: the widget offers front, side and top for `camera: views`, and the camera moves to each.
+	# Views: the widget offers Front and Top for `camera: views`, and the camera moves to each.
+	p.rooms[0].camera = Room.Camera.VIEWS
+	home.show_room(p.rooms[0])
+	await get_tree().process_frame
+	bodies = room_view.bodies()
+	door = room_view.body("door")
 	_check(widget.visible, "the view widget shows for a views room")
-	var turn: SdfButton = widget.items()[CameraFraming.View.TURN]
-	_check(not turn.visible, "turn is hidden until the room allows an orbit")
+	var tilt_button: SdfButton = widget.items()[CameraFraming.View.TILT]
+	_check(not tilt_button.visible, "tilt is hidden until the room allows it")
 	var front_pos: Vector3 = room_view.camera_position()
-	room_view.set_view(CameraFraming.View.SIDE, false)
-	_check(room_view.camera_position().x > front_pos.x + 1.0, "the side view stands to the right")
-	_check(not room_view.wall_visible(Spot.Wall.RIGHT), "the right wall hides in the side view")
-	_check(room_view.wall_visible(Spot.Wall.LEFT) and room_view.wall_visible(Spot.Wall.BACK), "the other walls stay")
 	room_view.set_view(CameraFraming.View.TOP, false)
 	_check(room_view.camera_position().y > front_pos.y + 1.0, "the top view stands above")
-	_check(room_view.wall_visible(Spot.Wall.RIGHT), "the right wall shows again")
+	_check(room_view.wall_visible(Spot.Wall.RIGHT) and room_view.wall_visible(Spot.Wall.LEFT), "the side walls show from above")
 	for b: SpotBody in bodies:
 		# The cup covers the table's center from above. Pick any visible part of each object.
 		var bounds: Rect2 = room_view.screen_bounds(b)
@@ -131,15 +134,76 @@ func _run() -> void:
 				reachable = reachable or room_view.pick_at(point) == b
 		_check(reachable, "%s has a reachable surface from above" % b.spot.id)
 
-	# Orbit: a drag past the limits stays inside them, and the view idles back to the front.
-	p.rooms[0].camera = Room.Camera.ORBIT
+	# Pan and zoom: nothing moves at the fit, a pinch closes in to its limit, and a drag then stays inside it.
+	room_view.set_view(CameraFraming.View.FRONT, false)
+	var mid_px: Vector2 = safe.get_center()
+	room_view.pan_by(Vector2(500.0, 300.0))
+	_check(room_view.pan() == Vector2.ZERO and not room_view.is_moved(), "no pan at the fit")
+	room_view.zoom_by(100.0, mid_px)
+	_check(absf(room_view.zoom() - CameraFraming.ZOOM_MAX) < 0.0001, "zoom stops at its limit")
+	_check(room_view.is_moved(), "a zoomed front is a moved view")
+	room_view.pan_by(Vector2(-100000.0, 100000.0))
+	var visible: Vector2 = Vector2(room_view.size.x / room_view.size.y, 1.0) * room_view.frame_extent() / room_view.zoom()
+	var silhouette: Rect2 = room_view.room_silhouette()
+	var clamped: Vector2 = CameraFraming.clamp_pan(room_view.pan(), visible, silhouette)
+	_check(room_view.pan().is_equal_approx(clamped) and room_view.pan() != Vector2.ZERO, "a pan stops inside the room (%s)" % room_view.pan())
+	_check(room_view.pan().x + visible.x / 2.0 <= silhouette.end.x + 0.0001, "the frame's edge stops at the wall")
+	_check(not room_view.enclosure_visible(), "the front wall and ceiling are out of the way from the front")
+	for b: SpotBody in bodies:
+		_check(room_view.pick_at(room_view.screen_point(b)) == b or room_view.camera_position().distance_to(b.center_point()) > 0.0, "%s is still picked where it shows" % b.spot.id)
+
+	# The press rule: movement past the threshold cancels the hold and moves the view from wherever it began,
+	# an object included, and the release is not a tap.
+	var holds: Array[Spot] = []
+	room_view.spot_held.connect(func(s: Spot, _g: Gestalt) -> void: holds.push_back(s))
+	room_view.set_view(CameraFraming.View.FRONT, false)
+	room_view.zoom_by(CameraFraming.ZOOM_MAX, mid_px)
+	var pan_before: Vector2 = room_view.pan()
+	var door_px: Vector2 = room_view.screen_point(door)
+	var was_on: bool = door.is_on
+	room_view._gui_input(_mouse(door_px, true))
+	room_view._gui_input(_motion(door_px + Vector2(60.0, 40.0), Vector2(60.0, 40.0)))
+	room_view._process(RoomView.HOLD_SECONDS + 0.1)
+	room_view._gui_input(_mouse(door_px + Vector2(60.0, 40.0), false))
+	_check(room_view.pan() != pan_before, "a drag that began on an object moves the view")
+	_check(door.is_on == was_on, "a drag is not a tap")
+	_check(holds.is_empty(), "a drag is not a hold")
+	room_view._gui_input(_mouse(door_px, true))
+	room_view._process(RoomView.HOLD_SECONDS + 0.1)
+	_check(holds.size() == 1 and holds[0] == door.spot, "a still press is a hold")
+	(home.get_node("%RecordOverlay") as RecordOverlay).close()
+
+	# A tap on the current view's pill resets it.
+	var front_button: SdfButton = widget.items()[CameraFraming.View.FRONT]
+	_check(front_button.button_pressed, "front is the pressed pill")
+	var pill_px: Vector2 = front_button.get_global_rect().get_center()
+	get_viewport().push_input(_mouse(pill_px, true))
+	get_viewport().push_input(_mouse(pill_px, false))
+	# The reset is a tween on wall time.
+	await get_tree().create_timer(1.0).timeout
+	await get_tree().process_frame
+	_check(not room_view.is_moved(), "a tap on the current pill resets the view (zoom %s, pan %s)" % [room_view.zoom(), room_view.pan()])
+
+	# Tilt: the camera stands at the room's center, every wall stays, a drag turns within the pitch limits,
+	# a pinch narrows the view, and the view idles back to the front.
+	p.rooms[0].camera = Room.Camera.TILT
 	home.show_room(p.rooms[0])
 	await get_tree().process_frame
-	_check(turn.visible, "turn shows for an orbit room")
-	room_view.orbit_by(Vector2(-100000.0, 100000.0))
-	var far: Vector3 = room_view.camera_position()
-	_check(room_view.view() == CameraFraming.View.TURN, "a drag puts the view in turn")
-	_check(far.y < RoomSpace.HEIGHT / 2.0 + 20.0 and far.x > 0.0, "the orbit stops at its limits (%s)" % far)
+	_check(tilt_button.visible, "tilt shows for a tilt room")
+	room_view.set_view(CameraFraming.View.TILT, false)
+	var origin: Vector3 = RoomSpace.tilt_origin(p.rooms[0])
+	_check(room_view.camera_position().is_equal_approx(origin), "tilt stands at the room's center (%s)" % room_view.camera_position())
+	_check(origin.y > 0.5 and origin.y < RoomSpace.HEIGHT, "tilt stands at eye height")
+	room_view.pan_by(Vector2(0.0, -100000.0))
+	_check(absf(room_view.tilt_angles().y - CameraFraming.TILT_PITCH_MIN_DEG) < 0.001, "tilt stops looking down at its limit")
+	room_view.pan_by(Vector2(100000.0, 100000.0))
+	_check(absf(room_view.tilt_angles().y - CameraFraming.TILT_PITCH_MAX_DEG) < 0.001, "tilt stops looking up at its limit")
+	_check(absf(room_view.tilt_angles().x) <= 180.0, "yaw wraps")
+	room_view.zoom_by(100.0, mid_px)
+	_check(absf(room_view.tilt_zoom() - CameraFraming.TILT_ZOOM_MAX) < 0.001, "tilt zoom stops at its limit")
+	for wall: Spot.Wall in [Spot.Wall.BACK, Spot.Wall.LEFT, Spot.Wall.RIGHT]:
+		_check(room_view.wall_visible(wall), "wall %d stays in tilt" % wall)
+	_check(room_view.enclosure_visible(), "the front wall and ceiling close the box in tilt")
 	room_view.idle_seconds = 0.3
 	await get_tree().create_timer(1.0).timeout
 	await get_tree().process_frame
@@ -162,6 +226,22 @@ func _run() -> void:
 	await _check_name(home, p)
 	await _check_cleanup(home, p)
 	_finish(repo, p.id)
+
+func _mouse(at: Vector2, pressed: bool) -> InputEventMouseButton:
+	var event: InputEventMouseButton = InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.pressed = pressed
+	event.position = at
+	event.global_position = at
+	return event
+
+func _motion(at: Vector2, relative: Vector2) -> InputEventMouseMotion:
+	var event: InputEventMouseMotion = InputEventMouseMotion.new()
+	event.position = at
+	event.global_position = at
+	event.relative = relative
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT
+	return event
 
 ## A chunk is the same color in the caption and on a tile. The spoken chunk grows at full motion and
 ## brightens, at its own size, at motion NONE.

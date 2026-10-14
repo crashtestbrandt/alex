@@ -1,4 +1,4 @@
-// THE GLYPHS ON THE LEARNER'S BUTTONS: the front, side, top and turn views, the three dots that lead to the
+// THE GLYPHS ON THE LEARNER'S BUTTONS: the front, side, top and tilt views, the three dots that lead to the
 // adults' screens, and the microphone. Each is a composition of segments, boxes, arcs and discs evaluated as a
 // distance field per pixel, so a stroke covers exactly its share of every pixel at every scale (docs/ui.md).
 // `figure` picks the composition, so every glyph shares one shader and one uniform set. A figure added later
@@ -9,7 +9,7 @@ uniform vec2 rect_px = vec2(1.0);
 // The glyph's radius: half of the figure's longer side, in control units.
 uniform float radius_px = 20.0;
 uniform float width_px = 3.0;
-// 0 front, 1 side, 2 top, 3 turn, 4 dots, 5 microphone.
+// 0 front, 1 side, 2 top, 3 tilt (a circular arrow), 4 dots, 5 microphone.
 uniform int figure = 0;
 uniform vec4 tint : source_color = vec4(1.0);
 

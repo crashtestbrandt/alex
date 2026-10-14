@@ -37,9 +37,10 @@ A gestalt row:
 | `stage` | The stage the gestalt models, 0 for unstaged. |
 | `recording` | A file under `media/`, or empty. `wav`, `ogg` or `mp3`. |
 
-A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front,
-Side, Top; the default) or `orbit` (adds Turn and a drag). A room's and a board's `title` is for the adults.
-The learner's strip reads Explore and Words. A spot row:
+A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front
+and Top, with a pan and a zoom; the default) or `tilt` (adds Tilt, a look around from the room's center).
+`orbit` in an older file reads as `tilt`. A room's and a board's `title` is for the adults. The learner's
+strip reads Explore and Words. A spot row:
 
 | Field | Meaning |
 | --- | --- |
