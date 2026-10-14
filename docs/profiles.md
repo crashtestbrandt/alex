@@ -95,8 +95,8 @@ Packs are read with `DirAccess` at runtime, so **a shipped build needs `*.json` 
 `Style.apply` builds a Theme from the preset at runtime and sets it on the root window. There is no theme
 file to keep in step. `calm`, `bold` and `quiet` ship; a fourth is a new `.tres`.
 
-- Press a Look pill on the profile screen to preview it immediately.
-- Use **Change look** for an existing profile to edit its saved style. **Save** updates that profile and opens it.
+- **New profile** opens the creation form. With no saved profiles, the form opens directly.
+- Use **Look** in an existing profile's row to edit its saved style. Style pills preview immediately. **Save** updates that profile and opens it.
 - **Back** or Escape discards the preview and restores the preceding screen style. Other profiles and recordings are unchanged.
 
 ## Recordings

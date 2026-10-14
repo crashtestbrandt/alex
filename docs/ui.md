@@ -53,10 +53,12 @@ for the shader to read.
 
 ## The profile picker
 
-The adults' first screen uses the same controls as the room's chrome: each profile is one button that opens
-it, the name is an `SdfField`, the starter pack and the style are pill bars with the choice pressed, and
-Create is the one `primary` button. Pressing a style applies it at once, so the screen is its own preview,
-and the bar shows the style the app is wearing whenever the picker returns. Nothing on it is drawn by a theme style box.
+- The first screen lists profile rows. The name opens the profile; an inline Look action edits its style.
+- New profile opens a separate form. An empty profile list opens that form directly.
+- The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
+- Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
+- Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
+- Nothing on the picker is drawn by a theme style box.
 
 ## Gates
 
@@ -75,7 +77,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Long phrases wrap within tiles. Larger boards scroll without reducing touch targets. Swipes beginning on buttons reach their scroll container.
 - `SdfSheet` centers caregiver forms, limits their line length, and scrolls tall content. `SdfScroll` draws its scrollbar with `SdfShape`.
 - Recording actions wrap. Back and Create stay reachable after rotation and with long content.
-- Each profile has a Change look action. Its editor previews styles immediately, saves only the selected profile's look, and offers Back to discard the preview.
+- Profile rows keep their Look action inline. Creation and look editing have separate forms.
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
 - The current phrase has one opaque caption panel. Repeated taps replace it; view changes clear it.
@@ -85,6 +87,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 
 - `just layout-probe` checks six viewport shapes in all three styles, all four camera views, caption bounds, tile bounds, and scrolling.
 - The sizes are 390×844, 844×390, 768×1024, 1280×800, 1920×1080, and 640×640.
+- Profile forms also run at 1280×360, 800×240, 640×360, 390×280, and 640×640 in every style. Native wheel input must reach the bottom actions after resizing.
 - A 320×568 stress case checks a long profile name, long place titles, a 30-phrase board, ten additional profiles, native wheel and drag scrolling, scroll-cancelled holds, and recording focus.
 - `just visual-probe` saves room, caption, board, recording, review, and picker screenshots under `user://visual_probe_captures/`.
 - Pass `--capture=<directory>` to the probe to choose a different screenshot directory.

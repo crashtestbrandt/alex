@@ -162,9 +162,7 @@ func _run() -> void:
 			await _settle()
 			var create: Control = picker.get_node("%CreateButton") as Control
 			var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
-			sheet.ensure_control_visible(create)
-			await _settle()
-			_inside(create, screen, "create reachable by scrolling")
+			_inside(picker.get_node("%NewProfileButton") as Control, screen, "new profile action fits")
 			_shot("picker")
 			var profile_card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
@@ -173,11 +171,27 @@ func _run() -> void:
 			_inside(create, screen, "save look reachable")
 			_shot("profile-look")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+			(picker.get_node("%NewProfileButton") as SdfButton).pressed.emit()
+			await _settle()
+			sheet.ensure_control_visible(create)
+			await _settle()
+			_inside(create, screen, "create reachable by scrolling")
+			_shot("new-profile")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 			print("VISUAL checked %s" % _label)
 	await _profile_looks(main, picker, profile)
 	_check(_profile_looks_complete, "profile look flow completed")
+	await _short_picker(main, picker)
 	await _stress(main, home, picker, overlay, profile)
 	ProfileStore.repo.delete_profile(profile.id)
+	main.show_picker()
+	await _settle()
+	_check((picker.get_node("%NameEdit") as Control).is_visible_in_tree(), "empty picker opens creation form")
+	_check(not (picker.get_node("%BackButton") as Control).is_visible_in_tree(), "empty picker has no redundant Back action")
+	(picker.get_node("%NameEdit") as LineEdit).text = "New profile fixture"
+	(picker.get_node("%CreateButton") as SdfButton).pressed.emit()
+	_check(not picker.visible and App.active_profile.display_name == "New profile fixture", "creation opens the new profile")
+	ProfileStore.repo.delete_profile(App.active_profile.id)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ProfileStore.repo.root))
 	ProfileStore.repo = previous_repo
 	print("VISUAL-PROBE %s (%d failures)" % ["PASS" if _failures.is_empty() else "FAIL", _failures.size()])
@@ -192,9 +206,12 @@ func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void
 	await _settle()
 	var styles: PillBar = picker.get_node("%StyleBar") as PillBar
 	var ids: PackedStringArray = StylePreset.list_ids()
+	(picker.get_node("%NewProfileButton") as SdfButton).pressed.emit()
 	styles.items()[ids.find("bold")].pressed.emit()
 	_check(Style.current == StylePreset.load_by_id("bold"), "new-profile look previews immediately")
 	_check(ProfileStore.load_profile(profile.id).style_id == saved.style_id, "preview leaves existing profile unchanged")
+	(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+	var previous: StylePreset = Style.current
 	var card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
 	(card.get_child(1) as SdfButton).pressed.emit()
 	_check(styles.active_index() == ids.find(saved.style_id), "editing selects the saved look")
@@ -202,7 +219,7 @@ func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void
 	_check(Style.current == StylePreset.load_by_id("calm"), "existing-profile look previews immediately")
 	_check(JSON.stringify(ProfileStore.load_profile(profile.id).to_dict()) == expected, "preview writes nothing")
 	(picker.get_node("%BackButton") as SdfButton).pressed.emit()
-	_check(Style.current == StylePreset.load_by_id("bold"), "Back restores the previous preview")
+	_check(Style.current == previous, "Back restores the previous preview")
 	_check(JSON.stringify(ProfileStore.load_profile(profile.id).to_dict()) == expected, "Back preserves the profile")
 	card = (picker.get_node("%Profiles") as Control).get_child(0) as Control
 	(card.get_child(1) as SdfButton).pressed.emit()
@@ -218,6 +235,41 @@ func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void
 	_check(Style.current == StylePreset.load_by_id("bold"), "reopening loads the saved look")
 	ProfileStore.repo.delete_profile(other.id)
 	_profile_looks_complete = true
+
+func _short_picker(main: Main, picker: ProfilePicker) -> void:
+	for style: String in ["calm", "bold", "quiet"]:
+		for window_size: Vector2i in [Vector2i(1280, 360), Vector2i(800, 240), Vector2i(640, 360), Vector2i(390, 280), Vector2i(640, 640)]:
+			_label = "short-%s-%dx%d" % [style, window_size.x, window_size.y]
+			get_window().size = window_size
+			Style.apply(StylePreset.load_by_id(style))
+			main.show_picker()
+			await _settle()
+			var screen: Rect2 = picker.get_global_rect()
+			_inside(picker.get_node("%NewProfileButton") as Control, screen, "profile list fits short window")
+			_shot("picker")
+			(picker.get_node("%NewProfileButton") as SdfButton).pressed.emit()
+			await _settle()
+			get_window().size = Vector2i(1280, 900)
+			await _settle()
+			get_window().size = window_size
+			await _settle()
+			screen = picker.get_global_rect()
+			var create: Control = picker.get_node("%CreateButton") as Control
+			var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
+			if sheet.get_v_scroll_bar().max_value > sheet.get_v_scroll_bar().page:
+				var wheel: InputEventMouseButton = InputEventMouseButton.new()
+				wheel.position = (picker.get_node("%StyleBar") as Control).get_global_rect().get_center()
+				wheel.global_position = wheel.position
+				wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+				wheel.pressed = true
+				wheel.factor = 20.0
+				get_viewport().push_input(wheel, true)
+				await _settle()
+			_inside(create, screen, "bottom action reachable with native wheel input")
+			var content: Control = create.get_parent().get_parent() as Control
+			_inside(content, (content.get_parent() as Control).get_global_rect(), "form fits its panel after resize")
+			_shot("form")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 
 func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: RecordOverlay, profile: Profile) -> void:
 	_label = "long-content"
@@ -293,7 +345,7 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	main.show_picker()
 	await _settle()
 	var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
-	var create: Control = picker.get_node("%CreateButton") as Control
+	var create: Control = picker.get_node("%NewProfileButton") as Control
 	sheet.scroll_vertical = 0
 	await _settle()
 	var first_profile: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
@@ -301,7 +353,7 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	_check(picker.visible, "dragging a profile does not open it")
 	sheet.ensure_control_visible(create)
 	await _settle()
-	_inside(create, screen, "create reachable with many profiles")
+	_inside(create, screen, "new profile reachable with many profiles")
 	_shot("picker")
 	for id: String in fixtures:
 		ProfileStore.repo.delete_profile(id)

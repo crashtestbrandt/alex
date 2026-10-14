@@ -51,12 +51,7 @@ func _run() -> void:
 		overlay.close()
 	if err == OK:
 		main.show_picker()
-		# Press the Calm pill: the picker applies a style the moment it is chosen, so the capture is light.
-		var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
-		var styles: PillBar = picker.get_node("%StyleBar") as PillBar
-		var calm: int = StylePreset.list_ids().find("calm")
-		styles.set_active(calm)
-		styles.items()[calm].pressed.emit()
+		Style.apply(StylePreset.load_by_id("calm"))
 		await get_tree().create_timer(0.3).timeout
 		RenderingServer.force_draw()
 		err = _save(_OUT_PICKER)
