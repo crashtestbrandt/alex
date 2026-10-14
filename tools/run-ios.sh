@@ -68,7 +68,14 @@ HELP
 	exit 1
 fi
 
-tools/export.sh --export-release iOS "$dir/ios/alex.xcodeproj"
+# Godot prints every packed file. The log keeps it out of the terminal unless the export fails.
+mkdir -p "$dir"
+if ! tools/export.sh --export-release iOS "$dir/ios/alex.xcodeproj" > "$dir/export-ios.log" 2>&1; then
+	grep -E 'ERROR|error' "$dir/export-ios.log" >&2 || tail -20 "$dir/export-ios.log" >&2
+	printf 'The full export log is %s/export-ios.log.\n' "$dir" >&2
+	exit 1
+fi
+printf 'export: %s/ios/alex.xcodeproj\n' "$dir"
 project="$dir/ios/alex.xcodeproj"
 bundle="$(sed -n 's/^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER = \([^;]*\);.*/\1/p' "$project/project.pbxproj" | head -1)"
 

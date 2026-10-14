@@ -30,7 +30,14 @@ if [[ -n "$(git status --porcelain)" ]]; then
 	exit 1
 fi
 
-tools/export.sh --export-release iOS "$dir/ios/alex.xcodeproj"
+# Godot prints every packed file. The log keeps it out of the terminal unless the export fails.
+mkdir -p "$dir"
+if ! tools/export.sh --export-release iOS "$dir/ios/alex.xcodeproj" > "$dir/export-ios.log" 2>&1; then
+	grep -E 'ERROR|error' "$dir/export-ios.log" >&2 || tail -20 "$dir/export-ios.log" >&2
+	printf 'The full export log is %s/export-ios.log.\n' "$dir" >&2
+	exit 1
+fi
+printf 'export: %s/ios/alex.xcodeproj\n' "$dir"
 
 # The team the export actually carries, which is the preset's unless .godot/export_credentials.cfg overrides it.
 team="$(sed -n 's/^[[:space:]]*DEVELOPMENT_TEAM = \([A-Z0-9]*\);.*/\1/p' "$dir/ios/alex.xcodeproj/project.pbxproj" | head -1)"
