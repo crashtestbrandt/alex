@@ -24,15 +24,21 @@ func _ready() -> void:
 	_shape = SdfShape.new()
 	_shape.name = "Shape"
 	_shape.show_behind_parent = true
-	_shape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_shape)
 	move_child(_shape, 0)
+	# A container lays its children out inside its margins, the shape included. It is pinned back to the full
+	# rect after every sort, so the drawn panel is the panel and not its content box.
+	sort_children.connect(_place_shape)
 	Style.changed.connect(_on_style_changed)
 	_refresh()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_refresh()
+
+func _place_shape() -> void:
+	_shape.position = Vector2.ZERO
+	_shape.size = size
 
 ## Put a button in the bar as a quiet pill in the bar's toggle group.
 func add_item(button: SdfButton) -> void:
@@ -50,6 +56,23 @@ func items() -> Array[SdfButton]:
 		if child is SdfButton:
 			out.push_back(child)
 	return out
+
+## The index of the pressed item, or -1.
+func active_index() -> int:
+	var all: Array[SdfButton] = items()
+	for i: int in all.size():
+		if all[i].button_pressed:
+			return i
+	return -1
+
+## Press item `index` without a signal.
+func set_active(index: int) -> void:
+	var all: Array[SdfButton] = items()
+	if index < 0 or index >= all.size():
+		return
+	all[index].set_pressed_no_signal(true)
+	for button: SdfButton in all:
+		button.refresh()
 
 func clear() -> void:
 	for child: Node in _row.get_children():

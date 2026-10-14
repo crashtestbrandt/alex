@@ -5,7 +5,8 @@ class_name SdfButton
 ## in, and a pressed or toggled-on button fills with the accent, which the theme's pressed font color is set
 ## against.
 ##
-## `quiet` is for a pill inside a bar: no fill, no relief, until it is the active one.
+## `quiet` is for a pill inside a bar: no fill, no relief, until it is the active one. `primary` is the one
+## button on a screen that does the thing: always the accent.
 
 enum Shape {
 	ROUNDED = 0,
@@ -24,6 +25,10 @@ const PRESS_SECONDS: float = 0.08
 @export var quiet: bool = false:
 	set(value):
 		quiet = value
+		refresh()
+@export var primary: bool = false:
+	set(value):
+		primary = value
 		refresh()
 ## Below zero, the style preset's corner radius. A bar or a panel sets a concentric one.
 @export var radius_px: float = -1.0:
@@ -80,7 +85,7 @@ func refresh() -> void:
 			_shape.radius_px = UiGeometry.pill_radius(size)
 		_:
 			_shape.radius_px = UiGeometry.rounded_radius(size, shape_radius)
-	if active:
+	if active or primary:
 		_shape.fill = preset.accent
 	elif disabled:
 		_shape.fill = preset.surface.lerp(preset.background, 0.5)
@@ -89,8 +94,11 @@ func refresh() -> void:
 	else:
 		_shape.fill = preset.surface
 	_shape.border_px = HOVER_BORDER_PX if _hover and not active and not disabled else 0.0
-	_shape.border_color = preset.accent
+	_shape.border_color = preset.text if primary else preset.accent
 	_shape.relief = 0.0 if quiet else -1.0
+	if primary:
+		add_theme_color_override("font_color", preset.surface)
+		add_theme_color_override("font_hover_color", preset.surface)
 
 # Named for the shape so a subclass with its own press handlers, HoldButton, never overrides these.
 func _on_shape_down() -> void:

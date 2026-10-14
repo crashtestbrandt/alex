@@ -27,3 +27,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# The picker screenshot lists whatever profiles the machine holds, so it never enters the repository.
+docs/img/picker.png
