@@ -59,7 +59,7 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 Early and usable. One 3D room with nine objects, a plain board for phrases with no object, three looks, and
 recording in your own voice. Coming: more rooms and reactions, the learner's own songs and clips, a remix board
 that offers chunk beginnings beside chunk endings, and a bank view for caregivers. Exports for Android and iOS
-phones and tablets, macOS, Windows and Linux. Not yet tried on a phone or tablet.
+phones and tablets, macOS, Windows and Linux. Runs on an iPhone; recording there is not yet tried.
 
 ## For developers
 
@@ -108,6 +108,7 @@ new kind of object is a `Spot.Kind` value and a recipe function in `ObjectRecipe
 ```sh
 just export-android   # one preset into build/<commit>/android/; also -ios, -macos, -windows, -linux
 just exports          # every preset, then check what each export holds
+just run-ios          # export iOS and run it on the paired iPhone or iPad
 just testflight       # export iOS, archive it and upload it for TestFlight
 ```
 

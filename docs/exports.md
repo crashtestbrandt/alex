@@ -78,8 +78,24 @@ Two project settings serve the mobile presets:
   application/app_store_team_id="ABCDE12345"
   ```
 
-  Then open `build/<commit>/ios/alex.xcodeproj`, pick a device as the run destination, and run. The iOS
-  simulator cannot run the Mobile renderer.
+  The iOS simulator cannot run the Mobile renderer.
+
+## Run on a device
+
+`just run-ios` exports the iOS preset, builds it, installs it on the paired iPhone or iPad, and launches it
+with its log in the terminal (`tools/run-ios.sh`). Ctrl-C stops the log and the app.
+
+- `just run-ios <name>` picks a device when several are paired. `xcrun devicectl list devices` lists the names.
+- The build replaces a TestFlight install of the app on that device.
+
+Once per device, with someone at it:
+
+| Step | Where |
+| --- | --- |
+| Pair it. iOS 27 pairs over Wi-Fi: Xcode > Window > Device Hub > + > Pair Nearby Device…. An older iOS needs a cable once. | Xcode and the device |
+| Turn on Developer Mode, restart, and tap Turn On. | Settings > Privacy & Security > Developer Mode |
+
+The script checks both and prints these steps when one is missing.
 
 ## TestFlight
 
@@ -124,5 +140,7 @@ xcodebuild -project build/<commit>/ios/alex.xcodeproj -scheme alex -destination 
 
 ## Not yet verified
 
-- A real device: install, the microphone prompt, and a recording through it (issue #4).
+- The iOS microphone prompt, and a recording through it (issue #4). Install and launch work on an iPhone with
+  iOS 27, from TestFlight and from `just run-ios`.
+- Any Android device.
 - The Android microphone prompt. `Recorder` does not request the permission before the first take.
