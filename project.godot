@@ -8,6 +8,8 @@ config_version=5
 
 config/name="Alex"
 config/description="A configurable companion for children who acquire language in gestalts."
+; The version every export preset reports (docs/exports.md). The iOS build number comes from the archive step.
+config/version="0.1.0"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 ; No engine logo. The app opens on the active style's background, and the first frame matches it.

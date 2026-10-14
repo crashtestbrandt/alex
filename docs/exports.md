@@ -16,6 +16,8 @@ each one holds.
 Every recipe goes through `tools/export.sh`. It empties the platform directory first and fails when Godot
 writes no output.
 
+Every preset takes its version from `application/config/version` in `project.godot`.
+
 ## Rules
 
 `tools/check-export-presets.sh` enforces these in `just check` and in CI.
