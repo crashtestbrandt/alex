@@ -140,5 +140,7 @@ xcodebuild -project build/<commit>/ios/alex.xcodeproj -scheme alex -destination 
 
 ## Not yet verified
 
-- A real device: install, the microphone prompt, and a recording through it (issue #4).
+- The iOS microphone prompt, and a recording through it (issue #4). Install and launch work on an iPhone with
+  iOS 27, from TestFlight and from `just run-ios`.
+- Any Android device.
 - The Android microphone prompt. `Recorder` does not request the permission before the first take.
