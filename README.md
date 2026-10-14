@@ -1,8 +1,8 @@
-# Jessie
+# Alex
 
 A room to explore, that speaks in voices you love.
 
-Jessie is a small app for children who acquire language in whole chunks: autistic children, children with
+Alex is a small app for children who acquire language in whole chunks: autistic children, children with
 developmental delays, and any child whose first speech is echolalia. It is not a clinical tool and not a
 substitute for one. It is something a learner can pick up and discover on their own, after a caregiver spends a
 few minutes setting it up.
@@ -38,13 +38,13 @@ Echolalia is communication, not noise. Repeated phrases carry requests, protests
 self-regulation [[1]](#research), [[2]](#research). Questions and demands draw more echoing and less original
 speech from autistic children than comments do, which is why the app asks nothing and only offers
 [[3]](#research). Whether echolalia should be reduced at all is contested, and the reviews find little evidence
-for the interventions that try [[4]](#research), [[5]](#research). Jessie does not try: it plays the learner's
+for the interventions that try [[4]](#research), [[5]](#research). Alex does not try: it plays the learner's
 phrases back in familiar voices, attached to things they can act on, and lets repetition run.
 
 The phrases ship in chunks an adult can recombine ("Let's go" + "outside", "Let's go" + "in the car"). That idea
 comes from the Natural Language Acquisition framework [[6]](#research), [[7]](#research), which describes
 language growing from whole gestalts to flexible sentences. The framework's clinical claims are debated and its
-protocol has no empirical evaluation yet [[8]](#research), [[9]](#research), [[10]](#research). Jessie uses the
+protocol has no empirical evaluation yet [[8]](#research), [[9]](#research), [[10]](#research). Alex uses the
 chunking as a design heuristic for making seams visible, not as a treatment, and nothing in the app depends on
 the stage model being right. The thinking, and the rules that follow from it, are in
 [`docs/design.md`](docs/design.md).

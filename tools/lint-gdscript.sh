@@ -14,7 +14,7 @@ if [ -z "$GODOT" ]; then
 fi
 
 TMPDIR="${TMPDIR:-/tmp}"
-LOG_FILE="$(mktemp "${TMPDIR%/}/jessie-gdscript-lint.XXXXXX")"
+LOG_FILE="$(mktemp "${TMPDIR%/}/alex-gdscript-lint.XXXXXX")"
 trap 'rm -f "$LOG_FILE"' EXIT HUP INT TERM
 
 if [ -d "$ROOT/build" ]; then

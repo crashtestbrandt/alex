@@ -35,9 +35,9 @@ profiles:
 
 # Where Godot keeps user:// for this project on this host.
 _user-dir:
-    @if [ "{{os()}}" = "macos" ]; then echo "$HOME/Library/Application Support/Godot/app_userdata/Jessie"; \
-    elif [ "{{os()}}" = "windows" ]; then echo "$APPDATA/Godot/app_userdata/Jessie"; \
-    else echo "${XDG_DATA_HOME:-$HOME/.local/share}/godot/app_userdata/Jessie"; fi
+    @if [ "{{os()}}" = "macos" ]; then echo "$HOME/Library/Application Support/Godot/app_userdata/Alex"; \
+    elif [ "{{os()}}" = "windows" ]; then echo "$APPDATA/Godot/app_userdata/Alex"; \
+    else echo "${XDG_DATA_HOME:-$HOME/.local/share}/godot/app_userdata/Alex"; fi
 
 # Headless project load; fails on compiler or script errors (tools/lint-gdscript.sh).
 lint:
@@ -78,12 +78,12 @@ check: doc-size-check lint test room-probe
 # a preset of that name in export_presets.cfg, which does not exist yet (README "Exports").
 export-macos:
     mkdir -p build/{{commit}}/macos
-    "{{godot}}" --headless --path . --export-release "macOS" build/{{commit}}/macos/jessie.zip
+    "{{godot}}" --headless --path . --export-release "macOS" build/{{commit}}/macos/alex.zip
 
 export-linux:
     mkdir -p build/{{commit}}/linux
-    "{{godot}}" --headless --path . --export-release "Linux" build/{{commit}}/linux/jessie.x86_64
+    "{{godot}}" --headless --path . --export-release "Linux" build/{{commit}}/linux/alex.x86_64
 
 export-windows:
     mkdir -p build/{{commit}}/windows
-    "{{godot}}" --headless --path . --export-release "Windows Desktop" build/{{commit}}/windows/jessie.exe
+    "{{godot}}" --headless --path . --export-release "Windows Desktop" build/{{commit}}/windows/alex.exe

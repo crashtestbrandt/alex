@@ -1,4 +1,4 @@
-# Jessie — Claude Code context
+# Alex — Claude Code context
 
 `CLAUDE.md` is capped at 40,000 bytes and `README.md` at 16,000 by `tools/check-doc-size.sh` (`just
 doc-size-check`). This file loads into every agent context on every session; it states durable rules and

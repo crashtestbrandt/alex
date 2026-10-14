@@ -2,8 +2,8 @@ extends Node
 ## Autoload `App`: the active profile and the app's display name. Scene-independent state only; every screen
 ## reads the profile from here rather than carrying its own copy.
 
-## The name every player-facing surface uses. The repository and the Godot project stay `jessie`.
-const DISPLAY_NAME: String = "Jessie"
+## The name every player-facing surface uses. The repository is `alex` too.
+const DISPLAY_NAME: String = "Alex"
 
 signal profile_changed(profile: Profile)
 
