@@ -112,13 +112,14 @@ func _run() -> void:
 			_inside(home.get_node("%TopBar") as Control, screen, "header")
 			_inside(home.get_node("%PlaceStrip") as Control, screen, "places")
 			_inside(room.get_node("%ViewWidget") as Control, screen, "views")
-			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP, CameraFraming.View.TILT]:
 				room.set_view(view, false)
 				await _settle()
-				for body: SpotBody in room.bodies():
-					_check(room.safe_rect().grow(1.0).encloses(room.screen_bounds(body)), "%s bounds are visible in view %s" % [body.spot.id, view])
-				if view == CameraFraming.View.SIDE and viewport_size == Vector2i(1280, 800):
-					_shot("side")
+				if view != CameraFraming.View.TILT:
+					for body: SpotBody in room.bodies():
+						_check(room.safe_rect().grow(1.0).encloses(room.screen_bounds(body)), "%s bounds are visible in view %s" % [body.spot.id, view])
+				if view == CameraFraming.View.TILT and viewport_size == Vector2i(1280, 800):
+					_shot("tilt")
 				if view == CameraFraming.View.FRONT:
 					room.body("door").react()
 					await get_tree().create_timer(0.55).timeout
@@ -472,7 +473,7 @@ func _safe_areas(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Re
 			_inside(home.get_node("%PlaceStrip") as Control, safe, "places avoid cutouts")
 			_inside(room.get_node("%ViewWidget") as Control, safe, "views avoid gesture area")
 			_square(home.get_node("%ProfilesButton") as Control, "profile control")
-			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP]:
 				room.set_view(view, false)
 				await _settle()
 				for body: SpotBody in room.bodies():

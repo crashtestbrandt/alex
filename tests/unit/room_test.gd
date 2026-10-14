@@ -52,9 +52,11 @@ func test_room_round_trip_skips_bad_spots() -> void:
 	assert_eq(back.camera, Room.Camera.VIEWS, "the camera defaults to the fixed views")
 
 func test_room_camera_round_trip() -> void:
-	var r: Room = Room.from_dict({"id": "home", "camera": "orbit"})
-	assert_eq(r.camera, Room.Camera.ORBIT, "orbit parses")
-	assert_eq(Room.from_dict(r.to_dict()).camera, Room.Camera.ORBIT, "orbit round-trips")
+	var r: Room = Room.from_dict({"id": "home", "camera": "tilt"})
+	assert_eq(r.camera, Room.Camera.TILT, "tilt parses")
+	assert_eq(Room.from_dict(r.to_dict()).camera, Room.Camera.TILT, "tilt round-trips")
+	assert_eq(r.to_dict()["camera"], "tilt", "tilt is saved by its own name")
+	assert_eq(Room.from_dict({"id": "home", "camera": "orbit"}).camera, Room.Camera.TILT, "a saved orbit room reads as tilt")
 	assert_eq(Room.from_dict({"id": "home", "camera": "spin"}).camera, Room.Camera.VIEWS, "an unlisted camera is views")
 	for c: int in Room.Camera.values():
 		var camera: Room.Camera = c as Room.Camera

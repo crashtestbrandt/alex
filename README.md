@@ -16,9 +16,9 @@ door. Touch the door and it swings open as a familiar voice says "Let's go outsi
 closes: "Let's go inside." The lamp lights, the ball bounces, the cup wobbles. While each phrase plays, its chunks float above the object and light
 up one after another, so the learner sees where a phrase comes apart without being told.
 
-Three buttons under the room look at it from the front, the side and above. A caregiver can add a fourth that
-turns the room, or take all of them away. Whatever the learner does with them, the room comes back to the front
-on its own.
+Two buttons under the room look at it from the front and from above, and a drag or a pinch moves in closer. A
+caregiver can add a third that stands the learner in the middle of the room to look around, or take all of
+them away. A tap on a button puts its view back, and a room left alone comes back to the front on its own.
 
 There are no questions, no right answers, no scores, no timers and no rewards. Touching the same thing forty
 times is fine. Nothing on the learner's screen can delete anything, buy anything, or leave the device.

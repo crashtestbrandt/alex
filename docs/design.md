@@ -54,9 +54,10 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
 - **Rooms.** An explorable 3D room of a handful of objects. Touch the door and it swings open as "Let's go
   outside" plays. Touch it again and it closes with "Let's go inside". Objects are built from primitives and
   described in data, so a caregiver can add a room without art or code (docs/geometry.md).
-- **Views.** Front, Side and Top buttons move the camera between three angles, and a caregiver can allow a
-  Turn button and a drag that orbits. Every view is reversible, every view returns to Front after a short
-  idle, and a room can be set to no view buttons at all. Views are the first step in scene complexity a
+- **Views.** Front and Top buttons move the camera between two angles, and a drag or a pinch pans and zooms
+  within them. A caregiver can allow a Tilt button, which stands the camera in the middle of the room to
+  look around. Every view is reversible: a tap on its button puts it back, and a long idle returns to
+  Front. A room can be set to no view buttons at all. Views are the first step in scene complexity a
   caregiver can grow.
 - **Boards.** The plainer alternative: large tiles that say a phrase. Useful for phrases with no object.
 - **A gestalt bank.** Every phrase, with its chunks, where it came from, what it does for the learner, and

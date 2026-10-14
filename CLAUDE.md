@@ -91,9 +91,13 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   A new object kind is a `Spot.Kind` plus a recipe function, never an art asset.
 - **A recipe is a union of rigid primitives, with no seed.** The mesh (`Mesher`) and the field (`Sdf`) are
   twins; a primitive or an operation exists in both or in neither. The same spot is the same object every time.
-- **The learner's camera is perspective, on one clamped orbit.** Front, Side, Top and Turn are points on it,
-  `Room.camera` decides which buttons show, and a moved view returns to Front after the overlay's idle period.
-  Orthographic is for the editor. A drag that starts on an object never turns the view.
+- **The learner's camera is perspective.** Front and Top are points on one clamped orbit, each with a clamped
+  pan and pinch-zoom; Tilt stands at the room's center and turns in place with every wall up. `Room.camera`
+  decides which buttons show. A tap on a view pill resets that view, and a moved view returns to Front after
+  two minutes with nothing touched. Orthographic is for the editor.
+- **A press is a tap, a hold or a drag by distance and time.** Movement past `DRAG_PX` cancels the hold and
+  moves the view from wherever the press began, an object included. Release inside the threshold before the
+  hold elapses is a tap.
 - **The recording overlay writes nothing until Keep**, keeps the previous take, and closes itself when idle.
 - **A familiar voice beats a synthetic one.** The OS text-to-speech voice is a placeholder until a
   recording exists. Never make the synthetic voice the better experience.

@@ -4,21 +4,28 @@ class_name RoomView
 ## a few views, and captions that float over a spot while its gestalt plays (docs/geometry.md).
 ##
 ## Input rules, in the learner's favor: a tap on an object reacts and speaks; a two-second hold on an object
-## opens the caregiver's recorder; a drag that started on an object cancels and does nothing; a drag on
-## empty room orbits only when the room allows it; and any view returns to the front after the same idle
-## period the recording overlay uses.
+## opens the caregiver's recorder; movement past `DRAG_PX` cancels the hold and moves the view from wherever
+## the press began, when the room allows a moved view; two fingers pinch to zoom; a tap on a view pill resets
+## that view; and a moved view returns to the front after `IDLE_RESET_SECONDS` with nothing touched.
+##
+## Front and Top pan and zoom on the orbit. Tilt stands at the room's center and a drag turns it, its zoom a
+## field-of-view change. Every wall stays in place in Tilt, since the camera is inside the box.
 
 signal spot_tapped(spot: Spot, gestalt: Gestalt)
 signal spot_held(spot: Spot, gestalt: Gestalt)
 
 const HOLD_SECONDS: float = 2.0
 const DRAG_PX: float = 24.0
-const ORBIT_DEG_PER_PX: float = 0.35
+const LOOK_DEG_PER_PX: float = 0.25
+## One notch of a scroll wheel zooms by this factor.
+const WHEEL_ZOOM_STEP: float = 1.15
 const VIEW_TWEEN_SECONDS: float = 0.7
 const WIDGET_MARGIN: float = 10.0
+## How long a moved view stays, with nothing touched, before it returns to the front.
+const IDLE_RESET_SECONDS: float = 120.0
 
-## How long a moved view stays before it returns to the front. A probe shortens it.
-var idle_seconds: float = RecordOverlay.IDLE_SECONDS
+## The idle period in use. A probe shortens it.
+var idle_seconds: float = IDLE_RESET_SECONDS
 ## How much of the top of the view floating controls cover. The home sets it from its top bar; the camera
 ## frames the room into the band below it and above the view widget.
 var safe_top_px: float = 0.0:
@@ -40,15 +47,35 @@ var _view: CameraFraming.View = CameraFraming.View.FRONT
 var _azimuth: float = 0.0
 var _elevation: float = CameraFraming.FRONT_ELEVATION_DEG
 var _extent: float = 3.0
+## Front and Top: how far in from the fit, and where the frame has moved, in meters on the target plane.
+var _zoom: float = 1.0
+var _pan: Vector2 = Vector2.ZERO
+## Tilt: where the camera looks and how narrow its view is.
+var _yaw: float = 0.0
+var _pitch: float = 0.0
+var _tilt_zoom: float = 1.0
+var _fov: float = CameraFraming.FOV_DEG
 var _view_tween: Tween = null
 var _blend_from: Vector3 = Vector3.ZERO
 var _blend_to: Vector3 = Vector3.ZERO
+var _blend_pan_from: Vector2 = Vector2.ZERO
+var _blend_zoom_from: float = 1.0
+var _blend_xf_from: Transform3D = Transform3D.IDENTITY
+var _blend_xf_to: Transform3D = Transform3D.IDENTITY
+var _blend_fov_from: float = CameraFraming.FOV_DEG
+var _blend_fov_to: float = CameraFraming.FOV_DEG
+var _blend_offset_from: Vector2 = Vector2.ZERO
+var _blend_offset_to: Vector2 = Vector2.ZERO
 
 var _press_pos: Vector2 = Vector2.ZERO
 var _press_body: SpotBody = null
 var _down_for: float = -1.0
 var _dragging: bool = false
-var _orbit_drag: bool = false
+## Every finger on the screen, by its index.
+var _touches: Dictionary[int, Vector2] = {}
+var _pinching: bool = false
+var _pinch_distance: float = 0.0
+var _pinch_center: Vector2 = Vector2.ZERO
 var _idle: float = 0.0
 
 @onready var _container: SubViewportContainer = %ViewportContainer
@@ -72,8 +99,8 @@ func _ready() -> void:
 	_widget.view_chosen.connect(_on_view_chosen)
 	resized.connect(_on_resized)
 	_widget.resized.connect(_on_resized)
-	get_window().focus_exited.connect(_cancel_press)
-	visibility_changed.connect(_cancel_press)
+	get_window().focus_exited.connect(_cancel_gestures)
+	visibility_changed.connect(_cancel_gestures)
 	Style.changed.connect(_on_style_changed)
 	_apply_camera()
 
@@ -205,27 +232,71 @@ func tap(b: SpotBody) -> void:
 		_spoken_gestalts[b.spot.id] = g
 		spot_tapped.emit(b.spot, g)
 
-## Move the camera to a view, animated unless `animate` is false or the style's motion is none.
+## Move the camera to a view at rest, animated unless `animate` is false or the style's motion is none. The
+## same view as the current one resets its pan, zoom or turn.
 func set_view(target: CameraFraming.View, animate: bool = true) -> void:
 	_clear_captions()
+	var crosses_tilt: bool = _view == CameraFraming.View.TILT or target == CameraFraming.View.TILT
 	_view = target
 	_widget.show_current(target)
 	var angles: Vector2 = CameraFraming.view_angles(target)
-	_move_camera(angles.x, angles.y, animate)
+	_move_camera(angles.x, angles.y, animate, crosses_tilt)
 
-## Turn the camera by a drag of `delta` pixels, within the orbit's limits. Only a room with `camera: orbit`
-## reaches this from input.
-func orbit_by(delta: Vector2) -> void:
-	if _view_tween != null:
-		_view_tween.kill()
-		_view_tween = null
+func zoom() -> float:
+	return _zoom
+
+## The fitted vertical extent of the current orbit view, in meters, which the zoom divides.
+func frame_extent() -> float:
+	return _extent
+
+func pan() -> Vector2:
+	return _pan
+
+## Tilt's yaw and pitch, in degrees.
+func tilt_angles() -> Vector2:
+	return Vector2(_yaw, _pitch)
+
+func tilt_zoom() -> float:
+	return _tilt_zoom
+
+## Whether the view has left its rest: another view than Front, or Front panned or zoomed.
+func is_moved() -> bool:
+	return _view != CameraFraming.View.FRONT or _zoom != 1.0 or _pan != Vector2.ZERO
+
+## Whether the room lets the learner move the view at all.
+func can_move_view() -> bool:
+	return _room != null and _room.camera != Room.Camera.FIXED
+
+## Move the view by a drag of `delta_px`: Front and Top pan within the fitted frame, Tilt turns within its
+## pitch limits. The world follows the finger.
+func pan_by(delta_px: Vector2) -> void:
+	if not can_move_view():
+		return
+	_stop_view_tween()
 	_clear_captions()
-	var clamped: Vector2 = CameraFraming.clamp_orbit(_azimuth - delta.x * ORBIT_DEG_PER_PX, _elevation + delta.y * ORBIT_DEG_PER_PX)
-	_view = CameraFraming.View.TURN
-	_widget.show_current(_view)
-	_azimuth = clamped.x
-	_elevation = clamped.y
-	_extent = _extent_for(_azimuth, _elevation)
+	if _view == CameraFraming.View.TILT:
+		var turned: Vector2 = CameraFraming.clamp_tilt(_yaw - delta_px.x * LOOK_DEG_PER_PX, _pitch + delta_px.y * LOOK_DEG_PER_PX)
+		_yaw = turned.x
+		_pitch = turned.y
+	else:
+		var per_px: float = CameraFraming.meters_per_px(_extent, size.y, _zoom)
+		_pan = CameraFraming.clamp_pan(_pan - Vector2(delta_px.x, -delta_px.y) * per_px, _extent, size.x / maxf(size.y, 1.0), _zoom)
+	_apply_camera()
+
+## Zoom by `factor` about the point `at_px` on this control: Front and Top close in on the fit and keep the
+## point under the fingers fixed, Tilt narrows its view.
+func zoom_by(factor: float, at_px: Vector2) -> void:
+	if not can_move_view() or factor <= 0.0:
+		return
+	_stop_view_tween()
+	_clear_captions()
+	if _view == CameraFraming.View.TILT:
+		_tilt_zoom = CameraFraming.clamp_tilt_zoom(_tilt_zoom * factor)
+	else:
+		var next: float = CameraFraming.clamp_zoom(_zoom * factor)
+		_pan = CameraFraming.zoom_about(_pan, _extent, size.y, at_px - size / 2.0, _zoom, next)
+		_zoom = next
+		_pan = CameraFraming.clamp_pan(_pan, _extent, size.x / maxf(size.y, 1.0), _zoom)
 	_apply_camera()
 
 ## Float `g`'s chunks above spot `s` for about `seconds`, one chunk lighting after another.
@@ -299,42 +370,114 @@ func _clear_captions() -> void:
 
 # --- input ------------------------------------------------------------------------------------------------
 
+## One finger arrives as emulated mouse events and drives the tap, the hold and the drag. Raw touch events
+## are tracked beside them only to see a second finger, which turns the gesture into a pinch. A trackpad's
+## magnify and pan gestures and a scroll wheel do the same on a desktop.
 func _gui_input(event: InputEvent) -> void:
 	_idle = 0.0
-	if event is InputEventMouseButton:
+	if event is InputEventScreenTouch:
+		var touch: InputEventScreenTouch = event
+		_on_touch(touch)
+	elif event is InputEventScreenDrag:
+		var drag: InputEventScreenDrag = event
+		_on_touch_drag(drag)
+	elif event is InputEventMagnifyGesture:
+		var magnify: InputEventMagnifyGesture = event
+		zoom_by(magnify.factor, magnify.position)
+		accept_event()
+	elif event is InputEventPanGesture:
+		var pan_gesture: InputEventPanGesture = event
+		pan_by(-pan_gesture.delta)
+		accept_event()
+	elif event is InputEventMouseButton:
 		var button: InputEventMouseButton = event
-		if button.button_index != MOUSE_BUTTON_LEFT:
-			return
-		if not device_safe_rect().has_point(button.position):
-			_cancel_press()
-			return
-		if button.pressed:
-			_press_pos = button.position
-			_press_body = pick_at(button.position)
-			_down_for = 0.0
-			_dragging = false
-			_orbit_drag = false
-			set_process(true)
-		elif _down_for >= 0.0:
-			var was_tap: bool = not _dragging and _press_body != null
-			var tapped: SpotBody = _press_body
-			_cancel_press()
-			if was_tap:
-				tap(tapped)
-		accept_event()
-	elif event is InputEventMouseMotion and _down_for >= 0.0:
+		_on_mouse_button(button)
+	elif event is InputEventMouseMotion:
 		var motion: InputEventMouseMotion = event
-		if not device_safe_rect().has_point(motion.position):
-			_cancel_press()
-			return
-		if not _dragging and motion.position.distance_to(_press_pos) > DRAG_PX:
-			_dragging = true
-			# A drag that started on an object cancels it; a drag on empty room turns the view if allowed.
-			_orbit_drag = _press_body == null and _room != null and _room.camera == Room.Camera.ORBIT
-			_press_body = null
-		if _orbit_drag:
-			orbit_by(motion.relative)
+		_on_mouse_motion(motion)
+
+func _on_mouse_button(button: InputEventMouseButton) -> void:
+	if button.button_index == MOUSE_BUTTON_WHEEL_UP or button.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		if button.pressed and device_safe_rect().has_point(button.position):
+			var step: float = WHEEL_ZOOM_STEP if button.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / WHEEL_ZOOM_STEP
+			zoom_by(step, button.position)
 		accept_event()
+		return
+	if button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if not device_safe_rect().has_point(button.position):
+		_cancel_press()
+		return
+	if button.pressed:
+		if _pinching:
+			return
+		_press_pos = button.position
+		_press_body = pick_at(button.position)
+		_down_for = 0.0
+		_dragging = false
+		set_process(true)
+	elif _down_for >= 0.0:
+		var was_tap: bool = not _dragging and _press_body != null
+		var tapped: SpotBody = _press_body
+		_cancel_press()
+		if was_tap:
+			tap(tapped)
+	accept_event()
+
+func _on_mouse_motion(motion: InputEventMouseMotion) -> void:
+	if _down_for < 0.0 or _pinching:
+		return
+	if not device_safe_rect().has_point(motion.position):
+		_cancel_press()
+		return
+	if not _dragging and motion.position.distance_to(_press_pos) > DRAG_PX:
+		# Past the threshold the press is a drag: the hold is off, and the view moves wherever the press began.
+		_dragging = true
+		_press_body = null
+	if _dragging:
+		pan_by(motion.relative)
+	accept_event()
+
+func _on_touch(touch: InputEventScreenTouch) -> void:
+	if touch.pressed:
+		_touches[touch.index] = touch.position
+	else:
+		_touches.erase(touch.index)
+	if _touches.size() >= 2:
+		if not _pinching:
+			_begin_pinch()
+	elif _pinching:
+		# The pinch ends with the second finger. The press it cancelled stays cancelled, so the first finger's
+		# release is not a tap.
+		_pinching = false
+
+func _on_touch_drag(drag: InputEventScreenDrag) -> void:
+	if not _touches.has(drag.index):
+		return
+	_touches[drag.index] = drag.position
+	if not _pinching or _touches.size() < 2:
+		return
+	var fingers: Array[Vector2] = _fingers()
+	var distance: float = fingers[0].distance_to(fingers[1])
+	var center: Vector2 = (fingers[0] + fingers[1]) / 2.0
+	if _pinch_distance > 1.0:
+		zoom_by(distance / _pinch_distance, center)
+	pan_by(center - _pinch_center)
+	_pinch_distance = distance
+	_pinch_center = center
+
+func _begin_pinch() -> void:
+	_cancel_press()
+	_pinching = true
+	var fingers: Array[Vector2] = _fingers()
+	_pinch_distance = fingers[0].distance_to(fingers[1])
+	_pinch_center = (fingers[0] + fingers[1]) / 2.0
+
+func _fingers() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for at: Vector2 in _touches.values():
+		out.push_back(at)
+	return out
 
 func _process(delta: float) -> void:
 	if _down_for >= 0.0:
@@ -347,7 +490,7 @@ func _process(delta: float) -> void:
 				if g != null:
 					spot_held.emit(held.spot, g)
 		return
-	if _view == CameraFraming.View.FRONT:
+	if _pinching or not _touches.is_empty() or not is_moved():
 		return
 	_idle += delta
 	if _idle >= idle_seconds:
@@ -358,9 +501,14 @@ func _cancel_press() -> void:
 	_down_for = -1.0
 	_press_body = null
 	_dragging = false
-	_orbit_drag = false
 	_idle = 0.0
 	set_process(_room != null and is_visible_in_tree())
+
+## Forget every finger too, for a window that lost focus or a view that was hidden mid-gesture.
+func _cancel_gestures() -> void:
+	_touches.clear()
+	_pinching = false
+	_cancel_press()
 
 func _on_view_chosen(target: CameraFraming.View) -> void:
 	_idle = 0.0
@@ -380,38 +528,111 @@ func _extent_for(azimuth: float, elevation: float) -> float:
 			points.push_back(Vector3(x, 0.0, z))
 	return CameraFraming.points_extent(points, _target(), azimuth, elevation, size, safe_rect().grow(-16.0))
 
-func _move_camera(azimuth: float, elevation: float, animate: bool) -> void:
-	if _view_tween != null:
-		_view_tween.kill()
-		_view_tween = null
+## Take the camera to a view at rest. Between Front and Top the camera slides along the orbit while the pan and
+## zoom ease out. Into or out of Tilt it blends its transform, field of view and band offsets straight across.
+func _move_camera(azimuth: float, elevation: float, animate: bool, crosses_tilt: bool) -> void:
+	_stop_view_tween()
+	var from_xf: Transform3D = _camera.transform
+	var from_fov: float = _fov
+	var from_offset: Vector2 = Vector2(_camera.h_offset, _camera.v_offset)
+	var from_pan: Vector2 = _pan
+	var from_zoom: float = _zoom
 	var extent: float = _extent_for(azimuth, elevation)
+	_yaw = 0.0
+	_pitch = 0.0
+	_tilt_zoom = 1.0
 	var scale_factor: float = Style.motion_scale()
 	if not animate or scale_factor <= 0.0 or not is_inside_tree():
 		_azimuth = azimuth
 		_elevation = elevation
 		_extent = extent
+		_pan = Vector2.ZERO
+		_zoom = 1.0
 		_apply_camera()
+		return
+	_view_tween = create_tween()
+	if crosses_tilt:
+		_azimuth = azimuth
+		_elevation = elevation
+		_extent = extent
+		_pan = Vector2.ZERO
+		_zoom = 1.0
+		_apply_camera()
+		_blend_xf_from = from_xf
+		_blend_xf_to = _camera.transform
+		_blend_fov_from = from_fov
+		_blend_fov_to = _fov
+		_blend_offset_from = from_offset
+		_blend_offset_to = Vector2(_camera.h_offset, _camera.v_offset)
+		_view_tween.tween_method(_blend_transform, 0.0, 1.0, VIEW_TWEEN_SECONDS * scale_factor) \
+			.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+		_view_tween.tween_callback(_apply_camera)
 		return
 	_blend_from = Vector3(_azimuth, _elevation, _extent)
 	_blend_to = Vector3(azimuth, elevation, extent)
-	_view_tween = create_tween()
+	_blend_pan_from = from_pan
+	_blend_zoom_from = from_zoom
 	_view_tween.tween_method(_blend, 0.0, 1.0, VIEW_TWEEN_SECONDS * scale_factor) \
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+func _stop_view_tween() -> void:
+	if _view_tween != null:
+		_view_tween.kill()
+		_view_tween = null
 
 func _blend(t: float) -> void:
 	var now: Vector3 = _blend_from.lerp(_blend_to, t)
 	_azimuth = now.x
 	_elevation = now.y
 	_extent = _extent_for(_azimuth, _elevation)
+	_pan = _blend_pan_from.lerp(Vector2.ZERO, t)
+	_zoom = lerpf(_blend_zoom_from, 1.0, t)
 	_apply_camera()
 
+func _blend_transform(t: float) -> void:
+	_fov = lerpf(_blend_fov_from, _blend_fov_to, t)
+	_camera.fov = _fov
+	_camera.transform = _blend_xf_from.interpolate_with(_blend_xf_to, t)
+	var offset: Vector2 = _blend_offset_from.lerp(_blend_offset_to, t)
+	_camera.h_offset = offset.x
+	_camera.v_offset = offset.y
+	_update_walls()
+
 func _apply_camera() -> void:
-	var distance: float = CameraFraming.perspective_distance(_extent, CameraFraming.FOV_DEG)
-	_camera.fov = CameraFraming.FOV_DEG
-	_camera.transform = CameraFraming.camera_transform(_target(), _azimuth, _elevation, distance)
+	if _view == CameraFraming.View.TILT:
+		_apply_tilt_camera()
+	else:
+		_apply_orbit_camera()
+	_update_walls()
+
+## An orbit view: the camera stands off the target at the distance that frames `_extent` over `_zoom`, trucked
+## by `_pan` and by the band the floating controls leave.
+func _apply_orbit_camera() -> void:
+	_pan = CameraFraming.clamp_pan(_pan, _extent, size.x / maxf(size.y, 1.0), _zoom)
+	var visible_extent: float = _extent / _zoom
+	var distance: float = CameraFraming.perspective_distance(visible_extent, CameraFraming.FOV_DEG)
+	_fov = CameraFraming.FOV_DEG
+	_camera.fov = _fov
+	var direction: Vector3 = CameraFraming.orbit_direction(_azimuth, _elevation)
+	var up: Vector3 = CameraFraming.orbit_up(_azimuth, _elevation)
+	var right: Vector3 = up.cross(direction)
+	var target: Vector3 = _target() + right * _pan.x + up * _pan.y
+	_camera.transform = CameraFraming.camera_transform(target, _azimuth, _elevation, distance)
 	var safe: Rect2 = safe_rect()
-	_camera.h_offset = -CameraFraming.center_offset(safe.get_center().x - size.x / 2.0, size.y, _extent)
-	_camera.v_offset = CameraFraming.center_offset(safe.get_center().y - size.y / 2.0, size.y, _extent)
+	_camera.h_offset = -CameraFraming.center_offset(safe.get_center().x - size.x / 2.0, size.y, visible_extent)
+	_camera.v_offset = CameraFraming.center_offset(safe.get_center().y - size.y / 2.0, size.y, visible_extent)
+
+## Tilt: the camera stands at the room's center and turns in place. It looks through the whole viewport, since
+## the learner can turn to anything the floating controls cover.
+func _apply_tilt_camera() -> void:
+	_fov = CameraFraming.tilt_fov(_tilt_zoom)
+	_camera.fov = _fov
+	_camera.transform = CameraFraming.tilt_transform(RoomSpace.tilt_origin(_room), _yaw, _pitch)
+	_camera.h_offset = 0.0
+	_camera.v_offset = 0.0
+
+## A wall hides only when the camera stands outside it, so every wall stays in place from inside the room.
+func _update_walls() -> void:
 	for w: int in _walls.keys():
 		var wall: Spot.Wall = w as Spot.Wall
 		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position)

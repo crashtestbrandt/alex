@@ -89,7 +89,7 @@
     {
       "id": "home",
       "title": "Home",
-      "camera": "views",
+      "camera": "tilt",
       "spots": [
         {
           "id": "door",

@@ -5,15 +5,16 @@ class_name Room
 ##
 ## `camera` is the caregiver's knob for how much the learner can move the view (docs/geometry.md "Views").
 
-## How much of the view widget the learner gets. FIXED is the front view only; VIEWS adds the front, side
-## and top buttons; ORBIT adds the turn button and a drag on empty floor.
+## How much of the view widget the learner gets. FIXED is the front view only; VIEWS adds the Front and Top
+## buttons with a pan and a zoom; TILT adds the Tilt button, a look around from the room's center. `orbit`
+## in a saved file is read as TILT, from before Tilt replaced the orbit drag.
 enum Camera {
 	FIXED = 0,
 	VIEWS = 1,
-	ORBIT = 2,
+	TILT = 2,
 }
 
-const _CAMERA_NAMES: Dictionary[String, int] = {"fixed": Camera.FIXED, "views": Camera.VIEWS, "orbit": Camera.ORBIT}
+const _CAMERA_NAMES: Dictionary[String, int] = {"fixed": Camera.FIXED, "views": Camera.VIEWS, "tilt": Camera.TILT, "orbit": Camera.TILT}
 
 var id: String = ""
 var title: String = ""

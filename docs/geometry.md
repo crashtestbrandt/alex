@@ -91,26 +91,33 @@ The learner's camera is always perspective. A room seen in perspective reads as 
 view flattens it back into a picture. Orthographic projection stays in the framing math for the editor's plan
 and elevation views.
 
-`ViewWidget` offers up to four buttons, each seven tenths of `tile_min_size` square, with a 96-unit floor.
-The bar wraps if needed. The camera reserves its height so objects stay clear of it. The pressed button is the current view. The room's `camera` field decides what shows:
+`ViewWidget` offers up to three buttons, each seven tenths of `tile_min_size` square, with a 96-unit floor.
+The bar wraps if needed. The camera reserves its height so objects stay clear of it. The pressed button is
+the current view, and a tap on it resets that view. The room's `camera` field decides what shows:
 
-| `camera` | Buttons | Drag on empty room |
-| --- | --- | --- |
-| `fixed` | none | nothing |
-| `views` | Front, Side, Top | nothing |
-| `orbit` | Front, Side, Top, Turn | turns the view |
+| `camera` | Buttons | Drag | Pinch |
+| --- | --- | --- | --- |
+| `fixed` | none | nothing | nothing |
+| `views` | Front, Top | pans | zooms |
+| `tilt` | Front, Top, Tilt | pans, or turns in Tilt | zooms, or narrows in Tilt |
 
-Every view is a point on one orbit (`CameraFraming.view_angles`): Front at azimuth 0, Side at the azimuth
-limit, Top at the elevation limit, Turn at a three-quarter angle. The orbit is clamped to the open front and
-above the floor (`CameraFraming.clamp_orbit`), so there is no angle where the room reads as a blank wall. A
-moved view returns to Front after the idle period the recording overlay uses (`RecordOverlay.IDLE_SECONDS`).
-At motion NONE a view change is a cut.
+Front and Top are points on one orbit (`CameraFraming.view_angles`): Front at azimuth 0, Top at the
+elevation limit. On either, zoom runs from the fit (`ZOOM_MIN`) to `ZOOM_MAX`, and the pan is clamped so the
+visible frame never leaves the fitted frame (`clamp_pan`). A pinch zooms about the point under the fingers
+(`zoom_about`). Tilt stands at `RoomSpace.tilt_origin`, the room's center at eye height, raised over any
+floor object under it. Its yaw is free, its pitch is clamped (`clamp_tilt`), and its zoom is a field-of-view
+change (`tilt_fov`). The camera is inside the box, so `RoomSpace.wall_hidden` keeps every wall in place. A
+moved view returns to Front after `RoomView.IDLE_RESET_SECONDS` with nothing touched. At motion NONE a view
+change is a cut.
 
 Input rules (`RoomView._gui_input`):
 
 - A tap on an object reacts and speaks. A two-second hold on an object opens the recorder.
-- A drag past `DRAG_PX` that started on an object cancels the press and does nothing more.
-- A drag that started on empty room turns the view only when `camera` is `orbit`.
+- Movement past `DRAG_PX` cancels the hold and moves the view from wherever the press began, an object
+  included. Release inside the threshold before the hold elapses is a tap.
+- A second finger starts a pinch, which cancels the press. The pinch zooms by the fingers' distance and pans
+  by their midpoint. On a desktop, the trackpad's magnify and pan gestures and the scroll wheel do the same.
+- A room with `camera: fixed` moves nothing.
 
 Framing (`CameraFraming`, pure):
 
@@ -139,12 +146,12 @@ Framing (`CameraFraming`, pure):
 | `mesher_test.gd` | every mesh is closed, fronts outward, unit normals, vertices on the field, deterministic |
 | `object_recipes_test.gd` | every kind builds, stands on the floor, fits its size, within the triangle budget, same fingerprint twice |
 | `picker_test.gd` | nearest hit, the gap between objects, a swung part |
-| `camera_framing_test.gd` | fit, floor pull-in and its cap, orbit limits, every view reachable, a continuous up vector |
-| `room_space_test.gd` | placement per wall, facing, wall hiding, the smallest spot |
+| `camera_framing_test.gd` | fit, zoom and pan limits, zoom about a point, Tilt's limits and basis, a continuous up vector |
+| `room_space_test.gd` | placement per wall, facing, wall hiding, the smallest spot, where Tilt stands |
 
-`just room-probe` picks every spot through its own screen point, taps it twice, walks the views, turns past
-the orbit's limits, idles back to the front, and switches to the board. `just screenshot` renders
-`docs/img/room.png`.
+`just room-probe` picks every spot through its own screen point, taps it twice, walks the views, pans and
+zooms past their limits, drags from an object, taps a pill to reset, turns Tilt past its limits, idles back
+to the front, and switches to the board. `just screenshot` renders `docs/img/room.png`.
 
 Fingerprints are compared within one run, not pinned across platforms: the builders use float trigonometry,
 and a pinned hash would fail on a different libm rather than on a real change.
