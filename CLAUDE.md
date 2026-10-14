@@ -11,9 +11,8 @@ Everything written for a human reader — PR titles, commit messages, issue and 
 copy, code comments, chat replies, this file and every page under `docs/` — is **concise, bulleted and
 aphorism-free**. State plainly what changed and what it now does.
 
-**The reason is the reader's time.** These rules are about being understood on one pass, so they hold on every
-surface. A sentence that is hard to read on a button is hard to read in `docs/` and in a comment; the button
-is only where it fails first, because there is no room to recover.
+**The rules hold on every surface.** A sentence that is hard to read on a button is hard to read in `docs/`
+and in a comment.
 
 - No metaphor, euphemism, or oblique stand-in for the thing you mean.
 - No epigrams or rhetorical inversions ("A *X* is not a *Y*", "not *X*, but *Y*").
@@ -29,7 +28,7 @@ is only where it fails first, because there is no room to recover.
   breaks on every reorder.
 - Short sections, bullets over paragraphs, tables for enumerations, identifiers in backticks.
 
-The five rules in bold were derived by measuring a rewrite rather than by taste (spaceman, PR #1029).
+The five rules in bold come from a measured rewrite of 64 strings in the spaceman repository (its PR #1029).
 
 **A PR title is a release-notes line.** Form: `<type>(<area>) <plain description> (#issue)`, type one of
 `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `chore`; area one of `profiles`, `rooms`, `style`,
@@ -37,8 +36,8 @@ The five rules in bold were derived by measuring a rewrite rather than by taste 
 
 ### What belongs on a control
 
-The rules above hold here too. What changes on a control is **scope**: a button or a status line has room for
-one fact, and a `docs/` page has room for the rule set.
+The rules above hold here too. A button or a status line has room for one fact. A `docs/` page has room for
+the rule set.
 
 - **One sentence.**
 - **A control describes itself.** "Hold the button, say it, let go" is the record button's job. Why a familiar
@@ -51,8 +50,8 @@ one fact, and a `docs/` page has room for the rule set.
   polarity of a switch stated outright, and on the second half of a rule that has two halves.
 
 **In-app copy is read by tired parents and by clinicians.** Plain words, no jargon the NLA guide does not
-use, and never a judgment of the child ("correct", "wrong", "score"). Nothing on the learner's screen names the
-app, and the app has no persona and never speaks its own name.
+use, and never a judgment of the child ("correct", "wrong", "score"). The learner's screen never shows the
+app's name, no screen speaks it, and the app has no persona.
 
 ## Project
 
