@@ -71,17 +71,20 @@ const TILT_EYE_HEIGHT: float = 1.4
 const TILT_CLEARANCE: float = 0.25
 
 ## Where a Tilt camera stands: the room's center at eye height, raised over any floor object whose footprint
-## reaches the center, and never up to the ceiling.
+## reaches the center, by that object's real height, and never up to the ceiling. The footprint and the
+## height come from the object's recipe, so a long low tub leaves the camera at eye height. Each recipe is
+## built here, so a caller keeps the result for the room rather than asking every frame.
 static func tilt_origin(r: Room) -> Vector3:
 	var y: float = TILT_EYE_HEIGHT
 	if r != null:
 		for s: Spot in r.spots:
 			if s.wall != Spot.Wall.NONE:
 				continue
+			var box: AABB = ObjectRecipes.make(s.kind, spot_size_m(s), StylePreset.new()).aabb()
 			var at: Vector3 = place(s).origin
-			var size_m: float = spot_size_m(s)
-			if Vector2(at.x, at.z).length() <= size_m / 2.0 + TILT_CLEARANCE:
-				y = maxf(y, s.height * HEIGHT + size_m + TILT_CLEARANCE)
+			var footprint: Rect2 = Rect2(at.x + box.position.x, at.z + box.position.z, box.size.x, box.size.z).grow(TILT_CLEARANCE)
+			if footprint.has_point(Vector2.ZERO):
+				y = maxf(y, at.y + box.end.y + TILT_CLEARANCE)
 	return Vector3(0.0, minf(y, HEIGHT - TILT_CLEARANCE), 0.0)
 
 ## The floor of what the camera must keep in frame: at least this much of the walls' height.

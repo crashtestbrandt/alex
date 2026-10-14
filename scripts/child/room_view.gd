@@ -54,7 +54,8 @@ var _extent: float = 3.0
 ## Front and Top: how far in from the fit, and where the frame has moved, in meters on the target plane.
 var _zoom: float = 1.0
 var _pan: Vector2 = Vector2.ZERO
-## Tilt: where the camera looks and how narrow its view is.
+## Tilt: where the camera stands, found once per room, where it looks, and how narrow its view is.
+var _tilt_origin: Vector3 = Vector3(0.0, RoomSpace.TILT_EYE_HEIGHT, 0.0)
 var _yaw: float = 0.0
 var _pitch: float = 0.0
 var _tilt_zoom: float = 1.0
@@ -125,6 +126,7 @@ func show_room(p: Profile, r: Room) -> void:
 		body.set_rest(RoomSpace.place(s))
 		_world.add_child(body)
 		_bodies[s.id] = body
+	_tilt_origin = RoomSpace.tilt_origin(r)
 	_build_shell()
 	_clear_captions()
 	_widget.set_mode(r.camera)
@@ -623,7 +625,7 @@ func _apply_orbit_camera() -> void:
 func _apply_tilt_camera() -> void:
 	_fov = CameraFraming.tilt_fov(_tilt_zoom)
 	_camera.fov = _fov
-	_camera.transform = CameraFraming.tilt_transform(RoomSpace.tilt_origin(_room), _yaw, _pitch)
+	_camera.transform = CameraFraming.tilt_transform(_tilt_origin, _yaw, _pitch)
 	_camera.h_offset = 0.0
 	_camera.v_offset = 0.0
 
