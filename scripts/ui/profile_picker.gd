@@ -2,7 +2,8 @@ extends Control
 class_name ProfilePicker
 ## The adults' screen: pick a profile, or make one from a starter pack and a style. Everything a child sees
 ## is a consequence of what is chosen here (docs/profiles.md). Each profile is one button; the starter and
-## the style are pill bars, so the choice is visible at a glance instead of inside a dropdown.
+## the style are pill bars, so the choice is visible at a glance instead of inside a dropdown. Pressing a
+## style applies it at once, so the screen itself is the preview.
 
 signal profile_chosen(profile_id: String)
 
@@ -47,6 +48,7 @@ func refresh() -> void:
 	_status.text = "Create a profile to begin." if ids.is_empty() else ""
 	_status.visible = not _status.text.is_empty()
 	_layout_profiles()
+	_style_bar.set_active(_current_style_index())
 
 func _fill_starters() -> void:
 	_starter_bar.clear()
@@ -67,8 +69,19 @@ func _fill_styles() -> void:
 	for style_id: String in _style_ids:
 		var button: SdfButton = SdfButton.new()
 		button.text = StylePreset.load_by_id(style_id).display_name
+		button.pressed.connect(_on_style_pressed.bind(style_id))
 		_style_bar.add_item(button)
-	_style_bar.set_active(maxi(_style_ids.find("calm"), 0))
+	_style_bar.set_active(_current_style_index())
+
+## The pill for the style the app is wearing right now, or Calm when the current preset is not one on disk.
+func _current_style_index() -> int:
+	var current: int = _style_ids.find(Style.current.resource_path.get_file().get_basename())
+	if current >= 0:
+		return current
+	return maxi(_style_ids.find("calm"), 0)
+
+func _on_style_pressed(style_id: String) -> void:
+	Style.apply(StylePreset.load_by_id(style_id))
 
 func _on_profile_pressed(profile_id: String) -> void:
 	profile_chosen.emit(profile_id)
