@@ -56,7 +56,8 @@ for the shader to read.
 
 The adults' first screen uses the same controls as the room's chrome: each profile is one button that opens
 it, the name is an `SdfField`, the starter pack and the style are pill bars with the choice pressed, and
-Create is the one `primary` button. Nothing on it is drawn by a theme style box.
+Create is the one `primary` button. Pressing a style applies it at once, so the screen is its own preview,
+and the bar shows the style the app is wearing whenever the picker returns. Nothing on it is drawn by a theme style box.
 
 ## Gates
 

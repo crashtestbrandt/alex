@@ -65,14 +65,15 @@ func active_index() -> int:
 			return i
 	return -1
 
-## Press item `index` without a signal.
+## Press item `index` without a signal, and release the others: a press without a signal does not go through
+## the button group, so the group's old choice has to be cleared by hand.
 func set_active(index: int) -> void:
 	var all: Array[SdfButton] = items()
 	if index < 0 or index >= all.size():
 		return
-	all[index].set_pressed_no_signal(true)
-	for button: SdfButton in all:
-		button.refresh()
+	for i: int in all.size():
+		all[i].set_pressed_no_signal(i == index)
+		all[i].refresh()
 
 func clear() -> void:
 	for child: Node in _row.get_children():
