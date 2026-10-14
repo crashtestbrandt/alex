@@ -23,7 +23,8 @@ box. Spots and the camera's framing use the box; only the shell uses the apron a
 are fractions of this box, so a starter pack never names a meter. `RoomSpace.place` turns a spot into a
 transform: a floor spot stands at `x` across and `y` back to front; a wall spot hangs on its wall at `x` along
 it with its base at `height`, turned to face into the room. A wall hides while the camera stands outside it
-(`RoomSpace.wall_hidden`), so the side view looks in.
+(`RoomSpace.wall_hidden`). A front wall and a ceiling show only while the camera is inside the box
+(`RoomSpace.inside`), which is Tilt's case; neither casts a shadow, so the sun still reaches the floor.
 
 Colors come from the style preset: `floor_color`, `wall_color`, and for the objects `wood`, `cloth`, `metal`,
 `glass`, `water` beside the existing `accent`, `surface` and `text`.
@@ -103,10 +104,12 @@ the current view, and a tap on it resets that view. The room's `camera` field de
 
 Front and Top are points on one orbit (`CameraFraming.view_angles`): Front at azimuth 0, Top at the
 elevation limit. On either, zoom runs from the fit (`ZOOM_MIN`) to `ZOOM_MAX`, and the pan is clamped so the
-visible frame never leaves the fitted frame (`clamp_pan`). A pinch zooms about the point under the fingers
+visible frame never leaves the room box's silhouette on the view plane (`room_silhouette`, `clamp_pan`); the
+range always includes rest, so a zoom never jumps the frame. A pinch zooms about the point under the fingers
 (`zoom_about`). Tilt stands at `RoomSpace.tilt_origin`, the room's center at eye height, raised over any
 floor object under it. Its yaw is free, its pitch is clamped (`clamp_tilt`), and its zoom is a field-of-view
-change (`tilt_fov`). The camera is inside the box, so `RoomSpace.wall_hidden` keeps every wall in place. A
+change (`tilt_fov`). The camera is inside the box, so `RoomSpace.wall_hidden` keeps every wall in place, and
+a front wall and a ceiling show whenever the camera is inside (`RoomSpace.inside`). Neither casts a shadow. A
 moved view returns to Front after `RoomView.IDLE_RESET_SECONDS` with nothing touched. At motion NONE a view
 change is a cut.
 

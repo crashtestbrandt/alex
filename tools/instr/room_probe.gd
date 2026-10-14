@@ -134,9 +134,12 @@ func _run() -> void:
 	_check(absf(room_view.zoom() - CameraFraming.ZOOM_MAX) < 0.0001, "zoom stops at its limit")
 	_check(room_view.is_moved(), "a zoomed front is a moved view")
 	room_view.pan_by(Vector2(-100000.0, 100000.0))
-	var aspect: float = room_view.size.x / room_view.size.y
-	var clamped: Vector2 = CameraFraming.clamp_pan(room_view.pan(), room_view.frame_extent(), aspect, room_view.zoom())
-	_check(room_view.pan().is_equal_approx(clamped) and room_view.pan() != Vector2.ZERO, "a pan stops inside the fit (%s)" % room_view.pan())
+	var visible: Vector2 = Vector2(room_view.size.x / room_view.size.y, 1.0) * room_view.frame_extent() / room_view.zoom()
+	var silhouette: Rect2 = room_view.room_silhouette()
+	var clamped: Vector2 = CameraFraming.clamp_pan(room_view.pan(), visible, silhouette)
+	_check(room_view.pan().is_equal_approx(clamped) and room_view.pan() != Vector2.ZERO, "a pan stops inside the room (%s)" % room_view.pan())
+	_check(room_view.pan().x + visible.x / 2.0 <= silhouette.end.x + 0.0001, "the frame's edge stops at the wall")
+	_check(not room_view.enclosure_visible(), "the front wall and ceiling are out of the way from the front")
 	for b: SpotBody in bodies:
 		_check(room_view.pick_at(room_view.screen_point(b)) == b or room_view.camera_position().distance_to(b.center_point()) > 0.0, "%s is still picked where it shows" % b.spot.id)
 
@@ -145,14 +148,14 @@ func _run() -> void:
 	var holds: Array[Spot] = []
 	room_view.spot_held.connect(func(s: Spot, _g: Gestalt) -> void: holds.push_back(s))
 	room_view.set_view(CameraFraming.View.FRONT, false)
-	room_view.zoom_by(2.0, mid_px)
+	room_view.zoom_by(CameraFraming.ZOOM_MAX, mid_px)
 	var pan_before: Vector2 = room_view.pan()
 	var door_px: Vector2 = room_view.screen_point(door)
 	var was_on: bool = door.is_on
 	room_view._gui_input(_mouse(door_px, true))
-	room_view._gui_input(_motion(door_px + Vector2(60.0, 0.0), Vector2(60.0, 0.0)))
+	room_view._gui_input(_motion(door_px + Vector2(60.0, 40.0), Vector2(60.0, 40.0)))
 	room_view._process(RoomView.HOLD_SECONDS + 0.1)
-	room_view._gui_input(_mouse(door_px + Vector2(60.0, 0.0), false))
+	room_view._gui_input(_mouse(door_px + Vector2(60.0, 40.0), false))
 	_check(room_view.pan() != pan_before, "a drag that began on an object moves the view")
 	_check(door.is_on == was_on, "a drag is not a tap")
 	_check(holds.is_empty(), "a drag is not a hold")
@@ -191,6 +194,7 @@ func _run() -> void:
 	_check(absf(room_view.tilt_zoom() - CameraFraming.TILT_ZOOM_MAX) < 0.001, "tilt zoom stops at its limit")
 	for wall: Spot.Wall in [Spot.Wall.BACK, Spot.Wall.LEFT, Spot.Wall.RIGHT]:
 		_check(room_view.wall_visible(wall), "wall %d stays in tilt" % wall)
+	_check(room_view.enclosure_visible(), "the front wall and ceiling close the box in tilt")
 	room_view.idle_seconds = 0.3
 	await get_tree().create_timer(1.0).timeout
 	await get_tree().process_frame

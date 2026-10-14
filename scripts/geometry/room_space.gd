@@ -61,6 +61,11 @@ static func wall_outward(w: Spot.Wall) -> Vector3:
 static func wall_hidden(w: Spot.Wall, camera_position: Vector3) -> bool:
 	return (camera_position - wall_center(w)).dot(wall_outward(w)) > 0.05
 
+## Whether a point is inside the room's box. The front wall and the ceiling show only from inside, since the
+## orbit views look in through them.
+static func inside(p: Vector3) -> bool:
+	return absf(p.x) < WIDTH / 2.0 and absf(p.z) < DEPTH / 2.0 and p.y > 0.0 and p.y < HEIGHT
+
 ## Eye height for a camera standing in the room, and how far it keeps from anything under or over it.
 const TILT_EYE_HEIGHT: float = 1.4
 const TILT_CLEARANCE: float = 0.25

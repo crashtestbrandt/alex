@@ -39,6 +39,13 @@ func test_smallest_spot() -> void:
 	assert_almost_eq(RoomSpace.smallest_spot_m(r), 0.1 * RoomSpace.WIDTH, 0.0001, "the smallest, in meters")
 	assert_almost_eq(RoomSpace.smallest_spot_m(Room.new()), 0.0, 0.0001, "an empty room has none")
 
+func test_inside_the_box() -> void:
+	assert_true(RoomSpace.inside(Vector3(0.0, 1.4, 0.0)), "the center is inside")
+	assert_false(RoomSpace.inside(Vector3(0.0, 1.4, 5.0)), "the open front is outside")
+	assert_false(RoomSpace.inside(Vector3(0.0, 4.0, 0.0)), "above the ceiling is outside")
+	assert_false(RoomSpace.inside(Vector3(3.0, 1.0, 0.0)), "past a side wall is outside")
+	assert_true(RoomSpace.inside(RoomSpace.tilt_origin(null)), "tilt stands inside")
+
 func test_tilt_stands_at_the_center_over_what_is_under_it() -> void:
 	var empty: Vector3 = RoomSpace.tilt_origin(Room.new())
 	assert_almost_eq(empty.x, 0.0, 0.0001, "centered across")

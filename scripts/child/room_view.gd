@@ -40,6 +40,8 @@ var _room: Room = null
 var _bodies: Dictionary[String, SpotBody] = {}
 var _spoken_gestalts: Dictionary[String, Gestalt] = {}
 var _walls: Dictionary[int, Node3D] = {}
+## The front wall and the ceiling, shown only from inside the box.
+var _enclosure: Node3D = null
 var _shell: Node3D = null
 var _material: StandardMaterial3D = RecipeBuilder.make_material()
 
@@ -280,7 +282,7 @@ func pan_by(delta_px: Vector2) -> void:
 		_pitch = turned.y
 	else:
 		var per_px: float = CameraFraming.meters_per_px(_extent, size.y, _zoom)
-		_pan = CameraFraming.clamp_pan(_pan - Vector2(delta_px.x, -delta_px.y) * per_px, _extent, size.x / maxf(size.y, 1.0), _zoom)
+		_pan = _clamp_pan(_pan - Vector2(delta_px.x, -delta_px.y) * per_px)
 	_apply_camera()
 
 ## Zoom by `factor` about the point `at_px` on this control: Front and Top close in on the fit and keep the
@@ -296,8 +298,17 @@ func zoom_by(factor: float, at_px: Vector2) -> void:
 		var next: float = CameraFraming.clamp_zoom(_zoom * factor)
 		_pan = CameraFraming.zoom_about(_pan, _extent, size.y, at_px - size / 2.0, _zoom, next)
 		_zoom = next
-		_pan = CameraFraming.clamp_pan(_pan, _extent, size.x / maxf(size.y, 1.0), _zoom)
+		_pan = _clamp_pan(_pan)
 	_apply_camera()
+
+## The pan that keeps the frame inside the room's silhouette at the current zoom.
+func _clamp_pan(pan_m: Vector2) -> Vector2:
+	var visible: Vector2 = Vector2(size.x / maxf(size.y, 1.0), 1.0) * _extent / _zoom
+	return CameraFraming.clamp_pan(pan_m, visible, room_silhouette())
+
+## The room box on the view plane of the current orbit view, in meters right and up from the target.
+func room_silhouette() -> Rect2:
+	return CameraFraming.room_silhouette(RoomSpace.dims(), _target(), _azimuth, _elevation)
 
 ## Float `g`'s chunks above spot `s` for about `seconds`, one chunk lighting after another.
 func show_chunks(s: Spot, g: Gestalt, seconds: float) -> void:
@@ -608,7 +619,7 @@ func _apply_camera() -> void:
 ## An orbit view: the camera stands off the target at the distance that frames `_extent` over `_zoom`, trucked
 ## by `_pan` and by the band the floating controls leave.
 func _apply_orbit_camera() -> void:
-	_pan = CameraFraming.clamp_pan(_pan, _extent, size.x / maxf(size.y, 1.0), _zoom)
+	_pan = _clamp_pan(_pan)
 	var visible_extent: float = _extent / _zoom
 	var distance: float = CameraFraming.perspective_distance(visible_extent, CameraFraming.FOV_DEG)
 	_fov = CameraFraming.FOV_DEG
@@ -631,11 +642,18 @@ func _apply_tilt_camera() -> void:
 	_camera.h_offset = 0.0
 	_camera.v_offset = 0.0
 
-## A wall hides only when the camera stands outside it, so every wall stays in place from inside the room.
+## A wall hides only when the camera stands outside it, so every wall stays in place from inside the room,
+## and the front wall and the ceiling show there too.
 func _update_walls() -> void:
 	for w: int in _walls.keys():
 		var wall: Spot.Wall = w as Spot.Wall
 		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position)
+	if _enclosure != null:
+		_enclosure.visible = RoomSpace.inside(_camera.global_position)
+
+## Whether the front wall and the ceiling show, which they do from inside the box.
+func enclosure_visible() -> bool:
+	return _enclosure != null and _enclosure.visible
 
 func _on_resized() -> void:
 	_clear_captions()
@@ -695,7 +713,20 @@ func _build_shell() -> void:
 			upper_at = Vector3((w + t) / 2.0 * (-1.0 if wall == Spot.Wall.LEFT else 1.0), upper_at.y, RoomSpace.APRON / 2.0)
 		var backing: MeshInstance3D = _slab(upper_size, upper_at, color, group)
 		backing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_build_enclosure(w, t)
 	_build_exterior()
+
+## The front wall and the ceiling close the box for a camera inside it. Neither casts a shadow, so the sun
+## still reaches the floor through them.
+func _build_enclosure(w: float, t: float) -> void:
+	_enclosure = Node3D.new()
+	_enclosure.name = "Enclosure"
+	_enclosure.visible = false
+	_shell.add_child(_enclosure)
+	var front: MeshInstance3D = _slab(Vector3(w + 2.0 * t, RoomSpace.HEIGHT + t, t), Vector3(0.0, RoomSpace.HEIGHT / 2.0, RoomSpace.DEPTH / 2.0 + t / 2.0), Style.current.wall_color, _enclosure)
+	front.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var ceiling: MeshInstance3D = _slab(Vector3(w + 2.0 * t, t, RoomSpace.DEPTH + 2.0 * t), Vector3(0.0, RoomSpace.HEIGHT + t / 2.0, 0.0), Style.current.wall_color.lightened(0.12), _enclosure)
+	ceiling.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 ## A quiet, deterministic garden gives every aperture real depth from every camera angle.
 func _build_exterior() -> void:

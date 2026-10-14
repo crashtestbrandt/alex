@@ -20,7 +20,8 @@ const FOV_DEG: float = 50.0
 const MARGIN: float = 1.12
 const ELEVATION_MAX_DEG: float = 80.0
 const FRONT_ELEVATION_DEG: float = 18.0
-## Zoom on an orbit view: 1 is the fit, and the frame may close in to a third of it.
+## Zoom on an orbit view: 1 is the fit, and the frame may close in to a third of it. The pan then keeps the
+## frame inside the room's silhouette (`clamp_pan`).
 const ZOOM_MIN: float = 1.0
 const ZOOM_MAX: float = 3.0
 ## Tilt's pitch, in degrees, positive up. Yaw is free.
@@ -77,12 +78,33 @@ static func projected_px(size_m: float, extent: float, viewport_height_px: float
 static func clamp_zoom(zoom: float) -> float:
 	return clampf(zoom, ZOOM_MIN, ZOOM_MAX)
 
-## The pan, in meters on the target plane, that keeps a frame zoomed by `zoom` inside the fitted frame. The
-## fitted frame is `extent` tall and `extent * aspect` wide, so at zoom 1 no pan is possible.
-static func clamp_pan(pan: Vector2, extent: float, aspect: float, zoom: float) -> Vector2:
-	var z: float = clamp_zoom(zoom)
-	var reach: Vector2 = Vector2(extent * maxf(aspect, 0.0), extent) * 0.5 * (1.0 - 1.0 / z)
-	return Vector2(clampf(pan.x, -reach.x, reach.x), clampf(pan.y, -reach.y, reach.y))
+## The room box's silhouette on the view plane of an orbit camera, in meters right and up from `target`.
+static func room_silhouette(room: Vector3, target: Vector3, azimuth_deg: float, elevation_deg: float) -> Rect2:
+	var direction: Vector3 = orbit_direction(azimuth_deg, elevation_deg)
+	var up: Vector3 = orbit_up(azimuth_deg, elevation_deg)
+	var right: Vector3 = up.cross(direction)
+	var box: AABB = AABB(Vector3(-room.x / 2.0, 0.0, -room.z / 2.0), room)
+	var low: Vector2 = Vector2(INF, INF)
+	var high: Vector2 = Vector2(-INF, -INF)
+	for i: int in 8:
+		var delta: Vector3 = box.get_endpoint(i) - target
+		var p: Vector2 = Vector2(delta.dot(right), delta.dot(up))
+		low = Vector2(minf(low.x, p.x), minf(low.y, p.y))
+		high = Vector2(maxf(high.x, p.x), maxf(high.y, p.y))
+	return Rect2(low, high - low)
+
+## The pan, in meters on the view plane, that keeps a frame `visible` wide and tall inside the room's
+## `silhouette`. On an axis where the frame is wider than the room there is no pan. Otherwise the pan runs
+## from the room's one edge to its other, and the range always includes rest, so a zoom never jumps the frame.
+static func clamp_pan(pan: Vector2, visible: Vector2, silhouette: Rect2) -> Vector2:
+	var out: Vector2 = Vector2.ZERO
+	for axis: int in 2:
+		var reach: float = (silhouette.size[axis] - visible[axis]) / 2.0
+		if reach <= 0.0:
+			continue
+		var center: float = silhouette.position[axis] + silhouette.size[axis] / 2.0
+		out[axis] = clampf(pan[axis], minf(center - reach, 0.0), maxf(center + reach, 0.0))
+	return out
 
 ## Meters on the target plane per pixel of a viewport `viewport_height_px` tall at `zoom`.
 static func meters_per_px(extent: float, viewport_height_px: float, zoom: float) -> float:
