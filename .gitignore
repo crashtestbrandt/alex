@@ -16,6 +16,7 @@ result
 result-*
 .vscode/
 .idea/
+.claude/worktrees/
 
 # OS junk
 .DS_Store
