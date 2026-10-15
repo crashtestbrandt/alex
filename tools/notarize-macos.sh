@@ -47,7 +47,9 @@ codesign --force --timestamp --options runtime --entitlements "$entitlements" --
 codesign --verify --strict --deep "$app"
 printf 'notarize: signed as %s\n' "$(codesign -dvv "$app" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
 
-ditto -c -k --keepParent "$app" "$work/submit.zip"
+# No resource forks or extended attributes. Their ._ files land inside the bundle when another tool unzips it,
+# which breaks the signature and makes macOS call the app damaged.
+ditto -c -k --norsrc --noextattr --noqtn --keepParent "$app" "$work/submit.zip"
 printf 'notarize: submitting to Apple, which takes a few minutes\n'
 result="$(xcrun notarytool submit "$work/submit.zip" --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" \
 	--issuer "$ASC_ISSUER_ID" --wait --output-format json)"
@@ -65,5 +67,5 @@ xcrun stapler staple "$app"
 spctl --assess --type execute --verbose=2 "$app"
 
 rm -f "$zip"
-ditto -c -k --keepParent "$app" "$zip"
+ditto -c -k --norsrc --noextattr --noqtn --keepParent "$app" "$zip"
 printf 'notarize: %s\n' "$zip"
