@@ -49,9 +49,12 @@ if [[ -z "$team" ]]; then
 fi
 build="$(git rev-list --count HEAD)"
 
-# With an App Store Connect API key, xcodebuild signs and uploads as that key, and the signing certificates
-# are the cloud-managed ones. Without one, it uses the account Xcode is signed in to.
+# Without an App Store Connect API key, the account Xcode is signed in to signs the archive and the export.
+#
+# With one, the archive is unsigned and the export signs it with Apple's cloud-managed distribution
+# certificate, so a machine with no signing identity can upload. The entitlements come out the same either way.
 auth=()
+archive_signing=(-allowProvisioningUpdates)
 if [[ -n "${ASC_KEY_PATH:-}" ]]; then
 	if [[ -z "${ASC_KEY_ID:-}" || -z "${ASC_ISSUER_ID:-}" ]]; then
 		printf 'testflight: ASC_KEY_PATH needs ASC_KEY_ID and ASC_ISSUER_ID too.\n' >&2
@@ -59,6 +62,7 @@ if [[ -n "${ASC_KEY_PATH:-}" ]]; then
 	fi
 	auth=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID"
 		-authenticationKeyIssuerID "$ASC_ISSUER_ID")
+	archive_signing=(CODE_SIGNING_ALLOWED=NO)
 fi
 
 archive="$dir/alex.xcarchive"
@@ -66,7 +70,7 @@ rm -rf "$archive"
 printf 'testflight: archiving build %s for team %s\n' "$build" "$team"
 if ! xcodebuild -project "$dir/ios/alex.xcodeproj" -scheme alex -configuration Release \
 	-destination 'generic/platform=iOS' -archivePath "$archive" -derivedDataPath build/xcode-dd \
-	-allowProvisioningUpdates ${auth[@]+"${auth[@]}"} CURRENT_PROJECT_VERSION="$build" archive \
+	"${archive_signing[@]}" CURRENT_PROJECT_VERSION="$build" archive \
 	> "$dir/archive.log" 2>&1; then
 	grep -E 'error:' "$dir/archive.log" | sort -u >&2 || tail -20 "$dir/archive.log" >&2
 	printf 'testflight: the archive failed. The full log is %s/archive.log.\n' "$dir" >&2
