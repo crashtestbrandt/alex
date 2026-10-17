@@ -9,6 +9,19 @@ after a caregiver spends a few minutes setting it up.
 
 ![The bedroom in the Bold style: the door swung open on the left wall as "Let's go outside" floats in chunks, a lamp, a bed under the window, a cup on the nightstand, a rug with a ball on it, and shoes by the door](docs/img/room.png)
 
+## Contents
+
+- [What the learner sees](#what-the-learner-sees)
+- [What a caregiver does](#what-a-caregiver-does)
+- [Why it is built this way](#why-it-is-built-this-way)
+- [Status](#status)
+- [Get Alex](#get-alex)
+- [For developers](#for-developers)
+- [Glossary](#glossary)
+- [Research](#research)
+- [Privacy](#privacy)
+- [License](#license)
+
 ## What the learner sees
 
 The learner moves between two modes, Explore and Words.
@@ -121,7 +134,7 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
 | `store/` | The Google Play and App Store listings and their images. `just store-graphics` renders the images. |
-| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md), [`exports.md`](docs/exports.md), [`releases.md`](docs/releases.md). |
+| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md), [`exports.md`](docs/exports.md), [`releases.md`](docs/releases.md), [`glossary.md`](docs/glossary.md). |
 
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.
@@ -156,32 +169,8 @@ the checks. [`docs/releases.md`](docs/releases.md) has the release workflow and 
 
 ## Glossary
 
-| Term | Meaning |
-| --- | --- |
-| Learner | The child using the app. Nothing on their screen tests, scores, times or rewards them. |
-| Caregiver | A parent or clinician. Every adult screen is theirs and sits behind a hold. |
-| Gestalt | A whole phrase the learner uses or an adult models, stored as heard. The unit of language here. |
-| Chunk | One component of a gestalt, marked with `\|` when authored: `Let's go \| outside`. |
-| Mitigation | Recombining chunks of known gestalts into new phrases. Build is made for it. |
-| Echolalia | Repeating heard speech. Treated as communication and never corrected. |
-| Gestalt language processor | A child who acquires language in whole gestalts before single words. |
-| NLA stage | A caregiver's note on where the learner is in the Natural Language Acquisition framework. Shown nowhere on the learner's screen and gates nothing. |
-| Profile | One learner's configuration: name, look, bank, rooms, boards and recordings. |
-| Bank | Every gestalt a profile holds. |
-| Scene pack | JSON under `starters/`: a room and its phrases. A profile starts with one and adds others. Also called a starter pack. |
-| Room | An explorable 3D box of spots. |
-| Spot | An object in a room: a kind, a reaction and the phrase it says. |
-| Reaction | What a spot does when touched: bounce, open, glow, spin, wobble, grow. |
-| Explore | The learner's room mode. |
-| Words | The learner's phrase mode, in two parts: Palette and Build. |
-| Palette | Every phrase in the bank as a tile. |
-| Build | A strip the learner fills by tapping beginnings and endings. |
-| Beginnings, endings | The first chunk of every phrase in the bank, and every later chunk, each once. |
-| Views | Front, Top and Tilt. A caregiver chooses which a room offers. |
-| Hold | A two-second press. The only way to an adult screen or the recorder. |
-| Take | One recording of a phrase in a caregiver's voice. Keep saves it and keeps the previous take. |
-| Look | A style preset: colors, type size, motion, corners and the room's materials. |
-| Chunk color | The color a chunk carries everywhere, keyed by its text. Identity only, never a judgment. |
+The words this README and the docs use, from "gestalt" and "chunk" to "take" and "look", are defined in
+[`docs/glossary.md`](docs/glossary.md).
 
 ## Research
 
