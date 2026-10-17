@@ -183,3 +183,22 @@ size_flags_horizontal = 0
 script = ExtResource("hold")
 shape = 1
 text = "Hold to read the privacy policy"
+
+[node name="BuildStamp" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -36.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"StampLabel"
+text = "dev"
+horizontal_alignment = 2
+vertical_alignment = 2

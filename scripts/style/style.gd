@@ -10,6 +10,7 @@ const _BASE_TILE_FONT: int = 24
 const _BASE_LABEL_FONT: int = 22
 const _BASE_TITLE_FONT: int = 32
 const _BASE_SECTION_FONT: int = 27
+const _BASE_STAMP_FONT: int = 14
 
 var current: StylePreset = StylePreset.new()
 
@@ -47,6 +48,10 @@ func _build_theme(preset: StylePreset) -> Theme:
 	theme.set_font_size("font_size", "ItemList", font_px(_BASE_LABEL_FONT))
 	theme.set_type_variation(&"TitleLabel", &"Label")
 	theme.set_font_size("font_size", "TitleLabel", font_px(_BASE_TITLE_FONT))
+	# The build stamp in a corner of the profile picker: small, and faded toward the page.
+	theme.set_type_variation(&"StampLabel", &"Label")
+	theme.set_font_size("font_size", "StampLabel", font_px(_BASE_STAMP_FONT))
+	theme.set_color("font_color", "StampLabel", preset.text.lerp(preset.background, 0.45))
 	theme.set_type_variation(&"SectionLabel", &"Label")
 	theme.set_font_size("font_size", "SectionLabel", font_px(_BASE_SECTION_FONT))
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
