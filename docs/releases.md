@@ -1,12 +1,14 @@
 # Releases
 
-A `vX.Y.Z` tag on `main` releases every platform. `.github/workflows/release.yml` builds, signs and publishes
-it.
+A `vX.Y.Z` tag on `main` takes every platform as far as it can go, with no step by hand.
+`.github/workflows/release.yml` builds, signs, publishes and submits it. A store step that still needs a person
+is a gap to close.
 
 ## Cut a release
 
 1. On an up-to-date `main`, run `just release X.Y.Z`. It tags `HEAD` as `vX.Y.Z` and pushes the tag.
-2. The release workflow runs. The GitHub Release leaves draft once every job passes.
+2. The release workflow runs. The GitHub Release leaves draft once every build job passes.
+3. The App Store job waits for Apple to process the build, then sends the version to App Review.
 
 - The tag is the version. `project.godot` keeps the placeholder `0.0.0`, and no pull request changes it.
 - The workflow passes the tag's version to every export as `ALEX_VERSION`.
@@ -39,12 +41,18 @@ signing key. A device can move between the two without losing its recordings.
   data from apps it protects. Play applies the setting when it processes a bundle, so it stays off for every upload.
 - Version codes 1 to 3 were uploaded by hand. A CI upload uses the commit count on `main`, which is higher.
 - Production needs a closed test with 12 testers opted in for 14 days in a row, because the account is personal.
+- Every upload also tries production, in an edit of its own. Until Google grants production access, Play
+  refuses and the job warns. After that, every tag reaches production with no change here.
+- The service account needs "Release to production" in Play Console for that, as well as "Release apps to
+  testing tracks".
 - Closed testers are the members of `alex-testers@googlegroups.com`, which anyone can join. The README's
   "Get Alex" section lists the steps. The Play API cannot manage testers on this kind of track, so the group
   was attached once in Play Console.
-- The listing text is `store/play/listing.txt`. `just store-graphics` renders its icon, feature graphic and
-  five 1920x1080 screenshots into `store/play/`. Play takes the same 16:9 set for phones, 7-inch and 10-inch
-  tablets, and Chromebooks. Upload them by hand after a change.
+- The listing is `store/play/listing.json` and `description.txt`. `just store-graphics` renders its icon,
+  feature graphic and five 1920x1080 screenshots into `store/play/`.
+- Every upload sets the listing, the icon, the feature graphic and the phone and tablet screenshots. They go in
+  an edit of their own after the bundle, so a bad listing never holds a build back from testers.
+- The API has no Chromebook image type, so that set was uploaded once in Play Console.
 
 ## App Store
 
@@ -52,9 +60,12 @@ signing key. A device can move between the two without losing its recordings.
   under. Its age rating answers are in `store/app-store/age-rating.json`.
 - `just app-store X.Y.Z` sets the listing from `store/app-store/`: `metadata.json`, `description.txt`, the age
   rating and the iPhone and iPad screenshots. `just store-graphics` renders the screenshots.
-- `just app-store-submit X.Y.Z` attaches the newest processed build of X.Y.Z and sends it to App Review. A tag
-  uploads that build to TestFlight first.
-- The first submission needs `APP_REVIEW_PHONE`, the number App Review may call. It is never committed.
+- `just app-store-submit X.Y.Z` attaches the newest processed build of X.Y.Z and sends it to App Review.
+- A tag runs all of it as `tools/app-store.sh release X.Y.Z <build>`: it withdraws an older version still in
+  review, sets the listing, waits up to 90 minutes for the build, and submits.
+- An approved version goes live by itself (`releaseType` `AFTER_APPROVAL`).
+- The review contact's phone is the `APP_REVIEW_PHONE` secret. Without it, the contact is copied from an earlier
+  version.
 - Three settings have no API and were set once in App Store Connect: App Privacy ("Data Not Collected"), the
   EU trader status (non-trader), and price and availability (free, every country).
 - The Mac App Store is not set up. It needs Mac App Store signing, the App Sandbox and a `.pkg` upload.
@@ -63,14 +74,16 @@ signing key. A device can move between the two without losing its recordings.
 
 | Job | Runner | Does |
 | --- | --- | --- |
-| `plan` | Ubuntu | Checks the tag matches `project.godot` and sits on `main`. Drafts the GitHub Release. |
+| `plan` | Ubuntu | Reads the version from the tag and checks the tag sits on `main`. Drafts the GitHub Release. |
 | `desktop` | Ubuntu | Exports Linux and Windows, checks them, attaches them. |
 | `android` | Ubuntu | Exports the APK and the AAB, checks them, attaches the APK, uploads the AAB to Play. |
 | `macos` | macOS | Exports, signs, notarizes (`tools/notarize-macos.sh`), checks, attaches. |
 | `ios` | macOS | Exports, archives and uploads to TestFlight (`tools/testflight.sh`). |
 | `publish` | Ubuntu | Takes the release out of draft. |
+| `app-store` | Ubuntu | After `ios`: sets the listing, waits for Apple to process the build, submits it (`tools/app-store.sh`). |
 
-A failed job leaves the release in draft. Re-run the failed job from the Actions page.
+A failed build job leaves the release in draft. `app-store` does not hold the release back. Re-run a failed job
+from the Actions page.
 
 ## Secrets
 
@@ -83,6 +96,7 @@ Every signing secret lives in the `release` environment. Only `main` and `v*` ta
 | `ASC_KEY_P8` | The App Store Connect API key, Admin role, the `.p8` file's contents. |
 | `ASC_KEY_ID` | The API key's ID. |
 | `ASC_ISSUER_ID` | The API key's issuer ID. |
+| `APP_REVIEW_PHONE` | The number App Review may call. Kept out of the repository. |
 | `MACOS_DEVELOPER_ID_P12_BASE64` | The Developer ID Application certificate and key, PKCS 12, base64. |
 | `MACOS_DEVELOPER_ID_P12_PASSWORD` | The PKCS 12 password. |
 | `PLAY_SERVICE_ACCOUNT_JSON` | The JSON key of `alex-ci@alex-releases.iam.gserviceaccount.com`. Play Console grants it "Release apps to testing tracks" on this app only. Without it, the Play upload is skipped with a warning. |

@@ -1,10 +1,3 @@
-APP NAME (30)
-Alex Language Explorer
-
-SHORT DESCRIPTION (80)
-Explore rooms and tap phrases, spoken in voices your child already knows.
-
-FULL DESCRIPTION (4000)
 Alex is a small app for children who learn language in whole phrases: autistic children, children with developmental delays, and any child whose first speech is echolalia. A caregiver sets it up in a few minutes. The child explores it alone.
 
 WHAT THE CHILD SEES
@@ -31,6 +24,3 @@ Touching the same thing forty times is fine. Repetition is never interrupted.
 Alex is not a clinical tool and not a substitute for one. It borrows the idea of phrase chunks from the Natural Language Acquisition framework as a design aid, not as a treatment.
 
 Alex is free and open source, under the MIT or Apache 2.0 license. The source, the research behind it and the issue tracker are at github.com/crashtestbrandt/alex.
-
-PRIVACY POLICY
-https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md

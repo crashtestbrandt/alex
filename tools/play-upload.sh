@@ -8,6 +8,8 @@
 #   release rights on the app.
 # - PLAY_TRACKS: the tracks, space-separated, `internal alpha` when unset. `alpha` is the closed testing track.
 # - PLAY_RELEASE_STATUS: `completed` when unset. An app with no release published from Play Console takes only `draft`.
+# - PLAY_PRODUCTION: `try` when unset, which also sends the release to production and only warns when Play
+#   refuses. `skip` leaves production out.
 #
 # It talks to the Play Developer API with curl, openssl and jq, so the key reaches no third-party code.
 set -euo pipefail
@@ -70,5 +72,55 @@ for track in $tracks; do
 		'{track: $track, releases: [{name: $name, versionCodes: [$code], status: $status}]}')"
 	call -X PUT -H 'Content-Type: application/json' --data "$body" "$api/edits/$edit/tracks/$track" > /dev/null
 done
+
 call -X POST "$api/edits/$edit:commit" > /dev/null
 printf 'play: version code %s is on the %s tracks as %s (%s)\n' "$version_code" "$tracks" "$release_name" "$status"
+
+# Production, in an edit of its own, so a refusal leaves the testing tracks in place. Play refuses until the
+# account has production access, which a personal account earns with a closed test (docs/releases.md). From
+# then on every release reaches production with no other change. PLAY_PRODUCTION=skip leaves it out.
+if [[ "${PLAY_PRODUCTION:-try}" == "try" ]]; then
+	if (
+		prod="$(call -X POST "$api/edits" | jq -r .id)" || exit 1
+		body="$(jq -cn --arg name "$release_name" --arg code "$version_code" --arg status "$status" \
+			'{track: "production", releases: [{name: $name, versionCodes: [$code], status: $status}]}')"
+		call -X PUT -H 'Content-Type: application/json' --data "$body" "$api/edits/$prod/tracks/production" > /dev/null || exit 1
+		call -X POST "$api/edits/$prod:commit" > /dev/null || exit 1
+	) 2> "$work/production.log"; then
+		printf 'play: version code %s is on the production track\n' "$version_code"
+	else
+		printf 'play: production refused version code %s, so it stays on the testing tracks:\n' "$version_code"
+		sed 's/^/  /' "$work/production.log" | head -12
+		if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+			echo "::warning::Google Play refused production. The release is on the testing tracks."
+		fi
+	fi
+fi
+
+# The store listing and its images, from store/play/, in an edit of its own after the bundle, so a bad listing
+# never holds a build back from testers. A failure here still fails the job. The API has no Chromebook image
+# type, so that set was uploaded once in Play Console.
+store="$(cd "$(dirname "$0")/.." && pwd)/store/play"
+language="$(jq -r .language "$store/listing.json")"
+listing_edit="$(call -X POST "$api/edits" | jq -r .id)"
+listing="$(jq -c --rawfile d "$store/description.txt" '{language, title, shortDescription: .short_description,
+	fullDescription: ($d | rtrimstr("\n"))}' "$store/listing.json")"
+call -X PUT -H 'Content-Type: application/json' --data "$listing" \
+	"$api/edits/$listing_edit/listings/$language" > /dev/null
+# upload_images <image type> <file>...: replace every image of that type.
+upload_images() {
+	local type="$1" file
+	shift
+	call -X DELETE "$api/edits/$listing_edit/listings/$language/$type" > /dev/null
+	for file in "$@"; do
+		call -X POST -H 'Content-Type: image/png' --data-binary "@$file" \
+			"$upload_api/edits/$listing_edit/listings/$language/$type?uploadType=media" > /dev/null
+	done
+}
+upload_images icon "$store/icon-512.png"
+upload_images featureGraphic "$store/feature-1024x500.png"
+for type in phoneScreenshots sevenInchScreenshots tenInchScreenshots; do
+	upload_images "$type" "$store"/screenshot-*.png
+done
+call -X POST "$api/edits/$listing_edit:commit" > /dev/null
+printf 'play: listing and images set from store/play/\n'
