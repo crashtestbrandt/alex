@@ -25,7 +25,7 @@ it.
 | Windows | GitHub Release, `alex-<version>-windows-x86_64.zip` | Nothing. SmartScreen warns on first launch. |
 | macOS | GitHub Release, `alex-<version>-macos.zip` | Developer ID, notarized and stapled. |
 | Android | GitHub Release, `alex-<version>-android.apk` | The release key. |
-| Android | Google Play, internal testing track | The release key, as the AAB's upload key. |
+| Android | Google Play, internal and closed testing tracks | The release key, as the AAB's upload key. |
 | iOS | TestFlight | Cloud-managed distribution certificate. |
 
 The APK and the Play build carry the same signature, because Play signs with the release key as its app
@@ -71,8 +71,9 @@ Every signing secret lives in the `release` environment. Only `main` and `v*` ta
 | `MACOS_DEVELOPER_ID_P12_PASSWORD` | The PKCS 12 password. |
 | `PLAY_SERVICE_ACCOUNT_JSON` | The JSON key of `alex-ci@alex-releases.iam.gserviceaccount.com`. Play Console grants it "Release apps to testing tracks" on this app only. Without it, the Play upload is skipped with a warning. |
 
-An upload goes to the internal track as `completed`. The `PLAY_RELEASE_STATUS` variable overrides the status, for
-example with `draft`.
+An upload goes to the internal track and the closed testing track (`alpha`) as `completed`. Closed testers get
+each release with no step in Play Console. The `PLAY_TRACKS` variable overrides the tracks, and
+`PLAY_RELEASE_STATUS` overrides the status, for example with `draft`.
 
 ## Keys
 
