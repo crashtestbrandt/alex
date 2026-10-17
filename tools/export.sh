@@ -13,6 +13,9 @@
 # ALEX_VERSION, when set, is the version every preset exports with. The release workflow sets it from the tag.
 # Without it a build carries project.godot's placeholder, 0.0.0.
 #
+# ALEX_LABEL is the whole tag, such as 0.1.2-rc.1. Every export stamps it, or "dev", with the commit count for
+# the profile picker's build stamp (BuildStamp).
+#
 # Both Android presets take the commit count as their version code, the build number iOS uses too.
 #
 # project.godot and export_presets.cfg are stamped for the length of the export and restored after it.
@@ -83,10 +86,13 @@ restore() {
 	done
 }
 trap restore EXIT
-# stamp <file> <sed expression>: edit a project file until the export ends.
+# stamp <file> <sed expression>: edit a project file until the export ends. The first stamp of a file keeps
+# its original, so a second stamp of the same file still restores to that.
 stamp() {
-	cp "$1" "$out_dir/$1.orig"
-	stamped+=("$1")
+	if [[ ! -e "$out_dir/$1.orig" ]]; then
+		cp "$1" "$out_dir/$1.orig"
+		stamped+=("$1")
+	fi
 	sed -i.bak "$2" "$1"
 	rm -f "$1.bak"
 }
@@ -100,9 +106,19 @@ if [[ -n "${ALEX_VERSION:-}" ]]; then
 	printf 'export: version %s\n' "$ALEX_VERSION"
 fi
 
+# The build stamp the profile picker shows (BuildStamp): the tag's label, such as 0.1.2-rc.1, and the build
+# number every store sees, the commit count.
+code="$(git rev-list --count HEAD 2> /dev/null || echo 1)"
+label="${ALEX_LABEL:-${ALEX_VERSION:-dev}}"
+if [[ ! "$label" =~ ^[0-9A-Za-z.+-]+$ ]]; then
+	printf 'export: ALEX_LABEL is "%s". It takes letters, digits, dots, plus and minus.\n' "$label" >&2
+	exit 2
+fi
+stamp project.godot "s/^build\/label=.*/build\/label=\"$label\"/; s/^build\/number=.*/build\/number=$code/"
+printf 'export: build stamp %s (%s)\n' "$label" "$code"
+
 extra=()
 if [[ "$preset" == "Android" || "$preset" == "Google Play" ]]; then
-	code="$(git rev-list --count HEAD 2> /dev/null || echo 1)"
 	stamp export_presets.cfg "s/^version\/code=.*/version\/code=$code/"
 	printf 'export: version code %s\n' "$code"
 fi

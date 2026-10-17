@@ -24,6 +24,10 @@ func _initialize() -> void:
 	for style_id: String in styles:
 		_check(ResourceLoader.exists("%s/%s.tres" % [StylePreset.DIR, style_id]), "style %s loads" % style_id)
 
+	var stamp: String = BuildStamp.current()
+	print("  build stamp: %s" % stamp)
+	_check(stamp != "dev", "the export stamped a build number")
+
 	var policy: PackedStringArray = PolicyText.load_blocks()
 	print("  privacy policy: %d blocks" % policy.size())
 	_check(not policy.is_empty(), "the privacy policy reads")

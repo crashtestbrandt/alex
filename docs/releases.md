@@ -36,6 +36,9 @@ is a gap to close.
 - Issue #49 tracks the rest: a final tag that moves the candidate's build to Play production instead of
   building again, and a rule that a final tag needs a candidate.
 - The build number is the commit count on `main`. iOS and Android both use it.
+- Every export stamps the tag, such as `0.1.2-rc.1`, and the build number into `project.godot`'s
+  `alex/build/*` settings. The profile picker shows them in a corner, so a tester can say which build they have.
+  A build that App Store Connect renumbered at upload still shows the commit count.
 - The release notes are the merged PR titles since the previous tag.
 - Running the workflow by hand (Actions > release > Run workflow) builds, signs and checks every platform as
   `0.0.0` and publishes nothing.

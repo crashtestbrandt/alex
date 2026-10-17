@@ -128,6 +128,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Board columns follow the available width and the style's touch floor. Rows balance across columns.
 - Long phrases wrap within tiles. Larger boards scroll without reducing touch targets. Swipes beginning on buttons reach their scroll container.
 - `SdfSheet` centers caregiver forms, limits their line length, and scrolls tall content. `SdfScroll` draws its scrollbar with `SdfShape`.
+- The profile picker's bottom-right corner shows the build stamp (`BuildStamp`), small and faded: "0.1.2 (34)", a candidate's "0.1.2-rc.1 (34)", or "dev". It stays inside the safe area and takes no input. The learner's screen never shows it.
 - Recording actions wrap. Back and Create stay reachable after rotation and with long content.
 - Profile rows keep their Look action inline. Creation and look editing have separate forms.
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.

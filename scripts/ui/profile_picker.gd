@@ -34,6 +34,7 @@ const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/P
 @onready var _scene_rows: VBoxContainer = %SceneRows
 @onready var _privacy_button: HoldButton = %PrivacyButton
 @onready var _policy: VBoxContainer = %Policy
+@onready var _build_stamp: Label = %BuildStamp
 
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
@@ -47,6 +48,7 @@ func _ready() -> void:
 	_new_button.pressed.connect(_on_new_profile)
 	_delete_button.held.connect(_on_delete_held)
 	_privacy_button.held.connect(_on_privacy_held)
+	_build_stamp.text = BuildStamp.current()
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()

@@ -4,6 +4,13 @@
 
 config_version=5
 
+[alex]
+
+; The release label and build number the profile picker shows (BuildStamp). tools/export.sh stamps both for the
+; length of an export; a run from the editor shows "dev".
+build/label="dev"
+build/number=0
+
 [application]
 
 config/name="Alex"
