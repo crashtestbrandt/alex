@@ -138,3 +138,17 @@ func test_remove_scene_keeps_recordings_for_the_next_add() -> void:
 	assert_true(bath.add_to(p), "added again")
 	assert_eq(p.gestalt("bath_time.splash_splash").recording, "bath_time.splash_splash.wav", "the recording is found again")
 	assert_eq(p.gestalts.size(), bath.gestalts.size(), "the phrase is not copied twice")
+
+func test_readding_a_removed_starter_reuses_its_recorded_phrase() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	var home: Starter = Starter.find("home_routines")
+	home.seed(p)
+	p.gestalt("lets_go_outside").recording = "lets_go_outside.wav"
+	assert_true(p.remove_scene("home_routines"), "the starter is removed")
+	assert_eq(p.gestalts.size(), 1, "only the recorded phrase stays")
+	assert_true(home.add_to(p), "added again")
+	assert_null(p.gestalt("home_routines.lets_go_outside"), "the recorded phrase is not copied")
+	assert_eq(p.gestalts.size(), home.gestalts.size(), "every phrase is in the bank once")
+	assert_eq(p.rooms[0].spots[0].gestalt_id, "lets_go_outside", "the spot says the recorded phrase")
+	assert_true(p.remove_scene("home_routines"), "removed again")
+	assert_eq(p.gestalts.size(), 1, "the recorded phrase still stays")
