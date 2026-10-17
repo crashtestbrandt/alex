@@ -29,6 +29,15 @@ it.
 The APK and the Play build carry the same signature, because Play signs with the release key as its app
 signing key. A device can move between the two without losing its recordings.
 
+## Google Play
+
+- The app is `io.github.crashtestbrandt.alex` in a personal developer account.
+- Play App Signing holds the release key, uploaded with Google's PEPK tool. The release key is also the upload key.
+- Automatic protection is off. Its failed-check prompt would appear on the learner's screen, and Google collects
+  data from apps it protects. Play applies the setting when it processes a bundle, so it stays off for every upload.
+- Version codes 1 to 3 were uploaded by hand. A CI upload uses the commit count on `main`, which is higher.
+- Production needs a closed test with 12 testers opted in for 14 days in a row, because the account is personal.
+
 ## Jobs
 
 | Job | Runner | Does |
@@ -56,9 +65,10 @@ Every signing secret lives in the `release` environment. Only `main` and `v*` ta
 | `ASC_ISSUER_ID` | The API key's issuer ID. |
 | `MACOS_DEVELOPER_ID_P12_BASE64` | The Developer ID Application certificate and key, PKCS 12, base64. |
 | `MACOS_DEVELOPER_ID_P12_PASSWORD` | The PKCS 12 password. |
-| `PLAY_SERVICE_ACCOUNT_JSON` | A Google Cloud service account key with release rights in Play Console. Optional. Without it, the Play upload is skipped with a warning. |
+| `PLAY_SERVICE_ACCOUNT_JSON` | The JSON key of `alex-ci@alex-releases.iam.gserviceaccount.com`. Play Console grants it "Release apps to testing tracks" on this app only. Without it, the Play upload is skipped with a warning. |
 
-The `PLAY_RELEASE_STATUS` variable is `draft` until Google has reviewed the app once, then unset.
+An upload goes to the internal track as `completed`. The `PLAY_RELEASE_STATUS` variable overrides the status, for
+example with `draft`.
 
 ## Keys
 
@@ -67,8 +77,9 @@ The owner keeps a backup of each key outside GitHub. GitHub secrets cannot be re
 | Key | Lasts | Lost means |
 | --- | --- | --- |
 | Android release keystore | Until 2081. | No update for anyone who installed the APK. |
-| Developer ID certificate | Five years. | Make a new one. Builds already notarized keep working. |
+| Developer ID certificate | Until 2027-11-14. | Make a new one. Builds already notarized keep working. |
 | App Store Connect API key | Until revoked. | Revoke it and make a new one. |
+| Play service account key | Until revoked. | Delete it in Google Cloud and make a new one. |
 
 ## Pull requests
 

@@ -7,7 +7,7 @@
 # - PLAY_SERVICE_ACCOUNT_JSON: the path to a Google Cloud service account key that Play Console has granted
 #   release rights on the app.
 # - PLAY_TRACK: the track, `internal` when unset.
-# - PLAY_RELEASE_STATUS: `completed` when unset. An app Google has not reviewed yet takes only `draft`.
+# - PLAY_RELEASE_STATUS: `completed` when unset. An app with no release published from Play Console takes only `draft`.
 #
 # It talks to the Play Developer API with curl, openssl and jq, so the key reaches no third-party code.
 set -euo pipefail
