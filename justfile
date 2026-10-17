@@ -61,6 +61,10 @@ doc-size-check:
 room-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_probe.tscn
 
+# The rubber band at both ends of a scroll, from synthetic mouse drags, the events Godot emulates from a finger (tools/instr/overscroll_probe.gd).
+overscroll-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/overscroll_probe.tscn
+
 # Responsive layout, scrolling and hold behavior across all styles and viewport shapes.
 layout-probe:
     "{{godot}}" {{headless}} --path . tools/instr/visual_probe.tscn
@@ -90,7 +94,7 @@ export-presets-check:
     tools/check-export-presets.sh
 
 # Everything the PR gate runs, in its order, then the headless scene probes.
-check: doc-size-check export-presets-check lint test room-probe
+check: doc-size-check export-presets-check lint test room-probe overscroll-probe
 
 # Exports into build/<commit>/<platform>/ (docs/exports.md). Each needs export templates of the same Godot
 # version. Android also needs an Android SDK and a JDK, and iOS needs a Mac with Xcode and a Team ID.

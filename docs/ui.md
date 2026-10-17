@@ -133,6 +133,9 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
 - A scroll begins after a press moves 24 px, the room's `DRAG_PX` (`gui/common/default_scroll_deadzone`). A resting finger's jitter keeps a hold.
+- Every `SdfScroll` rubber-bands at both ends (`Overscroll`). A drag past an end moves the content less the further it goes, and a release springs it back. Only content taller than its view bands.
+- A fling that reaches an end carries past it, at most a sixth of the view, and settles. A jump to the top when a screen opens does not bounce.
+- The spring multiplies by `Style.motion_scale()`. At motion NONE a release returns the content at once. `just overscroll-probe` checks all of it.
 - The current phrase has one caption. Repeated taps replace it; view changes clear it.
 - Shadows remain dark in every style. Glyphs change color while pressed. Chunk text keeps the text color on its pill.
 
