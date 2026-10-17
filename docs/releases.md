@@ -51,7 +51,11 @@ for a final. iOS takes it as the build number and Android as the version code.
 - A final tag on a candidate's commit submits the candidate's TestFlight build to App Review, the build testers
   had: the lowest processed build from that commit's first number on.
 - Versions order as `0.1.1` < `0.1.2-rc.1` < `0.1.2-rc.2` < `0.1.2`. A candidate after its own final is refused.
-- Issue #49 tracks the rest: a rule that a final tag needs a candidate.
+- With the `REQUIRE_CANDIDATE` repository variable set to `true`, a final needs a candidate of its version on
+  the same commit. `just release` refuses one without, and so does the release workflow, for a tag pushed by
+  hand. Turn it on once either store is public: `gh variable set REQUIRE_CANDIDATE --body true`.
+- With the variable off, a final with no candidate still releases. `just release` says the stores get a build
+  no tester had.
 
 ## What a release publishes
 

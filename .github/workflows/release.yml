@@ -54,6 +54,8 @@ jobs:
       # the files and the GitHub release. A run by hand builds as 0.0.0.
       - name: Version
         id: version
+        env:
+          REQUIRE_CANDIDATE: ${{ vars.REQUIRE_CANDIDATE }}
         run: |
           set -euo pipefail
           version=0.0.0
@@ -80,6 +82,13 @@ jobs:
             fi
             if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
               echo "::error::$GITHUB_REF_NAME is not on main."
+              exit 1
+            fi
+            # With REQUIRE_CANDIDATE on, a final ships only what testers had: a candidate of the same version
+            # on the same commit (docs/releases.md "Release candidates").
+            if [[ "$candidate" == "false" && "$REQUIRE_CANDIDATE" == "true" ]] \
+              && ! git tag --points-at "$GITHUB_SHA" | grep -qx "v${version//./\\.}-rc\.[0-9]*"; then
+              echo "::error::$GITHUB_REF_NAME has no candidate on its commit. Tag v$version-rc.N there first."
               exit 1
             fi
             publish=true

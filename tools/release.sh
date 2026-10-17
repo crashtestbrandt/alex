@@ -4,6 +4,8 @@
 # `just release` runs this (docs/releases.md). The pushed tag starts .github/workflows/release.yml, which
 # builds every platform with that version. project.godot keeps a placeholder; the tag is the version. A release
 # candidate goes to testers only.
+#
+# With the REQUIRE_CANDIDATE repository variable set to true, a final needs a candidate on its commit.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -50,6 +52,16 @@ fi
 if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
 	printf 'release: %s already exists.\n' "$tag" >&2
 	exit 1
+fi
+# A final ships what testers had: a candidate of the same version on this commit. The REQUIRE_CANDIDATE
+# repository variable makes that a rule, which the release workflow checks again.
+if [[ "$version" != *-rc.* ]] && ! git tag --points-at HEAD | grep -qx "v${version//./\\.}-rc\.[0-9]*"; then
+	required="$(gh variable get REQUIRE_CANDIDATE 2> /dev/null || true)"
+	if [[ "$required" == "true" ]]; then
+		printf 'release: no candidate of %s is on this commit. Run just release %s-rc.1 first.\n' "$version" "$version" >&2
+		exit 1
+	fi
+	printf 'release: no candidate of %s is on this commit, so the stores get a build no tester had.\n' "$version"
 fi
 # iOS and Google Play refuse a version lower than one they already hold. A candidate after its own final is
 # refused too, because TestFlight closes a version once the App Store releases it.
