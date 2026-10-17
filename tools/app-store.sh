@@ -11,6 +11,9 @@
 #                        version to App Review. The review contact comes from an earlier version, or from
 #                        APP_REVIEW_PHONE and metadata.json when none has one.
 #   supersede X.Y.Z      Withdraw any other version from review, so X.Y.Z can take its place.
+#   beta-setup           TestFlight test information, the Beta App Review contact, and the external group with a
+#                        public link, from metadata.json. Safe to run again.
+#   beta X.Y.Z n         Build n to the external group with What to Test, and Beta App Review when Apple asks.
 #   release X.Y.Z n      All of it for a version tag: supersede, metadata, age-rating, screenshots, submit.
 #                        An approved version goes live without a further step.
 #
@@ -365,6 +368,92 @@ cmd_release() {
 	cmd_submit "$version" "$number"
 }
 
+# The external TestFlight group named in metadata.json, or nothing.
+beta_group() {
+	api GET "/v1/apps/$1/betaGroups?limit=200" | jq -r --arg n "$(meta .testflight.group)" \
+		'[.data[] | select(.attributes.name == $n and (.attributes.isInternalGroup | not))] | first | .id // empty'
+}
+
+# Test information, the Beta App Review contact, and the external group with a public link. Safe to run again.
+cmd_beta_setup() {
+	local id locale lid attrs contact gid group
+	id="$(app_id)"
+	locale="$(meta .locale)"
+	attrs="$(jq -c '{description: .testflight.description, feedbackEmail: .testflight.feedback_email,
+		privacyPolicyUrl: .privacy_policy_url, marketingUrl: .marketing_url}' "$META")"
+	lid="$(api GET "/v1/apps/$id/betaAppLocalizations" | jq -r --arg l "$locale" '.data[] | select(.attributes.locale == $l) | .id')"
+	if [[ -z "$lid" ]]; then
+		api POST /v1/betaAppLocalizations "$(jq -cn --arg a "$id" --arg l "$locale" --argjson x "$attrs" '{data: {
+			type: "betaAppLocalizations", attributes: ($x + {locale: $l}),
+			relationships: {app: {data: {type: "apps", id: $a}}}}}')" > /dev/null
+	else
+		api PATCH "/v1/betaAppLocalizations/$lid" "$(jq -cn --arg id "$lid" --argjson x "$attrs" \
+			'{data: {type: "betaAppLocalizations", id: $id, attributes: $x}}')" > /dev/null
+	fi
+	printf 'app-store: TestFlight test information set\n'
+
+	if [[ -n "${APP_REVIEW_PHONE:-}" ]]; then
+		contact="$(jq -cn --arg p "$APP_REVIEW_PHONE" --slurpfile m "$META" '{
+			contactFirstName: $m[0].review_contact.first_name, contactLastName: $m[0].review_contact.last_name,
+			contactEmail: $m[0].review_contact.email, contactPhone: $p}')"
+	elif ! contact="$(earlier_review_contact "$id" "")"; then
+		printf 'app-store: no review contact to copy. Set APP_REVIEW_PHONE.\n' >&2
+		exit 2
+	fi
+	api PATCH "/v1/betaAppReviewDetails/$id" "$(jq -cn --arg id "$id" --argjson c "$contact" --slurpfile m "$META" '{data: {
+		type: "betaAppReviewDetails", id: $id,
+		attributes: ($c + {demoAccountRequired: false, notes: $m[0].testflight.review_notes})}}')" > /dev/null
+	printf 'app-store: Beta App Review contact set\n'
+
+	gid="$(beta_group "$id")"
+	if [[ -z "$gid" ]]; then
+		gid="$(api POST /v1/betaGroups "$(jq -cn --arg a "$id" --arg n "$(meta .testflight.group)" '{data: {
+			type: "betaGroups", attributes: {name: $n, publicLinkEnabled: true},
+			relationships: {app: {data: {type: "apps", id: $a}}}}}')" | jq -r .data.id)"
+		printf 'app-store: external group %s created\n' "$(meta .testflight.group)"
+	fi
+	group="$(api GET "/v1/betaGroups/$gid")"
+	if [[ "$(jq -r .data.attributes.publicLinkEnabled <<< "$group")" != "true" ]]; then
+		api PATCH "/v1/betaGroups/$gid" "$(jq -cn --arg id "$gid" '{data: {type: "betaGroups", id: $id,
+			attributes: {publicLinkEnabled: true}}}')" > /dev/null
+		group="$(api GET "/v1/betaGroups/$gid")"
+	fi
+	printf 'app-store: public link %s\n' "$(jq -r '.data.attributes.publicLink // "(not yet, Apple makes it after the first build is approved)"' <<< "$group")"
+}
+
+# beta X.Y.Z <build number>: that build to the external group, with What to Test, and Beta App Review when
+# the build needs it. Every tag runs it, candidate or final.
+cmd_beta() {
+	local version="$1" number="$2" id gid bid locale blid state
+	id="$(app_id)"
+	gid="$(beta_group "$id")"
+	if [[ -z "$gid" ]]; then
+		printf 'app-store: no external group. Run tools/app-store.sh beta-setup first.\n' >&2
+		exit 1
+	fi
+	bid="$(wait_for_build "$id" "$version" "$number")"
+	locale="$(meta .locale)"
+	blid="$(api GET "/v1/builds/$bid/betaBuildLocalizations" | jq -r --arg l "$locale" '.data[] | select(.attributes.locale == $l) | .id')"
+	if [[ -z "$blid" ]]; then
+		api POST /v1/betaBuildLocalizations "$(jq -cn --arg b "$bid" --arg l "$locale" --arg w "$(meta .testflight.what_to_test)" \
+			'{data: {type: "betaBuildLocalizations", attributes: {locale: $l, whatsNew: $w},
+			relationships: {build: {data: {type: "builds", id: $b}}}}}')" > /dev/null
+	else
+		api PATCH "/v1/betaBuildLocalizations/$blid" "$(jq -cn --arg id "$blid" --arg w "$(meta .testflight.what_to_test)" \
+			'{data: {type: "betaBuildLocalizations", id: $id, attributes: {whatsNew: $w}}}')" > /dev/null
+	fi
+	api POST "/v1/betaGroups/$gid/relationships/builds" "$(jq -cn --arg b "$bid" '{data: [{type: "builds", id: $b}]}')" > /dev/null
+	printf 'app-store: build %s of %s is in the %s group\n' "$number" "$version" "$(meta .testflight.group)"
+	state="$(api GET "/v1/builds/$bid/buildBetaDetail" | jq -r '.data.attributes.externalBuildState')"
+	if [[ "$state" == "READY_FOR_BETA_SUBMISSION" ]]; then
+		api POST /v1/betaAppReviewSubmissions "$(jq -cn --arg b "$bid" '{data: {type: "betaAppReviewSubmissions",
+			relationships: {build: {data: {type: "builds", id: $b}}}}}')" > /dev/null
+		printf 'app-store: build %s sent to Beta App Review\n' "$number"
+	else
+		printf 'app-store: build %s needs no Beta App Review submission (%s)\n' "$number" "$state"
+	fi
+}
+
 cmd_status() {
 	local id
 	id="$(app_id)"
@@ -382,6 +471,8 @@ case "$1" in
 	screenshots) cmd_screenshots "${2:?usage: tools/app-store.sh screenshots X.Y.Z}" ;;
 	submit) cmd_submit "${2:?usage: tools/app-store.sh submit X.Y.Z [build number]}" "${3:-}" ;;
 	supersede) cmd_supersede "${2:?usage: tools/app-store.sh supersede X.Y.Z}" ;;
+	beta-setup) cmd_beta_setup ;;
+	beta) cmd_beta "${2:?usage: tools/app-store.sh beta X.Y.Z <build number>}" "${3:?usage: tools/app-store.sh beta X.Y.Z <build number>}" ;;
 	release) cmd_release "${2:?usage: tools/app-store.sh release X.Y.Z <build number>}" "${3:?usage: tools/app-store.sh release X.Y.Z <build number>}" ;;
 	*)
 		printf 'app-store: unknown command %s\n' "$1" >&2

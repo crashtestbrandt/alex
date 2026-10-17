@@ -14,5 +14,12 @@
     "first_name": "Brandt",
     "last_name": "Frazier",
     "email": "frazimuth@pm.me"
+  },
+  "testflight": {
+    "group": "Testers",
+    "feedback_email": "frazimuth@pm.me",
+    "description": "Alex is a small app for children who learn language in whole phrases. A caregiver sets up a profile and records phrases in their own voice; the child explores a room and hears them.",
+    "what_to_test": "Make a profile, explore the room, open Words, and record a phrase by holding an object for two seconds. The profile picker shows this build in its bottom-right corner. Report anything that looks wrong or gets in the way.",
+    "review_notes": "No account or sign-in. Adult screens open on a 2-second hold. Recording needs the microphone, asked on first launch."
   }
 }

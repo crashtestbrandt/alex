@@ -101,7 +101,8 @@ Early and usable.
   2. Open the [testing page](https://play.google.com/apps/testing/io.github.crashtestbrandt.alex) and choose
      **Become a tester**.
   3. Install [Alex from Google Play](https://play.google.com/store/apps/details?id=io.github.crashtestbrandt.alex).
-- **iPhone and iPad** builds are on TestFlight, for invited testers only.
+- **iPhone and iPad** builds are in a TestFlight beta. Open the [TestFlight link](https://testflight.apple.com/join/2AYBxYbr)
+  on the device and accept. A new build arrives in the TestFlight app.
 
 ## For developers
 
