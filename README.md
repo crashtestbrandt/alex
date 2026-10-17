@@ -79,6 +79,19 @@ Early and usable.
 - **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Recording is tried on an Android
   phone and an iPhone.
 
+## Get Alex
+
+- **Linux, Windows, macOS and an Android APK** are on the
+  [releases page](https://github.com/crashtestbrandt/alex/releases/latest).
+- **Google Play** is in a closed test. To join it on Android:
+  1. Join the [alex-testers group](https://groups.google.com/g/alex-testers) with the Google account your
+     phone uses.
+  2. Open the [testing page](https://play.google.com/apps/testing/io.github.crashtestbrandt.alex) and choose
+     **Become a tester**.
+  3. Install [Alex from Google Play](https://play.google.com/store/apps/details?id=io.github.crashtestbrandt.alex).
+     A new release arrives as an update.
+- **iPhone and iPad** builds go to TestFlight, which takes invited testers only for now.
+
 ## For developers
 
 **Godot 4.7**, GDScript only, strict typing promoted to errors. Organized around a `justfile`.
