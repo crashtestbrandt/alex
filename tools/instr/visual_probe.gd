@@ -120,7 +120,6 @@ func _run() -> void:
 			var screen: Rect2 = home.get_global_rect()
 			var scale_xy: Vector2 = get_viewport().get_final_transform().get_scale()
 			_check(absf(scale_xy.x - scale_xy.y) < 0.001, "canvas scales uniformly")
-			_square(home.get_node("%ProfilesButton") as Control, "profile button")
 			var widget: ViewWidget = room.get_node("%ViewWidget") as ViewWidget
 			for button: SdfButton in widget.items():
 				if button.visible:
@@ -202,6 +201,14 @@ func _run() -> void:
 			var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
 			_inside(picker.get_node("%NewProfileButton") as Control, screen, "new profile action fits")
 			_shot("picker")
+			(picker.get_node("%GuideButton") as SdfButton).pressed.emit()
+			await _settle()
+			var page: Control = picker.get_node("%Page") as Control
+			_check(page.visible and page.get_child_count() > 10, "the guide opens with its sections")
+			_inside(picker.get_node("%Heading") as Control, screen, "guide heading")
+			_shot("guide")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+			await _settle()
 			var profile_card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()
@@ -423,7 +430,6 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	_check(stage.scroll_vertical > 0, "mouse wheel scrolls the board")
 	await _drag_scroll(stage, stage.get_global_rect().get_center())
 	_check(not overlay.visible, "drag scrolling does not open the recorder")
-	_square(home.get_node("%ProfilesButton") as Control, "profile button with wrapped navigation")
 	_inside(home.get_node("%TopBar") as Control, screen, "long name header")
 	_inside(home.get_node("%ModeStrip") as Control, screen, "mode strip beside a long name")
 	_check(home.mode_button(ChildHome.Mode.EXPLORE).text == "Explore", "a long room title stays off the strip")
@@ -518,7 +524,6 @@ func _safe_areas(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Re
 			_inside(home.get_node("%TopBar") as Control, safe, "header avoids cutouts")
 			_inside(home.get_node("%ModeStrip") as Control, safe, "modes avoid cutouts")
 			_inside(room.get_node("%ViewWidget") as Control, safe, "views avoid gesture area")
-			_square(home.get_node("%ProfilesButton") as Control, "profile control")
 			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP]:
 				room.set_view(view, false)
 				await _settle()

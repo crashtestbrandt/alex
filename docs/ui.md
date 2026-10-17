@@ -93,12 +93,31 @@ it. Words reopens in the mode the learner last used.
 | `ChunkButton` | `HoldButton` | A chunk the learner taps in Build: a pill in its chunk's color at the tile floor, text in the style's text color. A hold records it. |
 | `TakePill` | `ChunkButton` | A pill on the recording overlay: a chunk in its color, or the whole phrase on the surface. A tap picks it; the picked pill has a thick border; a pill with a take carries a microphone mark. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
-| `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
+| `HoldButton` | `SdfButton` | Fires only after a hold, so a stray tap does nothing. The caregiver chord cancels a hold in progress. |
 | `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. `floating` gives the pills the style's relief. |
 
 The background quad an `SdfShape` paints is the control grown by `SdfShape.PAD_PX` on each side, so the
 shadow has room. It is drawn with `draw_texture_rect` over a white texture because a plain rect carries no UVs
 for the shader to read.
+
+## Caregiver mode
+
+The learner's screen has no control that leads to the picker. `CaregiverGate` watches for a chord held for
+three seconds (`CaregiverChord`):
+
+| Input | Chord |
+| --- | --- |
+| Touch | Exactly three fingers, each within 48 px of where the chord formed. |
+| Mouse | The left and right buttons together. |
+| Keyboard | Escape. |
+
+- A fourth finger, a lifted finger or a wandering finger breaks the chord and restarts the count.
+- A forming chord cancels every hold in progress (`CaregiverGate.HOLD_GROUP`), so a record hold under the
+  first finger never fires first.
+- The chord stops speech and closes the recording overlay without keeping its take.
+- Input passes through, so the room still pans and zooms under the fingers.
+- Launch reopens the profile opened last (`ProfileRepo.last_id`). With none, the picker opens. Deleting that
+  profile forgets it.
 
 ## The profile picker
 
@@ -111,6 +130,7 @@ for the shader to read.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
+- Caregiver guide opens `GUIDE.md` on a tap. The privacy policy opens `PRIVACY.md` on a hold (`PageText`).
 - Nothing on the picker is drawn by a theme style box.
 
 ## Gates

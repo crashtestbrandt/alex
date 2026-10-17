@@ -1,7 +1,7 @@
 extends SdfButton
 class_name HoldButton
-## A button that fires only after being held. The adult-facing screens sit behind one so a stray tap from
-## the child never leaves the board. `held` fires once per press, at `hold_seconds`.
+## A button that fires only after being held, so a stray tap does nothing. `held` fires once per press, at
+## `hold_seconds`. The caregiver chord cancels a hold in progress ([CaregiverGate]).
 
 signal held
 
@@ -12,6 +12,7 @@ var _fired: bool = false
 
 func _ready() -> void:
 	super()
+	add_to_group(CaregiverGate.HOLD_GROUP)
 	button_down.connect(_on_down)
 	button_up.connect(_on_up)
 	mouse_exited.connect(_cancel_hold)
@@ -44,6 +45,10 @@ func _notification(what: int) -> void:
 	super(what)
 	if what == NOTIFICATION_SCROLL_BEGIN:
 		_cancel_hold()
+
+## End the press without firing, and without counting it as a tap.
+func cancel_hold() -> void:
+	_cancel_hold()
 
 func _cancel_hold() -> void:
 	_down_for = -1.0

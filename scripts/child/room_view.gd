@@ -95,6 +95,7 @@ var _idle: float = 0.0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
+	add_to_group(CaregiverGate.HOLD_GROUP)
 	_build_shell()
 	# From the front and high, so the raised side walls throw their shadow onto the apron, not the back wall.
 	_sun.look_at_from_position(Vector3(0.8, 6.0, 5.0), Vector3.ZERO, Vector3.UP)
@@ -501,6 +502,10 @@ func _cancel_press() -> void:
 	_dragging = false
 	_idle = 0.0
 	set_process(_room != null and is_visible_in_tree())
+
+## End a press without a tap or a hold, for the caregiver chord ([CaregiverGate]).
+func cancel_hold() -> void:
+	_cancel_press()
 
 ## Forget every finger too, for a window that lost focus or a view that was hidden mid-gesture.
 func _cancel_gestures() -> void:

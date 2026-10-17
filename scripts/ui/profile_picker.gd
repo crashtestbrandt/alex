@@ -4,14 +4,14 @@ class_name ProfilePicker
 ## removes and picks the entry scene for them. Style pills preview immediately. Saving a look, changing a
 ## scene or completing the delete hold changes a profile.
 ##
-## It also shows the privacy policy, which Google Play's Families policy requires inside the app. The text is
-## PRIVACY.md, shipped in every export ([PolicyText]), so nothing leaves the app to show it. The picker is the
-## first screen at launch, so the policy opens on a hold.
+## It also shows two shipped pages ([PageText]), so nothing leaves the app to show them: the caregiver guide,
+## GUIDE.md, on a tap, and the privacy policy, PRIVACY.md, which Google Play's Families policy requires inside
+## the app, on a hold.
 
 signal profile_chosen(profile_id: String)
 signal profile_deleted(profile_id: String)
 
-enum Mode { PICK, CREATE, LOOK, POLICY }
+enum Mode { PICK, CREATE, LOOK, POLICY, GUIDE }
 
 const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md"
 
@@ -32,8 +32,9 @@ const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/P
 @onready var _delete_button: HoldButton = %DeleteButton
 @onready var _scene_section: VBoxContainer = %SceneSection
 @onready var _scene_rows: VBoxContainer = %SceneRows
+@onready var _guide_button: SdfButton = %GuideButton
 @onready var _privacy_button: HoldButton = %PrivacyButton
-@onready var _policy: VBoxContainer = %Policy
+@onready var _page: VBoxContainer = %Page
 @onready var _build_stamp: Label = %BuildStamp
 
 var _starters: Array[Starter] = []
@@ -48,6 +49,7 @@ func _ready() -> void:
 	_new_button.pressed.connect(_on_new_profile)
 	_delete_button.held.connect(_on_delete_held)
 	_privacy_button.held.connect(_on_privacy_held)
+	_guide_button.pressed.connect(_on_guide_pressed)
 	_build_stamp.text = BuildStamp.current()
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
@@ -159,16 +161,20 @@ func _show_mode(mode: Mode) -> void:
 	_actions.visible = mode != Mode.PICK
 	_delete_section.visible = mode == Mode.LOOK
 	_scene_section.visible = mode == Mode.LOOK
-	_policy.visible = mode == Mode.POLICY
+	var reading: bool = mode == Mode.POLICY or mode == Mode.GUIDE
+	_page.visible = reading
+	_guide_button.visible = mode == Mode.PICK or mode == Mode.CREATE
 	_privacy_button.visible = mode == Mode.PICK or mode == Mode.CREATE
-	_back_button.visible = mode == Mode.POLICY or (mode != Mode.PICK and _profiles.get_child_count() > 0)
-	_create_button.visible = mode != Mode.POLICY
+	_back_button.visible = reading or (mode != Mode.PICK and _profiles.get_child_count() > 0)
+	_create_button.visible = not reading
 	_create_button.text = "Save" if mode == Mode.LOOK else "Create"
 	match mode:
 		Mode.CREATE:
 			_heading.text = "New profile"
 		Mode.POLICY:
 			_heading.text = "Privacy policy"
+		Mode.GUIDE:
+			_heading.text = "Caregiver guide"
 		_:
 			_heading.text = "Choose a profile"
 	_status.hide()
@@ -295,19 +301,29 @@ func _on_delete_held() -> void:
 		_new_button.grab_focus()
 
 func _on_privacy_held() -> void:
-	if _policy.get_child_count() == 0:
-		var headings: PackedStringArray = PolicyText.load_headings()
-		var blocks: PackedStringArray = PolicyText.load_blocks()
+	_show_page(PageText.PRIVACY, Mode.POLICY)
+
+func _on_guide_pressed() -> void:
+	_show_page(PageText.GUIDE, Mode.GUIDE)
+
+## Fill the page from the shipped Markdown at `path` and show it in `mode`.
+func _show_page(path: String, mode: Mode) -> void:
+	for child: Node in _page.get_children():
+		_page.remove_child(child)
+		child.queue_free()
+	var headings: PackedStringArray = PageText.load_headings(path)
+	var blocks: PackedStringArray = PageText.load_blocks(path)
+	if mode == Mode.POLICY:
 		blocks.push_back("This policy is also at %s" % PRIVACY_URL)
-		for block: String in blocks:
-			var label: Label = Label.new()
-			label.text = block
-			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			if headings.has(block):
-				label.theme_type_variation = &"SectionLabel"
-			_policy.add_child(label)
-	# Focus stays put: the sheet follows focus, and the policy reads from the top.
-	_show_mode(Mode.POLICY)
+	for block: String in blocks:
+		var label: Label = Label.new()
+		label.text = block
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if headings.has(block):
+			label.theme_type_variation = &"SectionLabel"
+		_page.add_child(label)
+	# Focus stays put: the sheet follows focus, and the page reads from the top.
+	_show_mode(mode)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and _mode != Mode.PICK and _back_button.visible and event.is_action_pressed("ui_cancel"):

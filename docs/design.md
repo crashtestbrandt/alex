@@ -45,8 +45,8 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
 - **Motion and sound are per-profile settings**, so overstimulation is a setting and never a surprise.
 - **A synthetic voice is never the goal.** OS text to speech voices a gestalt until a recording exists; a
   familiar voice is always the intended experience.
-- **Adult screens sit behind a held button**, and the recording overlay writes nothing until Keep is
-  pressed and closes itself when left alone.
+- **Adult screens sit behind a three-second chord** that a hand landing on the screen does not make, and
+  the recording overlay writes nothing until Keep is pressed and closes itself when left alone.
 - **Nothing cartoon-babyish by default.** The learner may be four or fourteen. Style presets carry the look.
 
 ## What the app does

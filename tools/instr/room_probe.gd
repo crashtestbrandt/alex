@@ -230,6 +230,7 @@ func _run() -> void:
 
 	await _check_name(home, p)
 	await _check_cleanup(home, p)
+	await _check_caregiver_chord(main, p)
 	_finish(repo, p.id)
 
 func _mouse(at: Vector2, pressed: bool) -> InputEventMouseButton:
@@ -246,6 +247,81 @@ func _motion(at: Vector2, relative: Vector2) -> InputEventMouseMotion:
 	event.global_position = at
 	event.relative = relative
 	event.button_mask = MOUSE_BUTTON_MASK_LEFT
+	return event
+
+## Each caregiver chord opens the picker after its hold, and cancels a record hold under the pointer. Two
+## fingers, or three with one wandering, do nothing. Opening a profile remembers it for the next launch.
+func _check_caregiver_chord(main: Main, p: Profile) -> void:
+	var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
+	var wait: float = CaregiverChord.HOLD_SECONDS + 0.4
+	main.open_profile(p.id)
+	await get_tree().process_frame
+	_check(ProfileStore.last_id() == p.id, "opening a profile remembers it")
+	var home: ChildHome = main.get_node("%ChildHome") as ChildHome
+	var room_view: RoomView = home.get_node("%RoomView") as RoomView
+	home.show_room(p.rooms[0])
+	await get_tree().process_frame
+	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
+	var door: Vector2 = room_view.get_global_transform_with_canvas() * room_view.screen_point(room_view.body("door"))
+
+	get_viewport().push_input(_mouse(door, true))
+	var right: InputEventMouseButton = _mouse(door, true)
+	right.button_index = MOUSE_BUTTON_RIGHT
+	get_viewport().push_input(right)
+	# Past the record hold, short of the chord.
+	await get_tree().create_timer(RoomView.HOLD_SECONDS + 0.4).timeout
+	_check(home.visible and not overlay.visible, "the chord cancels the record hold under the left button")
+	await get_tree().create_timer(wait - RoomView.HOLD_SECONDS - 0.4).timeout
+	await get_tree().process_frame
+	_check(picker.visible and not home.visible, "left and right held together open the picker")
+	get_viewport().push_input(_mouse(door, false))
+	right.pressed = false
+	get_viewport().push_input(right)
+
+	for fingers: int in [2, 3]:
+		main.open_profile(p.id)
+		await get_tree().process_frame
+		for i: int in fingers:
+			get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), true))
+		await get_tree().create_timer(wait).timeout
+		await get_tree().process_frame
+		if fingers == 2:
+			_check(home.visible, "two fingers held stay on the learner's screen")
+		else:
+			_check(picker.visible and not home.visible, "three fingers held open the picker")
+		for i: int in fingers:
+			get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), false))
+
+	main.open_profile(p.id)
+	await get_tree().process_frame
+	for i: int in 3:
+		get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), true))
+	var drag: InputEventScreenDrag = InputEventScreenDrag.new()
+	drag.index = 2
+	drag.position = door + Vector2(120.0, CaregiverChord.STILL_PX * 2.0)
+	get_viewport().push_input(drag)
+	await get_tree().create_timer(wait).timeout
+	await get_tree().process_frame
+	_check(home.visible, "three fingers with one wandering stay on the learner's screen")
+	for i: int in 3:
+		get_viewport().push_input(_touch(i, door, false))
+
+	var escape: InputEventKey = InputEventKey.new()
+	escape.keycode = KEY_ESCAPE
+	escape.pressed = true
+	get_viewport().push_input(escape)
+	await get_tree().create_timer(wait).timeout
+	await get_tree().process_frame
+	_check(picker.visible and not home.visible, "Escape held opens the picker")
+	escape.pressed = false
+	get_viewport().push_input(escape)
+	_check(ProfileStore.last_id() == p.id, "the picker keeps the profile remembered")
+
+func _touch(index: int, at: Vector2, pressed: bool) -> InputEventScreenTouch:
+	var event: InputEventScreenTouch = InputEventScreenTouch.new()
+	event.index = index
+	event.position = at
+	event.pressed = pressed
 	return event
 
 ## A chunk is the same color in the caption and on a tile. The spoken chunk grows at full motion and

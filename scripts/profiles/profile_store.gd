@@ -21,3 +21,9 @@ func media_dir(profile_id: String) -> String:
 
 func delete_profile(profile_id: String) -> Error:
 	return repo.delete_profile(profile_id)
+
+func last_id() -> String:
+	return repo.last_id()
+
+func remember(profile_id: String) -> Error:
+	return repo.remember(profile_id)

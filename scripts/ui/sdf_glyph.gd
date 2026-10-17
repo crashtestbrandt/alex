@@ -1,14 +1,14 @@
 extends Control
 class_name SdfGlyph
-## A glyph drawn as a distance field (`shaders/ui/glyph.gdshader`): the view icons, the dots that lead to the
-## adults' screens, the microphone. It fills its control, scales its figure to the control's shorter side, and
-## never takes input (docs/ui.md).
+## A glyph drawn as a distance field (`shaders/ui/glyph.gdshader`): the view icons, the Words modes, the
+## microphone. It fills its control, scales its figure to the control's shorter side, and never takes input
+## (docs/ui.md).
 
 const _SHADER: Shader = preload("res://shaders/ui/glyph.gdshader")
 ## The figure's radius as a fraction of the control's shorter side.
 const RADIUS_FRACTION: float = 0.26
 
-## The shader's `figure` cases, in order. SIDE is drawn by the shader and used by no button.
+## The shader's `figure` cases, in order. SIDE and DOTS are drawn by the shader and used by no button.
 enum Figure {
 	FRONT = 0,
 	SIDE = 1,

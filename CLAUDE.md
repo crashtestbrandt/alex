@@ -118,7 +118,9 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
   in profile data and off the learner's screen. Words is the whole bank, as Palette tiles or as Build, a
   strip filled from chunk beginnings and endings (`ChunkBank`), chunk-first and never word-first.
-- **Adult screens sit behind a `HoldButton`.** A stray tap never leaves the board.
+- **Nothing on the learner's screen leads to the adults' screens.** The caregiver chord does: three fingers,
+  both mouse buttons or Escape, held for three seconds (`CaregiverChord`, docs/ui.md "Caregiver mode").
+- **Launch reopens the profile used last** (`ProfileRepo.last_id`). With none, it opens the picker.
 - **Motion respects the style's `motion` setting.** Every tween multiplies by `Style.motion_scale()` and
   skips at zero.
 - **Touch targets honor `StylePreset.tile_min_size`.** 160 px is the floor. In the room, picking takes the

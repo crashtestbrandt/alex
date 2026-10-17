@@ -1,15 +1,14 @@
 extends Control
 class_name ChildHome
-## The learner's screen: the room or the tiles, a strip of two modes to move between them, and a held button
-## back to the adults' picker. No scores, no timers, no wrong answers (docs/design.md).
+## The learner's screen: the room or the tiles, and a strip of two modes to move between them. Nothing on it
+## leads to the adults' picker; the caregiver chord does ([CaregiverGate]). No scores, no timers, no wrong
+## answers (docs/design.md).
 ##
 ## The strip reads Explore and Words, never a room's or a board's title. Explore is the entry scene's room
 ## (`Profile.explore_room`); room choice inside it waits. Words is the whole bank
 ## (`Profile.words_gestalts`) in two modes on a floating widget: Palette, a column of tiles, and Build, a
 ## strip the learner fills from the bank's chunks ([BuildView]). Holding a spot or a tile opens the
 ## caregiver's recording overlay for that gestalt.
-
-signal profiles_requested
 
 ## The learner's two modes, in strip order.
 enum Mode {
@@ -33,7 +32,6 @@ const WIDGET_MARGIN: float = 10.0
 @onready var _board_spacer: Control = %BoardSpacer
 @onready var _build: BuildView = %Build
 @onready var _words_widget: WordsWidget = %WordsWidget
-@onready var _profiles_button: HoldButton = %ProfilesButton
 @onready var _speaker: Speaker = %Speaker
 @onready var _record_overlay: RecordOverlay = %RecordOverlay
 
@@ -56,7 +54,6 @@ func _ready() -> void:
 		_title.add_theme_stylebox_override(state, name_padding)
 	_name_slot.resized.connect(_layout_name)
 	_title.theme_changed.connect(_layout_name.call_deferred)
-	_profiles_button.held.connect(_on_profiles_held)
 	_title.pressed.connect(_on_name_tapped)
 	_title.held.connect(_on_name_held)
 	_speaker.started.connect(_on_speech_started)
@@ -323,9 +320,11 @@ func _open_recorder(g: Gestalt) -> void:
 	_speaker.stop()
 	_record_overlay.open(g, _profile)
 
-func _on_profiles_held() -> void:
+## Stop speaking and close the recording overlay without keeping its take, before the adults' picker shows.
+func leave() -> void:
 	_speaker.stop()
-	profiles_requested.emit()
+	if _record_overlay.visible:
+		_record_overlay.close()
 
 func _on_style_changed(_preset: StylePreset) -> void:
 	if _profile == null:

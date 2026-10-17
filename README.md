@@ -53,7 +53,11 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
    voice fills in. A recorded part shows a microphone; pick it and hold **Hold to remove this recording** to
    go back to the device's voice.
 3. **Record the name.** Hold the profile name to record it; tap the name to hear it.
-4. **Hand it over.**
+4. **Hand it over.** The app reopens this profile next time.
+
+To come back to the profiles, hold three fingers on the screen for three seconds. With a mouse, hold both
+buttons; with a keyboard, hold Escape. **Caregiver guide** on the profile picker covers the rest
+([GUIDE.md](GUIDE.md)).
 
 ![The recording overlay: the phrase as pills, whole and by chunk, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
 
@@ -132,7 +136,7 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `scripts/speech/` | `Speaker` (the whole take, else chunk takes, else OS text to speech), `Recorder` (the microphone) and `ChunkTakes` (a take per chunk, keyed by text). |
 | `scripts/geometry/` | Objects as recipes and the camera math: `Sdf`, `Mesher`, `Primitive`, `Recipe`, `RecipeBuilder`, `ObjectRecipes`, `Picker`, `CameraFraming`, `RoomSpace`. |
 | `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
-| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `TakePill`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `ChunkRow`, `UiGeometry`. |
+| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `TakePill`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `CaregiverGate`, `ChunkRow`, `UiGeometry`. |
 | `shaders/ui/` | `shape.gdshader` and `glyph.gdshader`, the two fields every control is drawn from. |
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |

@@ -32,8 +32,10 @@ writes no output.
 
 - Every preset includes `starters/*.json`. Starter packs are read with `DirAccess`, so nothing references
   them. The include keeps them in a build whose export mode is not "all resources".
-- Every preset includes `PRIVACY.md`. The profile picker shows it (`PolicyText`), and Google Play's Families
+- Every preset includes `PRIVACY.md`. The profile picker shows it (`PageText`), and Google Play's Families
   policy requires the policy inside the app. `tools/check-exports.sh` checks it is in each build.
+- Every preset includes `GUIDE.md`. The profile picker shows it (`PageText`). `tools/check-exports.sh` checks
+  it is in each build.
 - `Android` and `Google Play` declare `RECORD_AUDIO`, support every screen size, and have no internet
   permission and no cloud backup. Both hold `version/code=1`, which the export stamps over.
 - `Google Play` uses the Gradle build and exports an AAB.
