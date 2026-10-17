@@ -109,7 +109,8 @@ visible frame never leaves the room box's silhouette on the view plane (`room_si
 range always includes rest, so a zoom never jumps the frame. A pinch zooms about the point under the fingers
 (`zoom_about`). Tilt stands at `RoomSpace.tilt_origin`, the room's center at eye height, raised over any
 floor object under it. Its yaw is free, its pitch is clamped (`clamp_tilt`), and its zoom is a field-of-view
-change (`tilt_fov`). The camera is inside the box, so `RoomSpace.wall_hidden` keeps every wall in place, and
+change (`tilt_fov`). Its resting view spans `TILT_DIAGONAL_DEG` corner to corner on any screen shape, and is
+the widest it goes. The camera is inside the box, so `RoomSpace.wall_hidden` keeps every wall in place, and
 a front wall and a ceiling show whenever the camera is inside (`RoomSpace.inside`). Neither casts a shadow. A
 moved view returns to Front after `RoomView.IDLE_RESET_SECONDS` with nothing touched. At motion NONE a view
 change is a cut.

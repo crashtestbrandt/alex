@@ -88,11 +88,26 @@ func test_tilt_is_clamped_in_pitch_and_wraps_in_yaw() -> void:
 	assert_almost_eq(CameraFraming.clamp_tilt(45.0, 10.0).x, 45.0, 0.0001, "inside the range it is itself")
 
 func test_tilt_zoom_narrows_the_view_within_limits() -> void:
-	assert_almost_eq(CameraFraming.tilt_fov(1.0), CameraFraming.FOV_DEG, 0.0001, "zoom 1 is the room's field of view")
-	assert_true(CameraFraming.tilt_fov(2.0) < CameraFraming.tilt_fov(1.0), "zooming in narrows the view")
-	assert_almost_eq(CameraFraming.tilt_fov(100.0), CameraFraming.FOV_DEG / CameraFraming.TILT_ZOOM_MAX, 0.0001, "never narrower than the limit")
-	assert_almost_eq(CameraFraming.tilt_fov(0.01), CameraFraming.FOV_DEG / CameraFraming.TILT_ZOOM_MIN, 0.0001, "never wider than the limit")
-	assert_true(CameraFraming.tilt_fov(CameraFraming.TILT_ZOOM_MIN) < 90.0, "the widest view is still a lens")
+	var a: float = 16.0 / 9.0
+	assert_true(CameraFraming.tilt_fov(2.0, a) < CameraFraming.tilt_fov(1.0, a), "zooming in narrows the view")
+	var rest: float = tan(deg_to_rad(CameraFraming.tilt_fov(1.0, a)) / 2.0)
+	var double: float = tan(deg_to_rad(CameraFraming.tilt_fov(2.0, a)) / 2.0)
+	assert_almost_eq(double, rest / 2.0, 0.0001, "zoom 2 shows half the span")
+	assert_almost_eq(CameraFraming.tilt_fov(100.0, a), CameraFraming.tilt_fov(CameraFraming.TILT_ZOOM_MAX, a), 0.0001, "never narrower than the limit")
+	assert_almost_eq(CameraFraming.tilt_fov(0.01, a), CameraFraming.tilt_fov(1.0, a), 0.0001, "the resting view is the widest")
+
+func test_tilt_rest_keeps_its_diagonal_on_any_screen() -> void:
+	var diagonal: float = tan(deg_to_rad(CameraFraming.TILT_DIAGONAL_DEG) / 2.0)
+	for a: float in [390.0 / 844.0, 3.0 / 4.0, 1.0, 4.0 / 3.0, 844.0 / 390.0]:
+		var v: float = tan(deg_to_rad(CameraFraming.tilt_fov(1.0, a)) / 2.0)
+		assert_almost_eq(Vector2(v * a, v).length(), diagonal, 0.0001, "the corners span the diagonal at %.2f" % a)
+		assert_true(CameraFraming.tilt_fov(1.0, a) < 120.0, "the view is still a lens at %.2f" % a)
+	var portrait: float = CameraFraming.tilt_fov(1.0, 390.0 / 844.0)
+	var landscape: float = CameraFraming.tilt_fov(1.0, 844.0 / 390.0)
+	assert_true(portrait > landscape, "a portrait screen sees taller")
+	var landscape_wide: float = rad_to_deg(2.0 * atan(tan(deg_to_rad(landscape) / 2.0) * 844.0 / 390.0))
+	assert_almost_eq(landscape_wide, portrait, 0.0001, "turning the device swaps the two angles")
+	assert_true(landscape >= CameraFraming.FOV_DEG, "never tighter than the room's lens on a phone")
 
 func test_tilt_camera_turns_in_place_and_stays_upright() -> void:
 	var origin: Vector3 = Vector3(0.0, 1.4, 0.0)
