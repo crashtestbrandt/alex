@@ -110,10 +110,10 @@ export-linux: (_export "--export-release" "Linux" "linux/alex.x86_64")
 exports: export-android export-play export-ios export-macos export-windows export-linux
     tools/check-exports.sh build/{{commit}}
 
-# Tag main's HEAD with project.godot's version and push the tag, which starts the release workflow
-# (docs/releases.md).
-release:
-    tools/release.sh
+# Tag main's HEAD as vX.Y.Z and push the tag, which starts the release workflow (docs/releases.md):
+# `just release 0.1.1`.
+release version:
+    tools/release.sh {{version}}
 
 # Export iOS, build it and run it on the paired iPhone or iPad, with its log here (docs/exports.md "Run on a
 # device"). DEVICE is a name from `xcrun devicectl list devices`, needed only when several are paired.

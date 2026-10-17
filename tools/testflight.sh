@@ -9,6 +9,7 @@
 # - The archive's build number is the commit count. Xcode raises it at upload when App Store Connect already
 #   holds that number for the version, which a squash merge can cause.
 # - --export-only signs the .ipa into <build directory>/ipa/ and uploads nothing.
+# - An upload needs ALEX_VERSION, the X.Y.Z it ships as. Without it the build carries project.godot's 0.0.0.
 # - ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID sign and upload with an App Store Connect API key instead of
 #   the Xcode account. The release workflow runs it that way (docs/releases.md).
 set -euo pipefail
@@ -21,6 +22,10 @@ dir="$1"
 destination="upload"
 if [[ $# -eq 2 ]]; then
 	destination="export"
+fi
+if [[ "$destination" == "upload" && -z "${ALEX_VERSION:-}" ]]; then
+	printf 'testflight: set ALEX_VERSION to the X.Y.Z this upload ships as.\n' >&2
+	exit 2
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

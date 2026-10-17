@@ -17,7 +17,10 @@ each one holds. docs/releases.md covers the release workflow that signs and publ
 Every recipe goes through `tools/export.sh`. It empties the platform directory first and fails when Godot
 writes no output.
 
-- Every preset takes its version from `application/config/version` in `project.godot`.
+- Every preset takes its version from `application/config/version` in `project.godot`, which holds the
+  placeholder `0.0.0`. With `ALEX_VERSION=X.Y.Z` set, `tools/export.sh` stamps that version for the length of
+  the export. A release sets it from the tag (docs/releases.md).
+- `just testflight` uploads only with `ALEX_VERSION` set.
 - Both Android presets take the commit count as their version code. `tools/export.sh` stamps it for the length
   of the export.
 - `Google Play` installs Godot's Gradle build template into `android/`, which git ignores. The first build
