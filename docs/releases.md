@@ -14,6 +14,27 @@ is a gap to close.
 - The workflow passes the tag's version to every export as `ALEX_VERSION`.
 - A version is three numbers, `X.Y.Z`. iOS and Google Play refuse anything else.
 - `just release` refuses a version lower than the latest tag, because iOS and Google Play refuse one too.
+
+## Release candidates
+
+`just release X.Y.Z-rc.N` tags a release candidate, for testers only:
+
+| Where | A candidate | A final `vX.Y.Z` |
+| --- | --- | --- |
+| GitHub | A pre-release, never "Latest", with every download named `alex-X.Y.Z-rc.N-…` | The release, marked "Latest" |
+| TestFlight | The build, as `X.Y.Z` | The build |
+| App Store | Nothing | Listing and App Review |
+| Google Play | Nothing | Every track, listing, production |
+
+- A candidate builds as `X.Y.Z`, because iOS and Google Play take only digits. The rc number is in the tag,
+  the GitHub release and the file names.
+- A candidate stays off Google Play. A final tag on the same commit has the same version code, and Play
+  refuses one twice.
+- A final tag on a candidate's commit submits the candidate's TestFlight build to App Review, the build testers
+  had. Its own upload gets a higher build number, and it goes unused.
+- Versions order as `0.1.1` < `0.1.2-rc.1` < `0.1.2-rc.2` < `0.1.2`. A candidate after its own final is refused.
+- Issue #49 tracks the rest: a final tag that moves the candidate's build to Play production instead of
+  building again, and a rule that a final tag needs a candidate.
 - The build number is the commit count on `main`. iOS and Android both use it.
 - The release notes are the merged PR titles since the previous tag.
 - Running the workflow by hand (Actions > release > Run workflow) builds, signs and checks every platform as

@@ -220,24 +220,27 @@ cmd_screenshots() {
 	done
 }
 
-# wait_for_build <app id> <version> <build number>: the build's id once Apple has processed it. Processing
-# takes 10 to 30 minutes after an upload; this polls each minute for up to 90.
+# wait_for_build <app id> <version> <build number>: the id of the lowest processed build of the version numbered
+# at least <build number>. A release candidate on the same commit uploaded that number first, so a final tag
+# takes the candidate's build, the one testers had, and Xcode numbers the final's own upload higher.
+# Processing takes 10 to 30 minutes after an upload; this polls each minute for up to 90.
 wait_for_build() {
-	local id="$1" version="$2" number="$3" i bid state
+	local id="$1" version="$2" number="$3" i builds bid state
 	for ((i = 0; i < 90; i++)); do
-		read -r bid state < <(api GET "/v1/builds?filter%5Bapp%5D=$id&filter%5BpreReleaseVersion.version%5D=$version&filter%5Bversion%5D=$number&limit=1" \
-			| jq -r '.data[0] | "\(.id // "") \(.attributes.processingState // "")"')
-		case "${state:-}" in
-			VALID)
-				printf '%s' "$bid"
-				return 0
-				;;
-			FAILED | INVALID)
-				printf 'app-store: build %s of %s is %s\n' "$number" "$version" "$state" >&2
-				return 1
-				;;
-		esac
-		printf 'app-store: waiting for build %s of %s (%s)\n' "$number" "$version" "${state:-not listed yet}" >&2
+		builds="$(api GET "/v1/builds?filter%5Bapp%5D=$id&filter%5BpreReleaseVersion.version%5D=$version&limit=50" \
+			| jq -c --argjson n "$number" '[.data[] | select((.attributes.version | tonumber) >= $n)
+				| {id, number: (.attributes.version | tonumber), state: .attributes.processingState}] | sort_by(.number)')"
+		bid="$(jq -r '[.[] | select(.state == "VALID")] | first | .id // empty' <<< "$builds")"
+		if [[ -n "$bid" ]]; then
+			printf '%s' "$bid"
+			return 0
+		fi
+		state="$(jq -r 'if length == 0 then "not listed yet" else map("\(.number) \(.state)") | join(", ") end' <<< "$builds")"
+		if jq -e 'length > 0 and all(.state == "FAILED" or .state == "INVALID")' <<< "$builds" > /dev/null; then
+			printf 'app-store: no usable build of %s from %s on: %s\n' "$version" "$number" "$state" >&2
+			return 1
+		fi
+		printf 'app-store: waiting for build %s of %s (%s)\n' "$number" "$version" "$state" >&2
 		sleep 60
 	done
 	printf 'app-store: build %s of %s was not processed within 90 minutes\n' "$number" "$version" >&2

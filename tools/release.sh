@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
-# Tag main with a version and push the tag: tools/release.sh X.Y.Z.
+# Tag main with a version and push the tag: tools/release.sh X.Y.Z, or X.Y.Z-rc.N for a release candidate.
 #
-# `just release X.Y.Z` runs this (docs/releases.md). The pushed tag starts .github/workflows/release.yml,
-# which builds every platform with that version. project.godot keeps a placeholder; the tag is the version.
+# `just release` runs this (docs/releases.md). The pushed tag starts .github/workflows/release.yml, which
+# builds every platform with that version. project.godot keeps a placeholder; the tag is the version. A release
+# candidate goes to testers only.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-	printf 'usage: tools/release.sh X.Y.Z\n' >&2
+	printf 'usage: tools/release.sh X.Y.Z | X.Y.Z-rc.N\n' >&2
 	exit 2
 fi
 version="$1"
-if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-	printf 'release: the version is "%s". It must be X.Y.Z.\n' "$version" >&2
+if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+	printf 'release: the version is "%s". It must be X.Y.Z or X.Y.Z-rc.N.\n' "$version" >&2
 	exit 2
 fi
 tag="v$version"
+
+# order_key <version>: a key sort -V orders correctly. X.Y.Z-rc.N comes after X.Y.(Z-1) and before X.Y.Z.
+order_key() {
+	if [[ "$1" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-rc\.([0-9]+)$ ]]; then
+		printf '%s.0.%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+	else
+		printf '%s.1.0' "$1"
+	fi
+}
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -36,10 +46,20 @@ if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
 	printf 'release: %s already exists.\n' "$tag" >&2
 	exit 1
 fi
-# iOS and Google Play refuse a version lower than one they already hold.
-latest="$(git tag --list 'v*' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
-if [[ -n "$latest" && "$(printf '%s\n%s\n' "$latest" "$version" | sort -V | tail -1)" != "$version" ]]; then
-	printf 'release: %s is lower than the latest release, %s.\n' "$version" "$latest" >&2
+# iOS and Google Play refuse a version lower than one they already hold. A candidate after its own final is
+# refused too, because TestFlight closes a version once the App Store releases it.
+latest=""
+latest_key=""
+while IFS= read -r existing; do
+	key="$(order_key "$existing")"
+	if [[ -z "$latest_key" || "$(printf '%s\n%s\n' "$latest_key" "$key" | sort -V | tail -1)" == "$key" ]]; then
+		latest="$existing"
+		latest_key="$key"
+	fi
+done < <(git tag --list 'v*' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$' || true)
+key="$(order_key "$version")"
+if [[ -n "$latest" && "$(printf '%s\n%s\n' "$latest_key" "$key" | sort -V | tail -1)" != "$key" ]]; then
+	printf 'release: %s comes before the latest release, %s.\n' "$version" "$latest" >&2
 	exit 1
 fi
 
