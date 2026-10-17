@@ -71,12 +71,7 @@ func _gui_input(event: InputEvent) -> void:
 			_travel = 0.0
 			_stop_spring()
 			_pull = Overscroll.unband(_shown, size.y)
-		else:
-			_touching = false
-			# Only a release that ends a drag hands the content to the native inertia.
-			if _travel >= _deadzone():
-				_since_drag = 0.0
-			_return()
+		# A release is handled in _input, which sees it wherever it lands.
 		return
 	var motion: InputEventMouseMotion = event as InputEventMouseMotion
 	if motion == null or not _touching or (motion.button_mask & MOUSE_BUTTON_MASK_LEFT) == 0:
@@ -91,6 +86,33 @@ func _gui_input(event: InputEvent) -> void:
 	_pull = next
 	_show(Overscroll.band(_pull, size.y))
 	accept_event()
+
+## A release can land on a child that took the press, or outside the window, and never reach _gui_input. _input
+## sees every event first, so a press this scroll took always ends here.
+func _input(event: InputEvent) -> void:
+	var button: InputEventMouseButton = event as InputEventMouseButton
+	if _touching and button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
+		_end_touch()
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			if _touching:
+				_end_touch()
+		NOTIFICATION_VISIBILITY_CHANGED:
+			# Hidden mid-pull or mid-spring, the content goes back to rest at once.
+			if not is_visible_in_tree():
+				_touching = false
+				_pull = 0.0
+				_stop_spring()
+				_show(0.0)
+
+func _end_touch() -> void:
+	_touching = false
+	# Only a release that ends a drag hands the content to the native inertia.
+	if _travel >= _deadzone():
+		_since_drag = 0.0
+	_return()
 
 ## The travel before a press becomes a drag: the container's own deadzone, or the project's when it has none.
 func _deadzone() -> float:
