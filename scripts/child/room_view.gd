@@ -623,7 +623,7 @@ func _apply_orbit_camera() -> void:
 ## Tilt: the camera stands at the room's center and turns in place. It looks through the whole viewport, since
 ## the learner can turn to anything the floating controls cover.
 func _apply_tilt_camera() -> void:
-	_fov = CameraFraming.tilt_fov(_tilt_zoom)
+	_fov = CameraFraming.tilt_fov(_tilt_zoom, size.x / maxf(size.y, 1.0))
 	_camera.fov = _fov
 	_camera.transform = CameraFraming.tilt_transform(_tilt_origin, _yaw, _pitch)
 	_camera.h_offset = 0.0

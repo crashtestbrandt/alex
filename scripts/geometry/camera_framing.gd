@@ -27,9 +27,11 @@ const ZOOM_MAX: float = 3.0
 ## Tilt's pitch, in degrees, positive up. Yaw is free.
 const TILT_PITCH_MIN_DEG: float = -40.0
 const TILT_PITCH_MAX_DEG: float = 30.0
-## Tilt's zoom: 1 is `FOV_DEG`, under 1 is wider, over 1 is narrower.
-const TILT_ZOOM_MIN: float = 0.75
-const TILT_ZOOM_MAX: float = 2.0
+## Tilt's resting view spans this angle corner to corner, on any screen shape (`tilt_fov`).
+const TILT_DIAGONAL_DEG: float = 110.0
+## Tilt's zoom: 1 is the resting view and the widest, 3 magnifies it threefold.
+const TILT_ZOOM_MIN: float = 1.0
+const TILT_ZOOM_MAX: float = 3.0
 
 ## Azimuth and elevation in degrees for an orbit view. Azimuth 0 faces the back wall from the open front and
 ## the top view sits at the elevation limit. Tilt is not on the orbit and takes the front's angles here.
@@ -127,9 +129,14 @@ static func clamp_tilt(yaw_deg: float, pitch_deg: float) -> Vector2:
 static func clamp_tilt_zoom(zoom: float) -> float:
 	return clampf(zoom, TILT_ZOOM_MIN, TILT_ZOOM_MAX)
 
-## Tilt's vertical field of view at `zoom`, in degrees.
-static func tilt_fov(zoom: float) -> float:
-	return FOV_DEG / clamp_tilt_zoom(zoom)
+## Tilt's vertical field of view, in degrees, on a viewport of `aspect` (width over height) at `zoom`. The
+## resting view keeps its diagonal, so a portrait screen sees taller and a landscape one wider, and turning
+## the device swaps the two angles. Zoom divides the view's half-tangent, so 2 shows half the width.
+static func tilt_fov(zoom: float, aspect: float) -> float:
+	var a: float = maxf(aspect, 0.1)
+	var half_diagonal: float = tan(deg_to_rad(TILT_DIAGONAL_DEG) / 2.0)
+	var half_vertical: float = half_diagonal / sqrt(1.0 + a * a) / clamp_tilt_zoom(zoom)
+	return rad_to_deg(2.0 * atan(half_vertical))
 
 ## The direction a Tilt camera looks: yaw 0 faces the back wall, positive yaw turns right, positive pitch
 ## looks up.
