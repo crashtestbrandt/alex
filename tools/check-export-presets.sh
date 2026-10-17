@@ -82,12 +82,16 @@ for name in "${PRESETS[@]}"; do
 	fi
 done
 
-# Starter packs are read with DirAccess, so nothing references them. The include keeps them in a build whose
-# export mode is not "all resources".
+# Starter packs and PRIVACY.md are read as files, so nothing references them. The include keeps them in a
+# build whose export mode is not "all resources". The profile picker shows PRIVACY.md (PolicyText).
 while IFS= read -r name; do
 	filter="$(get "$name" include_filter || true)"
-	if ! printf '%s' "$filter" | tr ',' '\n' | sed 's/^ *//; s/ *$//' | grep -qx 'starters/\*\.json'; then
+	entries="$(printf '%s' "$filter" | tr ',' '\n' | sed 's/^ *//; s/ *$//')"
+	if ! grep -qx 'starters/\*\.json' <<< "$entries"; then
 		fail "\"$name\" has no starters/*.json in include_filter."
+	fi
+	if ! grep -qx 'PRIVACY\.md' <<< "$entries"; then
+		fail "\"$name\" has no PRIVACY.md in include_filter."
 	fi
 done < <(printf '%s\n' "$FLAT" | awk -F '\t' '$2 == "name" { print $3 }')
 
