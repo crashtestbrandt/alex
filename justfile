@@ -79,6 +79,11 @@ mic-probe:
 screenshot:
     "{{godot}}" --path . tools/instr/screenshot_probe.tscn
 
+# Google Play graphics under store/play/: the icon, the feature graphic and five 1920x1080 screenshots
+# (tools/instr/store_probe.gd). Windowed, on a screen of at least 1920x1080 pixels. Re-run when the screens change.
+store-graphics:
+    "{{godot}}" --path . tools/instr/store_probe.tscn
+
 # The export presets keep the rules docs/exports.md lists: starter packs, the microphone, no signing secret.
 export-presets-check:
     tools/check-export-presets.sh
