@@ -37,6 +37,9 @@ signing key. A device can move between the two without losing its recordings.
   data from apps it protects. Play applies the setting when it processes a bundle, so it stays off for every upload.
 - Version codes 1 to 3 were uploaded by hand. A CI upload uses the commit count on `main`, which is higher.
 - Production needs a closed test with 12 testers opted in for 14 days in a row, because the account is personal.
+- The listing text is `store/play/listing.txt`. `just store-graphics` renders its icon, feature graphic and
+  five 1920x1080 screenshots into `store/play/`. Play takes the same 16:9 set for phones, 7-inch and 10-inch
+  tablets, and Chromebooks. Upload them by hand after a change.
 
 ## Jobs
 
