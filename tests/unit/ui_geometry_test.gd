@@ -1,5 +1,5 @@
 extends UnitTest
-## [UiGeometry]: concentric corners, pills, and the cap on a rounded radius.
+## [UiGeometry]: concentric corners, pills, the cap on a rounded radius, and the scroll drag distance.
 
 func test_concentric_subtracts_the_padding() -> void:
 	assert_almost_eq(UiGeometry.concentric(40.0, 8.0), 32.0, 0.0001, "outer minus padding")
@@ -29,3 +29,8 @@ func test_columns_fit_without_shrinking_touch_targets() -> void:
 			assert_true(columns == 1 or columns * maxf(floor_px, 280.0) + (columns - 1) * 16 <= width, "columns fit the width")
 	assert_eq(UiGeometry.grid_columns(1200, 1, 160), 1, "one tile uses one column")
 	assert_eq(UiGeometry.grid_columns(600, 0, 160), 1, "empty grid remains valid")
+
+func test_a_scroll_waits_for_the_drag_distance() -> void:
+	# A deadzone of 0 lets a resting finger's jitter start a scroll, which cancels a hold (#39).
+	var deadzone: int = ProjectSettings.get_setting("gui/common/default_scroll_deadzone", 0)
+	assert_eq(deadzone, int(RoomView.DRAG_PX), "scroll containers and the room share one drag distance")
