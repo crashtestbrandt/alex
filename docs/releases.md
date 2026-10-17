@@ -57,8 +57,7 @@ Every signing secret lives in the `release` environment. Only `main` and `v*` ta
 
 | Secret | What |
 | --- | --- |
-| `ANDROID_RELEASE_KEYSTORE_BASE64` | The release keystore, base64. |
-| `ANDROID_RELEASE_KEYSTORE_USER` | Its key alias, `alex`. |
+| `ANDROID_RELEASE_KEYSTORE_BASE64` | The release keystore, base64. Its key alias, `alex`, is written in `release.yml`. |
 | `ANDROID_RELEASE_KEYSTORE_PASSWORD` | Its password. The keystore and the key share it. |
 | `ASC_KEY_P8` | The App Store Connect API key, Admin role, the `.p8` file's contents. |
 | `ASC_KEY_ID` | The API key's ID. |

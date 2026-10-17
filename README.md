@@ -209,6 +209,10 @@ how much weight to give the stage model should read both sides.
     *American Journal of Speech-Language Pathology*, 24(4), 750–762.
     [doi:10.1044/2015_AJSLP-14-0166](https://doi.org/10.1044/2015_AJSLP-14-0166). A survey of the disagreements.
 
+## Privacy
+
+Alex collects no personal data, and nothing leaves the device. See [PRIVACY.md](PRIVACY.md).
+
 ## License
 
 **MIT OR Apache-2.0**, at your option. See [LICENSE](LICENSE). Contributions are dual-licensed the same way.

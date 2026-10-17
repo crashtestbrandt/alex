@@ -149,7 +149,8 @@ jobs:
 
       - name: Export
         env:
-          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ secrets.ANDROID_RELEASE_KEYSTORE_USER }}
+          # The key alias is public. As a secret, GitHub masked every "alex" in the logs.
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: alex
           GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
         run: |
           tools/export.sh --export-release Android build/release/android/alex.apk
