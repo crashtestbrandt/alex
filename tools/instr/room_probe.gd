@@ -83,8 +83,11 @@ func _run() -> void:
 		_check(room_view.recording_gestalt_for(door.spot).id == "lets_go_outside", "hold records the phrase heard before the door opened")
 		home._on_spot_held(door.spot, room_view.recording_gestalt_for(door.spot))
 		var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
-		_check((overlay.get_node("%Phrase") as Label).text == "Let's go outside", "recording prompt matches the spoken caption")
-		_check(overlay._gestalt.id == "lets_go_outside", "Keep targets the displayed phrase")
+		var pills: Array[TakePill] = overlay.pills()
+		_check(pills.size() == 3 and pills[0].text == "Let's go outside", "the whole pill reads the spoken caption (%d pills)" % pills.size())
+		_check(pills[1].text == "Let's go" and pills[2].text == "outside", "one pill per chunk after the whole")
+		_check(overlay.selected_pill() == pills[0] and pills[0].whole, "the whole is picked on open")
+		_check(overlay.gestalt().id == "lets_go_outside", "Keep targets the displayed phrase")
 		overlay.close()
 	var tub: SpotBody = room_view.body("tub")
 	if tub != null:
@@ -221,6 +224,7 @@ func _run() -> void:
 	_check(home.mode_button(ChildHome.Mode.EXPLORE).button_pressed, "Explore is the pressed pill again")
 	await _check_chunks(home, room_view)
 	await _check_build(home, p)
+	await _check_takes(home)
 	home.show_words()
 	await get_tree().process_frame
 
@@ -331,17 +335,13 @@ func _check_build(home: ChildHome, p: Profile) -> void:
 	await get_tree().process_frame
 	_check(build.chunks() == PackedStringArray(["Let's go", "outside"]), "a tapped ending follows it")
 	_check(build.strip_row().pills().size() == 2, "the strip shows both pills")
-	build._on_strip_down()
-	build._press_point = Vector2(-100.0, -100.0)
-	build._on_strip_pressed()
+	_tap_strip(build, Vector2(-100.0, -100.0))
 	await get_tree().process_frame
 	_check(heard.size() == 3 and heard[2].id == "lets_go_outside", "a tap on the strip says the bank's own phrase")
-	build._press_point = build.strip_row().pills()[0].get_rect().get_center()
-	build._on_strip_pressed()
+	_tap_strip(build, build.strip_row().pills()[0].get_rect().get_center())
 	await get_tree().process_frame
 	_check(build.chunks() == PackedStringArray(["outside"]), "a tap on a strip pill takes it off")
-	build._press_point = Vector2(-100.0, -100.0)
-	build._on_strip_pressed()
+	_tap_strip(build, Vector2(-100.0, -100.0))
 	await get_tree().process_frame
 	_check(heard.size() == 4 and heard[3].id == ChunkBank.BUILD_ID and heard[3].text == "outside", "a strip the bank does not hold is said as itself")
 	home.show_explore()
@@ -353,6 +353,119 @@ func _check_build(home: ChildHome, p: Profile) -> void:
 	build.clear()
 	speaker.stop()
 	await get_tree().create_timer(0.2).timeout
+
+## Takes: a whole take and a chunk take recorded through the overlay from a held object, the chunk landing
+## under media/chunks/ with the whole-phrase take untouched; the same from a Build chunk; a chunk take voicing
+## the strip; a held strip opening on the bank's phrase or on its chunks; and a held remove clearing a take.
+func _check_takes(home: ChildHome) -> void:
+	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
+	var speaker: Speaker = home.get_node("%Speaker") as Speaker
+	var prof: Profile = home._profile
+	var media: String = ProfileStore.media_dir(prof.id)
+	var take: AudioStreamWAV = AudioStreamWAV.new()
+	take.format = AudioStreamWAV.FORMAT_16_BITS
+	take.mix_rate = 16000
+	var data: PackedByteArray = PackedByteArray()
+	data.resize(16000)
+	take.data = data
+	home.show_explore()
+	await get_tree().process_frame
+
+	# The whole first, as a caregiver does today.
+	var g: Gestalt = prof.gestalt("lets_go_outside")
+	home._open_recorder(g)
+	_check(overlay.visible and overlay.selected_pill() != null and overlay.selected_pill().whole, "the whole is picked on open")
+	overlay._take = take
+	overlay._on_keep()
+	_check(overlay.visible, "Keep leaves the overlay open on the phrase")
+	_check(g.recording == "lets_go_outside.wav" and FileAccess.file_exists(media.path_join(g.recording)), "the whole take is saved where it was")
+	_check(overlay.pills()[0].recorded and overlay._remove_button.visible, "the whole pill is marked and offers removal")
+
+	# Then one chunk, with the whole left alone.
+	var outside_pill: TakePill = overlay.pills()[2]
+	outside_pill.pressed.emit()
+	_check(overlay.selected_pill() == outside_pill and not outside_pill.recorded and not overlay._remove_button.visible, "a tap picks the chunk")
+	overlay._take = take
+	overlay._on_keep()
+	var relative: String = ChunkTakes.relative_path("outside")
+	_check(ChunkTakes.take_for("outside", prof.chunk_takes) == relative, "the chunk take is in the profile by key")
+	_check(FileAccess.file_exists(media.path_join(relative)), "the chunk take lands under media/chunks/")
+	_check(g.recording == "lets_go_outside.wav" and FileAccess.file_exists(media.path_join(g.recording)), "the whole-phrase take is untouched")
+	_check(outside_pill.recorded and overlay._remove_button.visible, "the chunk pill is marked and offers removal")
+	var saved: Profile = ProfileStore.load_profile(prof.id)
+	_check(ChunkTakes.take_for("outside", saved.chunk_takes) == relative, "the chunk take survives a reload")
+	overlay.close()
+
+	# The same from a Build chunk.
+	home.show_build()
+	await get_tree().process_frame
+	var build: BuildView = home.build_view()
+	var go: ChunkButton = null
+	var outside: ChunkButton = null
+	for button: ChunkButton in build.beginning_buttons():
+		if button.chunk == "Let's go":
+			go = button
+	for button: ChunkButton in build.ending_buttons():
+		if button.chunk == "outside":
+			outside = button
+	if go == null or outside == null:
+		_check(false, "the door's chunks are on offer in Build")
+		return
+	go.held.emit()
+	var pills: Array[TakePill] = overlay.pills()
+	_check(overlay.visible and pills.size() == 1 and not pills[0].whole and pills[0].text == "Let's go", "a held chunk opens on that chunk alone")
+	overlay._take = take
+	overlay._on_keep()
+	_check(FileAccess.file_exists(media.path_join(ChunkTakes.relative_path("Let's go"))), "a chunk take from Build lands under media/chunks/")
+	overlay.close()
+
+	# A chunk landing on the strip plays its take; a phrase with one chunk take plays it, then the OS voice.
+	go.pressed.emit()
+	await get_tree().process_frame
+	_check(build.chunks() == PackedStringArray(["Let's go"]) and speaker._player.playing and speaker._player.stream is AudioStreamWAV, "a chunk on the strip plays its take")
+	speaker.stop()
+	speaker.say(prof.gestalt("lets_go_in_the_car"), media, prof.chunk_takes)
+	_check(speaker._player.playing and speaker._queue.size() == 1 and speaker._queue[0] == null, "a phrase with one chunk take plays it, then the rest by the OS voice")
+	speaker.stop()
+
+	# A held strip opens on the bank's phrase when it is one, and on its chunks otherwise.
+	outside.pressed.emit()
+	await get_tree().process_frame
+	build._on_strip_held()
+	_check(overlay.visible and overlay.gestalt().id == "lets_go_outside" and overlay.pills().size() == 3, "a held strip that is a bank phrase opens on that phrase")
+	overlay.close()
+	build.clear()
+	outside.pressed.emit()
+	go.pressed.emit()
+	await get_tree().process_frame
+	build._on_strip_held()
+	_check(overlay.visible and overlay.gestalt().id == ChunkBank.BUILD_ID and overlay.pills().size() == 2 and not overlay.pills()[0].whole, "a held strip the bank does not hold opens on its chunks")
+	overlay.close()
+	build.clear()
+	speaker.stop()
+
+	# A held remove clears the whole take, then a chunk take, and the removal is saved.
+	home._open_recorder(g)
+	_check(overlay._remove_button.visible, "a recorded pill offers removal")
+	overlay._remove_button.held.emit()
+	_check(g.recording.is_empty() and not FileAccess.file_exists(media.path_join("lets_go_outside.wav")), "a held remove clears the whole take")
+	_check(not overlay._remove_button.visible and not overlay.pills()[0].recorded, "and the pill is unmarked")
+	saved = ProfileStore.load_profile(prof.id)
+	_check(saved.gestalt("lets_go_outside").recording.is_empty(), "the removal is saved")
+	overlay.pills()[2].pressed.emit()
+	overlay._remove_button.held.emit()
+	_check(not prof.chunk_takes.has("outside") and not FileAccess.file_exists(media.path_join(relative)), "a held remove clears a chunk take")
+	overlay.close()
+	home.show_explore()
+	await get_tree().create_timer(0.2).timeout
+
+## A short press on the strip at `at` in the strip row's coordinates: down, up, then the tap, as a finger
+## does, so the strip's hold never counts the press as consumed.
+func _tap_strip(build: BuildView, at: Vector2) -> void:
+	build._strip.button_down.emit()
+	build._strip.button_up.emit()
+	build._press_point = at
+	build._on_strip_pressed()
 
 ## The strip reads Explore then Words, whatever the room and the board are called.
 func _check_strip(home: ChildHome, p: Profile) -> void:

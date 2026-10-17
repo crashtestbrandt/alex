@@ -7,7 +7,9 @@ The configurability model. Nothing about one child is in code; it is all here.
 ```
 user://profiles/<id>/
   profile.json     the Profile dictionary (Profile.to_dict)
-  media/           recordings, named by Gestalt.recording
+  media/           whole-phrase recordings, named by Gestalt.recording
+  media/chunks/    one take per chunk, named by Profile.chunk_takes
+  media/name/      the name recording
 ```
 
 `user://` is the app's data directory on the device. A family's recordings never leave it, and never enter
@@ -15,7 +17,7 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1, 2 and 3 forward before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 4 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
@@ -27,6 +29,7 @@ this repository.
 | `gestalts` | The bank. See below. |
 | `rooms` | Explorable screens of spots. The first is the learner's Explore. See below. |
 | `boards` | Lists of gestalt ids. Together they are the learner's Words tiles (docs/ui.md "The mode strip"). |
+| `chunk_takes` | A take per chunk, keyed by the chunk's text (`ChunkTakes.key`), as a path under `media/chunks/`. Added in schema 5. |
 
 A gestalt row:
 
@@ -37,7 +40,7 @@ A gestalt row:
 | `source` | Free text: a show, a song, a person. |
 | `function` | `request`, `protest`, `comment`, `regulation`, `greeting`, `routine`, or `unknown`. |
 | `stage` | The stage the gestalt models, 0 for unstaged. |
-| `recording` | A file under `media/`, or empty. `wav`, `ogg` or `mp3`. |
+| `recording` | The whole-phrase take, a file under `media/`, or empty. `wav`, `ogg` or `mp3`. |
 
 A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front
 and Top, with a pan and a zoom; the default) or `tilt` (adds Tilt, a look around from the room's center).
@@ -142,13 +145,35 @@ file to keep in step. `calm`, `bold` and `quiet` ship; a fourth is a new `.tres`
 
 ## Recordings
 
-Hold any spot or tile for two seconds to open the recording overlay for its gestalt. Hold the big button,
-say the phrase, let go, hear it back, press Keep. `Recorder.save` writes `media/<gestalt id>.wav`, keeps the
-previous take as `media/<gestalt id>.prev.wav`, and sets `Gestalt.recording`; the profile is saved. Nothing
-is written before Keep, and the overlay closes itself after twenty idle seconds.
+Hold any spot, tile, Build chunk or the Build strip for two seconds to open the recording overlay. The
+overlay shows the phrase as its pills: one for the whole phrase, and one per chunk when there is more than
+one. A tap on a pill picks what the big button records. The whole is picked on open. Hold the big button,
+say it, let go, hear it back, press Keep. Keep saves the picked pill and leaves the overlay open on the
+phrase. Back closes it. Nothing is written before Keep, and the overlay closes itself after twenty idle
+seconds.
 
-Until a recording exists, `Speaker` voices the gestalt with the OS text-to-speech voice for the device's
-language.
+| Hold on | Opens the recorder on |
+| --- | --- |
+| An object in Explore | The phrase the object said last. |
+| A tile in Palette | That tile's phrase. |
+| A chunk in Build | That one chunk, with no other pills. |
+| The strip in Build | The strip's chunks. A strip that is a bank phrase opens on that phrase. |
+
+- A whole-phrase take is `media/<gestalt id>.wav` (`Recorder.save`), with the previous take beside it as
+  `<gestalt id>.prev.wav`. `Gestalt.recording` names it.
+- A chunk take is `media/chunks/<key letters>-<key hash>.wav` (`ChunkTakes.save`), with the previous take
+  beside it. `Profile.chunk_takes` maps the chunk's key to it. The key is the chunk's text, lowercased and
+  trimmed, the same key as its color, so one take serves every phrase the chunk appears in and every strip
+  Build assembles.
+- A pill with a take carries a microphone mark. Picking it shows **Hold to remove this recording**. The
+  hold removes the take and its previous take, and the OS voice says that part again.
+- `Speaker` plays the whole-phrase take when one exists. Otherwise it plays each chunk's take in order with
+  a short gap, and the OS voice for a chunk with no take. A phrase with no take at all is said whole by the
+  OS voice for the device's language.
+- Build plays a chunk's take as it lands on the strip, and the whole-phrase take when the strip is a bank
+  phrase.
+- A pack carries no takes. Version 3 profiles migrate with an empty take map and their whole-phrase
+  recordings kept.
 
 The microphone needs `audio/driver/enable_input` (on in `project.godot`). The Android, iOS and macOS presets
 declare it, and iOS records under the Play and Record audio session (docs/exports.md). macOS asks the first

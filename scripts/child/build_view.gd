@@ -4,15 +4,18 @@ class_name BuildView
 ## left column and endings in the right, each a [ChunkButton] in its chunk's color (ChunkBank). A tap on a
 ## chunk lands it on the strip, a tap on the strip says the whole, and a tap on a chunk in the strip takes it
 ## off. The strip keeps what the learner built until they change it. Nothing is scored, nothing is timed,
-## and there is no send button. The home owns the speaking.
+## and there is no send button. The home owns the speaking. A hold on a chunk or on the strip reports itself
+## for the caregiver's recording flow; a hold is never a tap.
 
 signal chunk_added(chunk: String, index: int)
 signal strip_tapped(chunks: PackedStringArray)
+signal chunk_held(chunk: String)
+signal strip_held(chunks: PackedStringArray)
 
 const FONT_BASE: int = 28
 const MARGIN_PX: float = 20.0
 
-@onready var _strip: SdfButton = %Strip
+@onready var _strip: HoldButton = %Strip
 @onready var _row: ChunkRow = %StripChunks
 @onready var _beginnings: VBoxContainer = %Beginnings
 @onready var _endings: VBoxContainer = %Endings
@@ -25,6 +28,7 @@ var _press_point: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	_strip.button_down.connect(_on_strip_down)
 	_strip.pressed.connect(_on_strip_pressed)
+	_strip.held.connect(_on_strip_held)
 	_strip.resized.connect(_layout_strip)
 	_row.minimum_size_changed.connect(_layout_strip)
 	Style.changed.connect(_on_style_changed)
@@ -85,7 +89,8 @@ func _fill(column: VBoxContainer, chunk_list: PackedStringArray, spacer: Control
 		var button: ChunkButton = ChunkButton.new()
 		button.chunk = chunk
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(add_chunk.bind(chunk))
+		button.pressed.connect(_on_chunk_pressed.bind(button))
+		button.held.connect(_on_chunk_held.bind(chunk))
 		column.add_child(button)
 	column.move_child(spacer, -1)
 
@@ -114,8 +119,24 @@ func _layout_strip() -> void:
 func _on_strip_down() -> void:
 	_press_point = _row.get_local_mouse_position()
 
-## A tap on a chunk takes it off the strip; a tap anywhere else on the strip says the whole.
+## A tap on a chunk lands it on the strip. A hold is not a tap.
+func _on_chunk_pressed(button: ChunkButton) -> void:
+	if not button.consumed_by_hold():
+		add_chunk(button.chunk)
+
+func _on_chunk_held(chunk: String) -> void:
+	chunk_held.emit(chunk)
+
+## A hold on a strip with something on it reports its chunks.
+func _on_strip_held() -> void:
+	if not _chunks.is_empty():
+		strip_held.emit(chunks())
+
+## A tap on a chunk takes it off the strip; a tap anywhere else on the strip says the whole. A hold is not
+## a tap.
 func _on_strip_pressed() -> void:
+	if _strip.consumed_by_hold():
+		return
 	var index: int = _row.pill_at(_press_point)
 	if index >= 0:
 		remove_chunk(index)

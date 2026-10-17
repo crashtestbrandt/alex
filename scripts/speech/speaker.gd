@@ -1,7 +1,8 @@
 extends Node
 class_name Speaker
-## Voices a gestalt. A recording from the profile's media directory when there is one, the OS text-to-speech
-## voice when there is not. Recordings are the point of the app (docs/design.md); the synthetic voice is a
+## Voices a gestalt. The whole-phrase recording from the profile's media directory when there is one, else
+## each chunk's take in order with a short gap between them, and the OS text-to-speech voice for a chunk with
+## no take (`ChunkTakes.plan`). Recordings are the point of the app (docs/design.md); the synthetic voice is a
 ## placeholder so a freshly seeded profile still speaks.
 ##
 ## `started` carries the expected length in seconds so a tile or room can pace the chunks; `finished`
@@ -13,36 +14,45 @@ signal finished(gestalt: Gestalt)
 var _player: AudioStreamPlayer = AudioStreamPlayer.new()
 var _current: Gestalt = null
 var _tts_voice: String = ""
+## What is left to play of the current utterance, in order, each a stream or empty for the OS voice.
+var _queue: Array[AudioStream] = []
+var _queue_text: PackedStringArray = PackedStringArray()
+## Bumped by every `say` and `stop`, so a gap timer from an earlier utterance plays nothing.
+var _serial: int = 0
 
 func _ready() -> void:
 	add_child(_player)
 	_player.finished.connect(_on_player_finished)
 	_tts_voice = _pick_tts_voice()
 
-## Say `g`, stopping anything already playing. `media_dir` is the profile's recording directory.
-func say(g: Gestalt, media_dir: String) -> void:
+## Say `g`, stopping anything already playing. `media_dir` is the profile's recording directory and
+## `chunk_takes` its per-chunk takes (`Profile.chunk_takes`).
+func say(g: Gestalt, media_dir: String, chunk_takes: Dictionary[String, String] = {}) -> void:
 	stop()
 	_current = g
-	if not g.recording.is_empty():
-		var stream: AudioStream = _load_recording("%s/%s" % [media_dir, g.recording])
+	var estimate: float = 0.0
+	var segments: Array[ChunkTakes.Segment] = ChunkTakes.plan(g, chunk_takes)
+	for segment: ChunkTakes.Segment in segments:
+		var stream: AudioStream = null
+		if segment.is_recorded():
+			stream = _load_recording("%s/%s" % [media_dir, segment.path])
 		if stream != null:
-			_player.stream = stream
-			started.emit(g, stream.get_length())
-			_player.play()
-			return
-	# A rough synthetic length: about 0.6 s per chunk reads naturally for an OS voice.
-	var estimate: float = 0.6 * g.chunks.size()
-	if _tts_voice.is_empty():
-		# Nothing to play and nothing to synthesize. Report the estimate so the picture still responds.
-		started.emit(g, estimate)
-		_finish()
-		return
+			estimate += stream.get_length()
+		else:
+			# A rough synthetic length: about 0.6 s per chunk reads naturally for an OS voice. One segment
+			# for the whole phrase covers every chunk; otherwise a segment is one chunk.
+			var covered: int = g.chunks.size() if segments.size() == 1 else 1
+			estimate += ChunkTakes.TTS_CHUNK_SECONDS * maxi(covered, 1)
+		_queue.push_back(stream)
+		_queue_text.push_back(segment.text)
+	estimate += ChunkTakes.GAP_SECONDS * maxi(_queue.size() - 1, 0)
 	started.emit(g, estimate)
-	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_tts_ended)
-	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_CANCELED, _on_tts_ended)
-	DisplayServer.tts_speak(g.text, _tts_voice, 50, 1.0, 1.0, 0, true)
+	_play_next()
 
 func stop() -> void:
+	_serial += 1
+	_queue.clear()
+	_queue_text.clear()
 	if _player.playing:
 		_player.stop()
 	if DisplayServer.tts_is_speaking():
@@ -52,6 +62,36 @@ func stop() -> void:
 func is_speaking() -> bool:
 	return _current != null
 
+## Play the next segment of the queue, or finish when it is empty.
+func _play_next() -> void:
+	if _queue.is_empty():
+		_finish()
+		return
+	var stream: AudioStream = _queue.pop_front()
+	var text: String = _queue_text[0]
+	_queue_text.remove_at(0)
+	if stream != null:
+		_player.stream = stream
+		_player.play()
+		return
+	if _tts_voice.is_empty():
+		# Nothing to play and nothing to synthesize. Move on so the picture still responds.
+		_after_gap()
+		return
+	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_tts_ended)
+	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_CANCELED, _on_tts_ended)
+	DisplayServer.tts_speak(text, _tts_voice, 50, 1.0, 1.0, 0, true)
+
+## A short quiet between two segments, then the next one. Nothing between the last and the end.
+func _after_gap() -> void:
+	if _queue.is_empty():
+		_play_next()
+		return
+	var serial: int = _serial
+	get_tree().create_timer(ChunkTakes.GAP_SECONDS).timeout.connect(func() -> void:
+		if serial == _serial:
+			_play_next())
+
 func _finish() -> void:
 	var done: Gestalt = _current
 	_current = null
@@ -59,10 +99,11 @@ func _finish() -> void:
 		finished.emit(done)
 
 func _on_player_finished() -> void:
-	_finish()
+	_after_gap()
 
 func _on_tts_ended(_utterance_id: int) -> void:
-	_finish()
+	if _current != null:
+		_after_gap()
 
 ## A recording by extension. Returns null, with the reason printed, for a file that cannot be loaded.
 static func _load_recording(path: String) -> AudioStream:
