@@ -111,8 +111,8 @@ export-linux: (_export "--export-release" "Linux" "linux/alex.x86_64")
 exports: export-android export-play export-ios export-macos export-windows export-linux
     tools/check-exports.sh build/{{commit}}
 
-# Tag main's HEAD as vX.Y.Z and push the tag, which starts the release workflow (docs/releases.md):
-# `just release 0.1.1`.
+# Tag main's HEAD and push the tag, which starts the release workflow (docs/releases.md). `just release 0.1.2`
+# releases everywhere; `just release 0.1.2-rc.1` goes to testers only.
 release version:
     tools/release.sh {{version}}
 

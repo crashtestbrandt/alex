@@ -9,6 +9,9 @@ name: release
 # - The iOS build on TestFlight, then the App Store listing set and the version sent to App Review. An approved
 #   version goes live by itself.
 #
+# A release candidate, `vX.Y.Z-rc.N`, goes to testers only: a GitHub pre-release with every download, and
+# TestFlight. It skips Google Play and App Review.
+#
 # The release leaves draft when every job passed. A run by hand (workflow_dispatch) builds, signs and checks
 # everything and publishes nothing.
 #
@@ -36,25 +39,34 @@ jobs:
       contents: write
     outputs:
       version: ${{ steps.version.outputs.version }}
+      label: ${{ steps.version.outputs.label }}
+      candidate: ${{ steps.version.outputs.candidate }}
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      # The tag is the version; project.godot keeps a placeholder. iOS and Google Play take only digits in a
-      # version, so a tag is vX.Y.Z and nothing more. A run by hand builds as 0.0.0.
+      # The tag is the version; project.godot keeps a placeholder. iOS and Google Play take only digits, so a
+      # build's version is X.Y.Z. A release candidate, vX.Y.Z-rc.N, builds as X.Y.Z too, and its label names
+      # the files and the GitHub release. A run by hand builds as 0.0.0.
       - name: Version
         id: version
         run: |
           set -euo pipefail
           version=0.0.0
+          label=0.0.0
+          candidate=false
           publish=false
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            version="${GITHUB_REF_NAME#v}"
-            if [[ "$GITHUB_REF_NAME" != v* || ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "::error::The tag is $GITHUB_REF_NAME. It must be vX.Y.Z."
+            label="${GITHUB_REF_NAME#v}"
+            if [[ "$GITHUB_REF_NAME" != v* || ! "$label" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-rc\.[0-9]+)?$ ]]; then
+              echo "::error::The tag is $GITHUB_REF_NAME. It must be vX.Y.Z or vX.Y.Z-rc.N."
               exit 1
+            fi
+            version="${BASH_REMATCH[1]}"
+            if [[ -n "${BASH_REMATCH[2]}" ]]; then
+              candidate=true
             fi
             if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
               echo "::error::$GITHUB_REF_NAME is not on main."
@@ -62,17 +74,26 @@ jobs:
             fi
             publish=true
           fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
-          echo "Version $version, build $(git rev-list --count HEAD), publish $publish"
+          {
+            echo "version=$version"
+            echo "label=$label"
+            echo "candidate=$candidate"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+          echo "Version $version ($label), build $(git rev-list --count HEAD), candidate $candidate, publish $publish"
 
+      # A release candidate is a pre-release, for testers. It never becomes "Latest".
       - name: Draft the release
         if: steps.version.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes \
-            --title "Alex ${{ steps.version.outputs.version }}"
+          prerelease=()
+          if [[ "${{ steps.version.outputs.candidate }}" == "true" ]]; then
+            prerelease=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes ${prerelease[@]+"${prerelease[@]}"} \
+            --title "Alex ${{ steps.version.outputs.label }}"
 
   desktop:
     runs-on: ubuntu-latest
@@ -81,6 +102,7 @@ jobs:
       contents: write
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
+      ALEX_LABEL: ${{ needs.plan.outputs.label }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -107,8 +129,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          tar -C build/release/linux -czf "dist/alex-$ALEX_VERSION-linux-x86_64.tar.gz" alex.x86_64 alex.pck
-          (cd build/release/windows && zip -q "$GITHUB_WORKSPACE/dist/alex-$ALEX_VERSION-windows-x86_64.zip" alex.exe alex.pck)
+          tar -C build/release/linux -czf "dist/alex-$ALEX_LABEL-linux-x86_64.tar.gz" alex.x86_64 alex.pck
+          (cd build/release/windows && zip -q "$GITHUB_WORKSPACE/dist/alex-$ALEX_LABEL-windows-x86_64.zip" alex.exe alex.pck)
           ls -la dist
 
       - name: Attach
@@ -125,6 +147,7 @@ jobs:
       contents: write
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
+      ALEX_LABEL: ${{ needs.plan.outputs.label }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -164,11 +187,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/release/android/alex.apk "build/release/alex-$ALEX_VERSION-android.apk"
-          gh release upload "$GITHUB_REF_NAME" "build/release/alex-$ALEX_VERSION-android.apk" --clobber
+          cp build/release/android/alex.apk "build/release/alex-$ALEX_LABEL-android.apk"
+          gh release upload "$GITHUB_REF_NAME" "build/release/alex-$ALEX_LABEL-android.apk" --clobber
 
+      # A release candidate stays off Play. Its version code would collide with the final tag's on the same
+      # commit, and Play refuses a version code twice.
       - name: Google Play
-        if: needs.plan.outputs.publish == 'true'
+        if: needs.plan.outputs.publish == 'true' && needs.plan.outputs.candidate != 'true'
         env:
           PLAY_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           PLAY_TRACKS: ${{ vars.PLAY_TRACKS }}
@@ -190,6 +215,7 @@ jobs:
       contents: write
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
+      ALEX_LABEL: ${{ needs.plan.outputs.label }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -226,8 +252,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/release/macos/alex.zip "build/release/alex-$ALEX_VERSION-macos.zip"
-          gh release upload "$GITHUB_REF_NAME" "build/release/alex-$ALEX_VERSION-macos.zip" --clobber
+          cp build/release/macos/alex.zip "build/release/alex-$ALEX_LABEL-macos.zip"
+          gh release upload "$GITHUB_REF_NAME" "build/release/alex-$ALEX_LABEL-macos.zip" --clobber
 
   ios:
     runs-on: macos-26
@@ -235,6 +261,7 @@ jobs:
     environment: release
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
+      ALEX_LABEL: ${{ needs.plan.outputs.label }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -277,18 +304,25 @@ jobs:
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+        run: |
+          if [[ "${{ needs.plan.outputs.candidate }}" == "true" ]]; then
+            gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
+          else
+            gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          fi
 
   # The App Store, for the build the ios job uploaded. Apple processes a build for 10 to 30 minutes before it
   # can be submitted, so this waits on its own runner, and the GitHub Release does not wait for it.
   app-store:
     runs-on: ubuntu-latest
     needs: [plan, ios]
-    if: needs.plan.outputs.publish == 'true'
+    # A release candidate stops at TestFlight.
+    if: needs.plan.outputs.publish == 'true' && needs.plan.outputs.candidate != 'true'
     environment: release
     timeout-minutes: 120
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
+      ALEX_LABEL: ${{ needs.plan.outputs.label }}
     steps:
       - uses: actions/checkout@v7
         with:
