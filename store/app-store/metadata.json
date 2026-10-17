@@ -1,0 +1,18 @@
+{
+  "locale": "en-US",
+  "name": "Alex Language Explorer",
+  "subtitle": "Phrases in a voice they know",
+  "promotional_text": "Explore a room and hear its phrases in a familiar voice. No ads, no account, no scores. Recordings stay on the device.",
+  "keywords": "echolalia,gestalt,language,autism,speech,phrases,AAC,toddler,preschool,communication,NLA,voice",
+  "support_url": "https://github.com/crashtestbrandt/alex/issues",
+  "marketing_url": "https://github.com/crashtestbrandt/alex",
+  "privacy_policy_url": "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md",
+  "copyright": "2026 Brandt Frazier",
+  "primary_category": "EDUCATION",
+  "review_notes": "No account or sign-in. The first screen is the adults' profile picker: create a profile, then the child's room opens. Adult controls open on a 2-second hold so a child's tap never reaches them. Hold any object for 2 seconds to record its phrase. The privacy policy is shown inside the app, on the profile picker.",
+  "review_contact": {
+    "first_name": "Brandt",
+    "last_name": "Frazier",
+    "email": "frazimuth@pm.me"
+  }
+}

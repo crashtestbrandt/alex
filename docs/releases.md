@@ -46,6 +46,19 @@ signing key. A device can move between the two without losing its recordings.
   five 1920x1080 screenshots into `store/play/`. Play takes the same 16:9 set for phones, 7-inch and 10-inch
   tablets, and Chromebooks. Upload them by hand after a change.
 
+## App Store
+
+- The app is `io.github.crashtestbrandt.alex`, "Alex Language Explorer", in the Kids category for ages 5 and
+  under. Its age rating answers are in `store/app-store/age-rating.json`.
+- `just app-store X.Y.Z` sets the listing from `store/app-store/`: `metadata.json`, `description.txt`, the age
+  rating and the iPhone and iPad screenshots. `just store-graphics` renders the screenshots.
+- `just app-store-submit X.Y.Z` attaches the newest processed build of X.Y.Z and sends it to App Review. A tag
+  uploads that build to TestFlight first.
+- The first submission needs `APP_REVIEW_PHONE`, the number App Review may call. It is never committed.
+- Three settings have no API and were set once in App Store Connect: App Privacy ("Data Not Collected"), the
+  EU trader status (non-trader), and price and availability (free, every country).
+- The Mac App Store is not set up. It needs Mac App Store signing, the App Sandbox and a `.pkg` upload.
+
 ## Jobs
 
 | Job | Runner | Does |
