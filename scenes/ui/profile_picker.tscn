@@ -47,6 +47,12 @@ theme_type_variation = &"TitleLabel"
 text = "Choose a profile"
 autowrap_mode = 3
 
+[node name="Policy" type="VBoxContainer" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
 [node name="Profiles" type="GridContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -169,3 +175,11 @@ hold_seconds = 3.0
 danger = true
 text = "Hold 3 seconds to delete"
 autowrap_mode = 3
+
+[node name="PrivacyButton" type="Button" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+script = ExtResource("hold")
+shape = 1
+text = "Hold to read the privacy policy"

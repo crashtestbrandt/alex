@@ -1,6 +1,6 @@
 extends SceneTree
 ## Pack probe: mount an exported .pck as res:// and check what a shipped build can read. Every starter pack
-## and style preset loads, and nothing from tests/, tools/ or docs/ shipped. tools/check-exports.sh runs it
+## and style preset loads, the privacy policy reads, and nothing from tests/, tools/ or docs/ shipped. tools/check-exports.sh runs it
 ## with `--main-pack <pck> --script <this file>`; tools/ never ships, so the script is read from disk. Prints
 ## PACK-PROBE PASS or FAIL and exits with the matching code.
 
@@ -23,6 +23,10 @@ func _initialize() -> void:
 	_check(not styles.is_empty(), "the style presets are listed")
 	for style_id: String in styles:
 		_check(ResourceLoader.exists("%s/%s.tres" % [StylePreset.DIR, style_id]), "style %s loads" % style_id)
+
+	var policy: PackedStringArray = PolicyText.load_blocks()
+	print("  privacy policy: %d blocks" % policy.size())
+	_check(not policy.is_empty(), "the privacy policy reads")
 
 	for path: String in _ABSENT:
 		_check(not DirAccess.dir_exists_absolute(path) and not FileAccess.file_exists(path), "%s did not ship" % path)

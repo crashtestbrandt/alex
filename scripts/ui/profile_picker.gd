@@ -3,11 +3,17 @@ class_name ProfilePicker
 ## The adults' screen opens, creates and permanently deletes profiles, changes their saved looks, and adds
 ## scenes to them. Style pills preview immediately. Saving a look, adding a scene or completing the delete
 ## hold changes a profile.
+##
+## It also shows the privacy policy, which Google Play's Families policy requires inside the app. The text is
+## PRIVACY.md, shipped in every export ([PolicyText]), so nothing leaves the app to show it. The picker is the
+## first screen at launch, so the policy opens on a hold.
 
 signal profile_chosen(profile_id: String)
 signal profile_deleted(profile_id: String)
 
-enum Mode { PICK, CREATE, LOOK }
+enum Mode { PICK, CREATE, LOOK, POLICY }
+
+const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md"
 
 @onready var _profiles: GridContainer = %Profiles
 @onready var _name_edit: SdfField = %NameEdit
@@ -26,6 +32,8 @@ enum Mode { PICK, CREATE, LOOK }
 @onready var _delete_button: HoldButton = %DeleteButton
 @onready var _scene_section: VBoxContainer = %SceneSection
 @onready var _scene_rows: VBoxContainer = %SceneRows
+@onready var _privacy_button: HoldButton = %PrivacyButton
+@onready var _policy: VBoxContainer = %Policy
 
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
@@ -38,6 +46,7 @@ func _ready() -> void:
 	_back_button.pressed.connect(_on_back)
 	_new_button.pressed.connect(_on_new_profile)
 	_delete_button.held.connect(_on_delete_held)
+	_privacy_button.held.connect(_on_privacy_held)
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()
@@ -136,13 +145,22 @@ func _show_mode(mode: Mode) -> void:
 	_new_button.visible = mode == Mode.PICK
 	_name_edit.visible = mode == Mode.CREATE
 	_starter_row.visible = mode == Mode.CREATE
-	_style_row.visible = mode != Mode.PICK
+	_style_row.visible = mode == Mode.CREATE or mode == Mode.LOOK
 	_actions.visible = mode != Mode.PICK
 	_delete_section.visible = mode == Mode.LOOK
 	_scene_section.visible = mode == Mode.LOOK
-	_back_button.visible = mode != Mode.PICK and _profiles.get_child_count() > 0
+	_policy.visible = mode == Mode.POLICY
+	_privacy_button.visible = mode == Mode.PICK or mode == Mode.CREATE
+	_back_button.visible = mode == Mode.POLICY or (mode != Mode.PICK and _profiles.get_child_count() > 0)
+	_create_button.visible = mode != Mode.POLICY
 	_create_button.text = "Save" if mode == Mode.LOOK else "Create"
-	_heading.text = "New profile" if mode == Mode.CREATE else "Choose a profile"
+	match mode:
+		Mode.CREATE:
+			_heading.text = "New profile"
+		Mode.POLICY:
+			_heading.text = "Privacy policy"
+		_:
+			_heading.text = "Choose a profile"
 	_status.hide()
 	_sheet.scroll_vertical = 0
 	_layout_choices.call_deferred()
@@ -237,6 +255,21 @@ func _on_delete_held() -> void:
 		_name_edit.grab_focus()
 	else:
 		_new_button.grab_focus()
+
+func _on_privacy_held() -> void:
+	if _policy.get_child_count() == 0:
+		var headings: PackedStringArray = PolicyText.load_headings()
+		var blocks: PackedStringArray = PolicyText.load_blocks()
+		blocks.push_back("This policy is also at %s" % PRIVACY_URL)
+		for block: String in blocks:
+			var label: Label = Label.new()
+			label.text = block
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			if headings.has(block):
+				label.theme_type_variation = &"SectionLabel"
+			_policy.add_child(label)
+	# Focus stays put: the sheet follows focus, and the policy reads from the top.
+	_show_mode(Mode.POLICY)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and _mode != Mode.PICK and _back_button.visible and event.is_action_pressed("ui_cancel"):

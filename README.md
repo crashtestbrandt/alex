@@ -212,7 +212,8 @@ how much weight to give the stage model should read both sides.
 
 ## Privacy
 
-Alex collects no personal data, and nothing leaves the device. See [PRIVACY.md](PRIVACY.md).
+Alex collects no personal data, and nothing leaves the device. See [PRIVACY.md](PRIVACY.md). In the app,
+hold **Hold to read the privacy policy** on the profile picker. The app shows the same file, offline.
 
 ## License
 

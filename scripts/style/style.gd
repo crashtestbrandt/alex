@@ -9,6 +9,7 @@ signal changed(preset: StylePreset)
 const _BASE_TILE_FONT: int = 24
 const _BASE_LABEL_FONT: int = 22
 const _BASE_TITLE_FONT: int = 32
+const _BASE_SECTION_FONT: int = 27
 
 var current: StylePreset = StylePreset.new()
 
@@ -46,6 +47,8 @@ func _build_theme(preset: StylePreset) -> Theme:
 	theme.set_font_size("font_size", "ItemList", font_px(_BASE_LABEL_FONT))
 	theme.set_type_variation(&"TitleLabel", &"Label")
 	theme.set_font_size("font_size", "TitleLabel", font_px(_BASE_TITLE_FONT))
+	theme.set_type_variation(&"SectionLabel", &"Label")
+	theme.set_font_size("font_size", "SectionLabel", font_px(_BASE_SECTION_FONT))
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
 		theme.set_stylebox(state, "Button", _button_box(preset, state))
 	theme.set_color("font_color", "Button", preset.text)
