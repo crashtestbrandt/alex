@@ -113,6 +113,26 @@ func _run() -> void:
 	await get_tree().create_timer(SdfScroll.RETURN_SECONDS + 0.3).timeout
 	_check(stage.overscroll() == 0.0, "and settles")
 
+	# A pull that loses the window springs back, as if released.
+	stage.scroll_vertical = 0
+	await _frames(2)
+	await _press(at)
+	await _drag(at, Vector2(0.0, 12.0), 20)
+	stage.notification(NOTIFICATION_WM_WINDOW_FOCUS_OUT)
+	await get_tree().create_timer(SdfScroll.RETURN_SECONDS + 0.3).timeout
+	_check(stage.overscroll() == 0.0, "losing the window mid-pull springs back")
+	await _release(at + Vector2(0.0, 240.0))
+
+	# A pull whose screen goes away comes back to rest at once.
+	await _press(at)
+	await _drag(at, Vector2(0.0, 12.0), 20)
+	home.show_explore()
+	await _frames(1)
+	_check(stage.overscroll() == 0.0, "hiding the scroll mid-pull returns it at once")
+	await _release(at + Vector2(0.0, 240.0))
+	home.show_palette()
+	await _frames(4)
+
 	# With motion off the release returns at once.
 	Style.apply(StylePreset.load_by_id("quiet"))
 	_check(Style.motion_scale() == 0.0, "the Quiet style has motion off")
