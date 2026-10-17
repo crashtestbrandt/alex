@@ -147,9 +147,12 @@ xcodebuild -project build/<commit>/ios/alex.xcodeproj -scheme alex -destination 
   CODE_SIGNING_ALLOWED=NO build
 ```
 
+## Verified on a device
+
+- Android: a Galaxy Z Fold3 on Android 15 ran the release-signed APK (version code 20). It launched, asked for
+  the microphone when the recording overlay opened, recorded a take, kept it, and played it from the object.
+- iOS: an iPhone on iOS 27 installs and launches from TestFlight and from `just run-ios`.
+
 ## Not yet verified
 
-- The iOS microphone prompt, and a recording through it (issue #4). Install and launch work on an iPhone with
-  iOS 27, from TestFlight and from `just run-ios`.
-- Any Android device.
-- The Android microphone prompt. `Recorder` does not request the permission before the first take.
+- The iOS microphone prompt, and a recording through it (issue #4).
