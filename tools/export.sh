@@ -7,6 +7,14 @@
 # An Android debug export signs with GODOT_ANDROID_KEYSTORE_DEBUG_* when they are set. Otherwise it signs with
 # ~/.android/debug.keystore, the key Android Studio uses, and makes that key with keytool on first use. One
 # key per machine lets `adb install -r` replace an earlier build without losing the app's data.
+#
+# An Android release export signs with GODOT_ANDROID_KEYSTORE_RELEASE_*, and Godot fails without them.
+#
+# Both Android presets take the commit count as their version code, the build number iOS uses too. The
+# preset file is stamped for the length of the export and restored after it.
+#
+# The `Google Play` preset is a Gradle build. Godot installs the build template into android/, which git
+# ignores, and Gradle fetches its dependencies on the first build.
 set -euo pipefail
 
 if [[ $# -ne 3 ]]; then
@@ -62,7 +70,21 @@ mkdir -p "$out_dir"
 # build/ sits inside the project. The .gdignore keeps the editor from importing an export, such as the iOS
 # project's icons.
 touch build/.gdignore
-tools/godot.sh "${headless[@]}" --path . "$mode" "$preset" "$out"
+
+extra=()
+if [[ "$preset" == "Android" || "$preset" == "Google Play" ]]; then
+	code="$(git rev-list --count HEAD 2> /dev/null || echo 1)"
+	cp export_presets.cfg "$out_dir/export_presets.cfg.orig"
+	trap 'cp "$out_dir/export_presets.cfg.orig" export_presets.cfg && rm -f "$out_dir/export_presets.cfg.orig"' EXIT
+	sed -i.bak "s/^version\/code=.*/version\/code=$code/" export_presets.cfg
+	rm -f export_presets.cfg.bak
+	printf 'export: version code %s\n' "$code"
+fi
+if [[ "$preset" == "Google Play" && ! -d android/build ]]; then
+	extra+=(--install-android-build-template)
+fi
+
+tools/godot.sh "${headless[@]}" --path . ${extra[@]+"${extra[@]}"} "$mode" "$preset" "$out"
 
 if [[ ! -e "$out" ]]; then
 	printf 'export: Godot wrote no %s for the "%s" preset.\n' "$out" "$preset" >&2

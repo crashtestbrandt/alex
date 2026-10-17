@@ -1,13 +1,14 @@
 # Exports
 
-`export_presets.cfg` holds five presets. `just exports` builds all five into `build/<commit>/` and checks what
-each one holds.
+`export_presets.cfg` holds six presets. `just exports` builds all six into `build/<commit>/` and checks what
+each one holds. docs/releases.md covers the release workflow that signs and publishes them.
 
 ## Presets
 
 | Preset | Recipe | Writes | Notes |
 | --- | --- | --- | --- |
 | `Android` | `just export-android` | `android/alex.apk` | Debug-signed APK, arm64. `just install-android` puts it on a device. |
+| `Google Play` | `just export-play` | `play/alex.aab` | Debug-signed AAB, arm64, through Godot's Gradle build. |
 | `iOS` | `just export-ios` | `ios/alex.xcodeproj` | An Xcode project. Signing and the build happen in Xcode. |
 | `macOS` | `just export-macos` | `macos/alex.zip` | Universal, ad-hoc signed. |
 | `Windows Desktop` | `just export-windows` | `windows/alex.exe`, `alex.pck` | x86_64. |
@@ -16,7 +17,11 @@ each one holds.
 Every recipe goes through `tools/export.sh`. It empties the platform directory first and fails when Godot
 writes no output.
 
-Every preset takes its version from `application/config/version` in `project.godot`.
+- Every preset takes its version from `application/config/version` in `project.godot`.
+- Both Android presets take the commit count as their version code. `tools/export.sh` stamps it for the length
+  of the export.
+- `Google Play` installs Godot's Gradle build template into `android/`, which git ignores. The first build
+  downloads Gradle and its dependencies.
 
 ## Rules
 
@@ -24,8 +29,9 @@ Every preset takes its version from `application/config/version` in `project.god
 
 - Every preset includes `starters/*.json`. Starter packs are read with `DirAccess`, so nothing references
   them. The include keeps them in a build whose export mode is not "all resources".
-- `Android` declares `RECORD_AUDIO`, supports every screen size, and has no internet permission and no
-  cloud backup.
+- `Android` and `Google Play` declare `RECORD_AUDIO`, support every screen size, and have no internet
+  permission and no cloud backup. Both hold `version/code=1`, which the export stamps over.
+- `Google Play` uses the Gradle build and exports an AAB.
 - `iOS` targets iPhone and iPad and carries a microphone usage description.
 - `macOS` carries the audio-input entitlement and a microphone usage description.
 - No preset holds a signing password or a release keystore.
@@ -65,8 +71,8 @@ Two project settings serve the mobile presets:
 - **Android debug.** `just export-android` signs with `~/.android/debug.keystore`, the key Android Studio uses,
   and makes that key on first use. `GODOT_ANDROID_KEYSTORE_DEBUG_PATH`, `_USER` and `_PASSWORD` override it.
 - **Android release.** Set `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `_USER` and `_PASSWORD`, then run
-  `tools/export.sh --export-release Android build/release/android/alex.apk`. The Play Store takes an AAB, which
-  needs a Gradle build. That is not set up yet.
+  `tools/export.sh --export-release Android build/release/android/alex.apk`. The release workflow does this
+  with the release key (docs/releases.md "Keys").
 - **iOS.** The iOS preset carries the owner's Apple Developer Team ID, `9RM79FMS9B`. Godot refuses the export
   without one. Xcode signs automatically with that team once Xcode is signed in to its account (Xcode >
   Settings > Accounts). To sign with another account without committing it, set your own Team ID in
@@ -100,7 +106,8 @@ The script checks both and prints these steps when one is missing.
 ## TestFlight
 
 `just testflight` exports the iOS preset, archives it and uploads it to App Store Connect
-(`tools/testflight.sh`).
+(`tools/testflight.sh`). The release workflow runs the same script with an App Store Connect API key on every
+tag (docs/releases.md).
 
 - It refuses a working tree with uncommitted changes, so every upload maps to a commit.
 - The build number is the commit count. Xcode raises it when App Store Connect already holds that number.
@@ -125,11 +132,13 @@ Once per Apple account and app:
 | --- | --- |
 | Every `.pck` | Mounted with `--main-pack`, it passes `tools/instr/pack_probe.gd`. Starter packs and style presets load. No `tests/`, `tools/`, `docs/` or `.mcp.json` shipped. |
 | Android APK | Starter packs present. `RECORD_AUDIO` declared, `INTERNET` absent, every screen size supported (read with `aapt2`). |
+| Play AAB | Starter packs present. `RECORD_AUDIO` declared, `INTERNET` absent. |
 | iOS project | A microphone usage description. `TARGETED_DEVICE_FAMILY` is iPhone and iPad. |
 | macOS app | A microphone usage description and the signed audio-input entitlement. |
 | This machine's export | Boots headless for 300 frames with no error. |
 
-`just exports` stays out of `just check`. It needs the templates and the SDKs, and takes under a minute.
+`just exports` stays out of `just check`. It needs the templates and the SDKs. It takes about a minute once
+Gradle has its dependencies.
 
 To compile the iOS project for a device without signing:
 
@@ -138,9 +147,13 @@ xcodebuild -project build/<commit>/ios/alex.xcodeproj -scheme alex -destination 
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-## Not yet verified
+## Verified on a device
 
-- The iOS microphone prompt, and a recording through it (issue #4). Install and launch work on an iPhone with
-  iOS 27, from TestFlight and from `just run-ios`.
-- Any Android device.
-- The Android microphone prompt. `Recorder` does not request the permission before the first take.
+- Android: a Galaxy Z Fold3 on Android 15 ran the release-signed APK (version code 20). It launched, asked for
+  the microphone when the recording overlay opened, recorded a take, kept it, and played it from the object.
+- iOS: an iPhone on iOS 27 installs from TestFlight and from `just run-ios`, asks for the microphone on first
+  launch, and records.
+
+## Known device issues
+
+- iOS: deleting a profile does not work (#39).

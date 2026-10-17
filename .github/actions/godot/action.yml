@@ -1,0 +1,104 @@
+name: Godot
+description: >
+  Put Godot on PATH (GODOT_BIN on macOS) and unpack the named export templates. Both are cached, and a pull
+  request only restores the cache, so a PR run writes nothing to Actions storage.
+
+inputs:
+  version:
+    description: The Godot release, such as 4.7.2-stable.
+    required: true
+  templates:
+    description: Space-separated template file names from the export template archive. Empty for none.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Paths
+      id: paths
+      shell: bash
+      run: |
+        set -euo pipefail
+        dir_version="${{ inputs.version }}"
+        dir_version="${dir_version/-/.}"
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          templates="$HOME/Library/Application Support/Godot/export_templates/$dir_version"
+        else
+          templates="$HOME/.local/share/godot/export_templates/$dir_version"
+        fi
+        echo "templates=$templates" >> "$GITHUB_OUTPUT"
+        echo "list-hash=$(printf '%s' '${{ inputs.templates }}' | shasum -a 256 | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Godot
+      id: godot-cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/godot
+        key: godot-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}
+
+    - name: Download Godot
+      if: steps.godot-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        base="https://github.com/godotengine/godot-builds/releases/download/${{ inputs.version }}"
+        mkdir -p ~/godot
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          curl -fsSL "$base/Godot_v${{ inputs.version }}_macos.universal.zip" -o "$RUNNER_TEMP/godot.zip"
+          ditto -x -k "$RUNNER_TEMP/godot.zip" ~/godot
+        else
+          curl -fsSL "$base/Godot_v${{ inputs.version }}_linux.x86_64.zip" -o "$RUNNER_TEMP/godot.zip"
+          unzip -q -o "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          install -m 0755 "$RUNNER_TEMP/godot/Godot_v${{ inputs.version }}_linux.x86_64" ~/godot/godot
+        fi
+
+    - name: Save Godot
+      if: steps.godot-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+      uses: actions/cache/save@v6
+      with:
+        path: ~/godot
+        key: godot-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}
+
+    - name: Put Godot on PATH
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          echo "GODOT_BIN=$HOME/godot/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+        else
+          echo "$HOME/godot" >> "$GITHUB_PATH"
+        fi
+
+    - name: Restore templates
+      id: templates-cache
+      if: inputs.templates != ''
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ steps.paths.outputs.templates }}
+        key: godot-templates-${{ inputs.version }}-${{ runner.os }}-${{ steps.paths.outputs.list-hash }}
+
+    - name: Download templates
+      if: inputs.templates != '' && steps.templates-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        base="https://github.com/godotengine/godot-builds/releases/download/${{ inputs.version }}"
+        curl -fsSL "$base/Godot_v${{ inputs.version }}_export_templates.tpz" -o "$RUNNER_TEMP/templates.tpz"
+        dest="${{ steps.paths.outputs.templates }}"
+        mkdir -p "$dest"
+        members=(templates/version.txt)
+        for name in ${{ inputs.templates }}; do
+          members+=("templates/$name")
+        done
+        unzip -q -o -j "$RUNNER_TEMP/templates.tpz" "${members[@]}" -d "$dest"
+        rm -f "$RUNNER_TEMP/templates.tpz"
+        ls -la "$dest"
+
+    - name: Save templates
+      if: >-
+        inputs.templates != '' && steps.templates-cache.outputs.cache-hit != 'true'
+        && github.event_name != 'pull_request'
+      uses: actions/cache/save@v6
+      with:
+        path: ${{ steps.paths.outputs.templates }}
+        key: godot-templates-${{ inputs.version }}-${{ runner.os }}-${{ steps.paths.outputs.list-hash }}

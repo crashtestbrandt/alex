@@ -25,8 +25,12 @@ Suites are hand-rolled, no GUT or GdUnit4. `tests/run_unit_tests.gd` discovers t
 | export presets | `tools/check-export-presets.sh`, no Godot. The rules are in docs/exports.md. |
 | lint | `tools/lint-gdscript.sh`: import, then load the main scene; fail on any script error. |
 | test | `tests/run_unit_tests.gd`. |
+| exports | Linux, Windows and a debug-signed Android APK, checked by `tools/check-exports.sh`. |
 
-`just check` runs the same four locally, then the headless scene probes (`just room-probe`, which picks,
+A pull request restores the Godot and template caches and saves none, and uploads no artifact. A push to
+`main` saves the caches. A `v*` tag runs the release workflow instead (docs/releases.md).
+
+`just check` runs the first four locally, then the headless scene probes (`just room-probe`, which picks,
 taps, walks the views and idles back; docs/geometry.md "Gates"). A probe stays out of the PR gate. `just lint` also loads every `tools/instr/*.gd` so a probe that does not compile fails
 there rather than at a run.
 

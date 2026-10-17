@@ -90,6 +90,9 @@ check: doc-size-check export-presets-check lint test room-probe
 # version. Android also needs an Android SDK and a JDK, and iOS needs a Mac with Xcode and a Team ID.
 export-android: (_export "--export-debug" "Android" "android/alex.apk")
 
+# The Play Store's AAB, through Godot's Gradle build. Debug-signed here; the release workflow signs it for Play.
+export-play: (_export "--export-debug" "Google Play" "play/alex.aab")
+
 export-ios: (_export "--export-release" "iOS" "ios/alex.xcodeproj")
 
 export-macos: (_export "--export-release" "macOS" "macos/alex.zip")
@@ -99,8 +102,13 @@ export-windows: (_export "--export-release" "Windows Desktop" "windows/alex.exe"
 export-linux: (_export "--export-release" "Linux" "linux/alex.x86_64")
 
 # Every preset, then the checks on what each one wrote (tools/check-exports.sh).
-exports: export-android export-ios export-macos export-windows export-linux
+exports: export-android export-play export-ios export-macos export-windows export-linux
     tools/check-exports.sh build/{{commit}}
+
+# Tag main's HEAD with project.godot's version and push the tag, which starts the release workflow
+# (docs/releases.md).
+release:
+    tools/release.sh
 
 # Export iOS, build it and run it on the paired iPhone or iPad, with its log here (docs/exports.md "Run on a
 # device"). DEVICE is a name from `xcrun devicectl list devices`, needed only when several are paired.

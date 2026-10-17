@@ -41,6 +41,7 @@ func _ready() -> void:
 	_keep_button.pressed.connect(_on_keep)
 	_again_button.pressed.connect(_reset)
 	_cancel_button.pressed.connect(close)
+	_recorder.permission_answered.connect(_on_permission_answered)
 	get_window().focus_exited.connect(_cancel_capture)
 	set_process(false)
 
@@ -58,7 +59,19 @@ func open(g: Gestalt, p: Profile, recording_name: bool = false) -> void:
 		_status.text = "This device has no microphone available."
 		_record_button.disabled = true
 		(_record_button as SdfButton).refresh()
+	elif not _recorder.ensure_permission():
+		_status.text = "Allow the microphone to record."
+		_record_button.disabled = true
+		(_record_button as SdfButton).refresh()
 	_focus_controls()
+
+func _on_permission_answered(granted: bool) -> void:
+	if not visible:
+		return
+	if granted:
+		_reset()
+	else:
+		_status.text = "Turn on the microphone for this app in Settings to record."
 
 func set_safe_area(rect: Rect2) -> void:
 	SafeArea.fit_control(_sheet, rect)

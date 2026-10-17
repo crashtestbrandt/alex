@@ -1,0 +1,276 @@
+name: release
+
+# A `vX.Y.Z` tag on main builds every platform, signs it and publishes it (docs/releases.md):
+#
+# - A draft GitHub Release with notes from the merged PR titles.
+# - Linux, Windows, macOS (notarized) and Android (APK) builds attached to it.
+# - The AAB on the Google Play internal track, once PLAY_SERVICE_ACCOUNT_JSON is set.
+# - The iOS build on TestFlight.
+#
+# The release leaves draft when every job passed. A run by hand (workflow_dispatch) builds, signs and checks
+# everything and publishes nothing.
+#
+# Signing secrets live in the `release` environment, which only main and v* tags can use.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # iOS and Google Play take only digits in a version, so a tag is vX.Y.Z and nothing more.
+      - name: Version
+        id: version
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^config\/version="\(.*\)"$/\1/p' project.godot)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error file=project.godot::application/config/version is \"$version\". It must be X.Y.Z."
+            exit 1
+          fi
+          publish=false
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+              echo "::error::The tag is $GITHUB_REF_NAME and project.godot says $version. Tag v$version instead."
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              echo "::error::$GITHUB_REF_NAME is not on main."
+              exit 1
+            fi
+            publish=true
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "Version $version, build $(git rev-list --count HEAD), publish $publish"
+
+      - name: Draft the release
+        if: steps.version.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes \
+            --title "Alex ${{ steps.version.outputs.version }}"
+
+  desktop:
+    runs-on: ubuntu-latest
+    needs: [plan]
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - uses: ./.github/actions/godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          templates: linux_release.x86_64 windows_release_x86_64.exe
+
+      - name: Import
+        run: godot --headless --path . --import
+
+      - name: Export
+        run: |
+          tools/export.sh --export-release Linux build/release/linux/alex.x86_64
+          tools/export.sh --export-release "Windows Desktop" build/release/windows/alex.exe
+
+      - name: Check
+        run: tools/check-exports.sh build/release
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar -C build/release/linux -czf "dist/alex-$VERSION-linux-x86_64.tar.gz" alex.x86_64 alex.pck
+          (cd build/release/windows && zip -q "$GITHUB_WORKSPACE/dist/alex-$VERSION-windows-x86_64.zip" alex.exe alex.pck)
+          ls -la dist
+
+      - name: Attach
+        if: needs.plan.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+
+  android:
+    runs-on: ubuntu-latest
+    needs: [plan]
+    environment: release
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - uses: ./.github/actions/godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          templates: android_release.apk android_source.zip
+
+      - name: Import
+        run: godot --headless --path . --import
+
+      - name: Release key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Export
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ secrets.ANDROID_RELEASE_KEYSTORE_USER }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+        run: |
+          tools/export.sh --export-release Android build/release/android/alex.apk
+          tools/export.sh --export-release "Google Play" build/release/play/alex.aab
+
+      - name: Check
+        run: tools/check-exports.sh build/release
+
+      - name: Attach
+        if: needs.plan.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/release/android/alex.apk "build/release/alex-$VERSION-android.apk"
+          gh release upload "$GITHUB_REF_NAME" "build/release/alex-$VERSION-android.apk" --clobber
+
+      - name: Google Play
+        if: needs.plan.outputs.publish == 'true'
+        env:
+          PLAY_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_RELEASE_STATUS: ${{ vars.PLAY_RELEASE_STATUS }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$PLAY_KEY" ]]; then
+            echo "::warning::PLAY_SERVICE_ACCOUNT_JSON is not set, so nothing went to Google Play."
+            exit 0
+          fi
+          printf '%s' "$PLAY_KEY" > "$RUNNER_TEMP/play.json"
+          PLAY_SERVICE_ACCOUNT_JSON="$RUNNER_TEMP/play.json" tools/play-upload.sh build/release/play/alex.aab "$VERSION"
+
+  macos:
+    runs-on: macos-26
+    needs: [plan]
+    environment: release
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - uses: ./.github/actions/godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          templates: macos.zip
+
+      - name: Import
+        run: tools/godot.sh --headless --rendering-driver opengl3 --audio-driver Dummy --path . --import
+
+      - name: Export
+        run: tools/export.sh --export-release macOS build/release/macos/alex.zip
+
+      - uses: ./.github/actions/apple-keys
+        with:
+          asc-key: ${{ secrets.ASC_KEY_P8 }}
+          asc-key-id: ${{ secrets.ASC_KEY_ID }}
+          asc-issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          developer-id-p12: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 }}
+          developer-id-password: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+
+      - name: Sign and notarize
+        run: tools/notarize-macos.sh build/release
+
+      - name: Check
+        run: tools/check-exports.sh build/release
+
+      - name: Attach
+        if: needs.plan.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/release/macos/alex.zip "build/release/alex-$VERSION-macos.zip"
+          gh release upload "$GITHUB_REF_NAME" "build/release/alex-$VERSION-macos.zip" --clobber
+
+  ios:
+    runs-on: macos-26
+    needs: [plan]
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - uses: ./.github/actions/godot
+        with:
+          version: ${{ env.GODOT_VERSION }}
+          templates: ios.zip
+
+      - name: Import
+        run: tools/godot.sh --headless --rendering-driver opengl3 --audio-driver Dummy --path . --import
+
+      - uses: ./.github/actions/apple-keys
+        with:
+          asc-key: ${{ secrets.ASC_KEY_P8 }}
+          asc-key-id: ${{ secrets.ASC_KEY_ID }}
+          asc-issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+
+      # A run by hand signs the .ipa and uploads nothing.
+      - name: TestFlight
+        run: |
+          if [[ "${{ needs.plan.outputs.publish }}" == "true" ]]; then
+            tools/testflight.sh build/release
+          else
+            tools/testflight.sh build/release --export-only
+          fi
+
+      - name: Check
+        run: tools/check-exports.sh build/release
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [plan, desktop, android, macos, ios]
+    if: needs.plan.outputs.publish == 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest

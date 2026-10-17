@@ -6,7 +6,12 @@ class_name Recorder
 ## Needs `audio/driver/enable_input` on in project.godot, and on iOS and Android a microphone permission in
 ## the export preset (docs/profiles.md "Recordings").
 
+## Emitted with Android's answer to [method ensure_permission].
+signal permission_answered(granted: bool)
+
 const BUS_NAME: String = "Record"
+## Android asks for this at run time. iOS and macOS ask by themselves the first time the microphone opens.
+const ANDROID_MIC_PERMISSION: String = "android.permission.RECORD_AUDIO"
 
 var _effect: AudioEffectRecord = null
 var _mic: AudioStreamPlayer = null
@@ -32,6 +37,20 @@ func _ready() -> void:
 ## Whether a microphone can be recorded on this device and build.
 func is_available() -> bool:
 	return _effect != null
+
+## Whether the microphone may be recorded now. On Android a missing permission is requested, the system
+## dialog shows, and [signal permission_answered] carries the answer.
+func ensure_permission() -> bool:
+	if OS.get_name() != "Android":
+		return true
+	var tree: SceneTree = get_tree()
+	if not tree.on_request_permissions_result.is_connected(_on_permission_result):
+		tree.on_request_permissions_result.connect(_on_permission_result)
+	return OS.request_permission(ANDROID_MIC_PERMISSION)
+
+func _on_permission_result(permission: String, granted: bool) -> void:
+	if permission == ANDROID_MIC_PERMISSION:
+		permission_answered.emit(granted)
 
 func is_recording() -> bool:
 	return _effect != null and _effect.is_recording_active()

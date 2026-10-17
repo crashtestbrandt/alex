@@ -8,6 +8,7 @@
 #   development file shipped.
 # - The Android APK holds the starter packs, asks for the microphone, has no internet permission, and
 #   supports every screen size. aapt2 comes from the Android SDK the export used.
+# - The Play AAB holds the starter packs, asks for the microphone and has no internet permission.
 # - The iOS and macOS bundles carry a microphone usage description, and the iOS project targets iPhone and
 #   iPad.
 # - The export for this machine boots headless for 300 frames with no error.
@@ -137,6 +138,38 @@ if [[ -d "$BUILD/android" ]]; then
 		fi
 	else
 		fail "no aapt2 under ANDROID_HOME, ANDROID_SDK_ROOT or the default SDK paths"
+	fi
+fi
+
+if [[ -d "$BUILD/play" ]]; then
+	checked=$((checked + 1))
+	echo "play"
+	aab="$BUILD/play/alex.aab"
+	listing="$(unzip -l "$aab" 2>/dev/null || true)"
+	for json in "$ROOT"/starters/*.json; do
+		name="starters/$(basename "$json")"
+		if grep -q "/assets/$name\$" <<< "$listing"; then
+			pass "$name is in the AAB"
+		else
+			fail "$name is not in the AAB"
+		fi
+	done
+	if grep -qE '/assets/(tests|tools|docs)/|/assets/\.mcp\.json$' <<< "$listing"; then
+		fail "a development file is in the AAB"
+	else
+		pass "no development file is in the AAB"
+	fi
+	# The bundle's manifest is a protocol buffer. Permission names sit in it as plain strings.
+	manifest="$(unzip -p "$aab" base/manifest/AndroidManifest.xml 2>/dev/null | strings || true)"
+	if grep -q "android.permission.RECORD_AUDIO" <<< "$manifest"; then
+		pass "RECORD_AUDIO is declared"
+	else
+		fail "RECORD_AUDIO is not declared"
+	fi
+	if grep -q "android.permission.INTERNET" <<< "$manifest"; then
+		fail "INTERNET is declared"
+	else
+		pass "INTERNET is not declared"
 	fi
 fi
 
