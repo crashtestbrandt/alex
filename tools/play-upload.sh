@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Upload an AAB to a Google Play track: tools/play-upload.sh <aab> <release name>.
+# Upload an AAB to a Google Play track: tools/play-upload.sh <aab> <version name>. The release is named
+# "<version name> (<version code>)", such as "0.1.0 (1)".
 #
 # The release workflow runs this (docs/releases.md). It needs:
 #
@@ -12,11 +13,11 @@
 set -euo pipefail
 
 if [[ $# -ne 2 || ! -f "$1" ]]; then
-	printf 'usage: tools/play-upload.sh <aab> <release name>\n' >&2
+	printf 'usage: tools/play-upload.sh <aab> <version name>\n' >&2
 	exit 2
 fi
 aab="$1"
-release_name="$2"
+version_name="$2"
 key_file="${PLAY_SERVICE_ACCOUNT_JSON:?PLAY_SERVICE_ACCOUNT_JSON is not set}"
 track="${PLAY_TRACK:-internal}"
 status="${PLAY_RELEASE_STATUS:-completed}"
@@ -63,6 +64,7 @@ edit="$(call -X POST "$api/edits" | jq -r .id)"
 printf 'play: uploading %s\n' "$aab"
 version_code="$(call -X POST -H 'Content-Type: application/octet-stream' --data-binary "@$aab" \
 	"$upload_api/edits/$edit/bundles?uploadType=media" | jq -r .versionCode)"
+release_name="$version_name ($version_code)"
 body="$(jq -cn --arg track "$track" --arg name "$release_name" --arg code "$version_code" --arg status "$status" \
 	'{track: $track, releases: [{name: $name, versionCodes: [$code], status: $status}]}')"
 call -X PUT -H 'Content-Type: application/json' --data "$body" "$api/edits/$edit/tracks/$track" > /dev/null
