@@ -4,7 +4,7 @@ name: release
 #
 # - A draft GitHub Release with notes from the merged PR titles.
 # - Linux, Windows, macOS (notarized) and Android (APK) builds attached to it.
-# - The AAB on the Google Play internal track, once PLAY_SERVICE_ACCOUNT_JSON is set.
+# - The AAB on the Google Play internal and closed testing tracks, once PLAY_SERVICE_ACCOUNT_JSON is set.
 # - The iOS build on TestFlight.
 #
 # The release leaves draft when every job passed. A run by hand (workflow_dispatch) builds, signs and checks
@@ -169,6 +169,7 @@ jobs:
         if: needs.plan.outputs.publish == 'true'
         env:
           PLAY_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_TRACKS: ${{ vars.PLAY_TRACKS }}
           PLAY_RELEASE_STATUS: ${{ vars.PLAY_RELEASE_STATUS }}
         run: |
           set -euo pipefail

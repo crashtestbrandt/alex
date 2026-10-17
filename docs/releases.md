@@ -25,7 +25,7 @@ it.
 | Windows | GitHub Release, `alex-<version>-windows-x86_64.zip` | Nothing. SmartScreen warns on first launch. |
 | macOS | GitHub Release, `alex-<version>-macos.zip` | Developer ID, notarized and stapled. |
 | Android | GitHub Release, `alex-<version>-android.apk` | The release key. |
-| Android | Google Play, internal testing track | The release key, as the AAB's upload key. |
+| Android | Google Play, internal and closed testing tracks | The release key, as the AAB's upload key. |
 | iOS | TestFlight | Cloud-managed distribution certificate. |
 
 The APK and the Play build carry the same signature, because Play signs with the release key as its app
@@ -39,6 +39,9 @@ signing key. A device can move between the two without losing its recordings.
   data from apps it protects. Play applies the setting when it processes a bundle, so it stays off for every upload.
 - Version codes 1 to 3 were uploaded by hand. A CI upload uses the commit count on `main`, which is higher.
 - Production needs a closed test with 12 testers opted in for 14 days in a row, because the account is personal.
+- Closed testers are the members of `alex-testers@googlegroups.com`, which anyone can join. The README's
+  "Get Alex" section lists the steps. The Play API cannot manage testers on this kind of track, so the group
+  was attached once in Play Console.
 - The listing text is `store/play/listing.txt`. `just store-graphics` renders its icon, feature graphic and
   five 1920x1080 screenshots into `store/play/`. Play takes the same 16:9 set for phones, 7-inch and 10-inch
   tablets, and Chromebooks. Upload them by hand after a change.
@@ -71,8 +74,9 @@ Every signing secret lives in the `release` environment. Only `main` and `v*` ta
 | `MACOS_DEVELOPER_ID_P12_PASSWORD` | The PKCS 12 password. |
 | `PLAY_SERVICE_ACCOUNT_JSON` | The JSON key of `alex-ci@alex-releases.iam.gserviceaccount.com`. Play Console grants it "Release apps to testing tracks" on this app only. Without it, the Play upload is skipped with a warning. |
 
-An upload goes to the internal track as `completed`. The `PLAY_RELEASE_STATUS` variable overrides the status, for
-example with `draft`.
+An upload goes to the internal track and the closed testing track (`alpha`) as `completed`. Closed testers get
+each release with no step in Play Console. The `PLAY_TRACKS` variable overrides the tracks, and
+`PLAY_RELEASE_STATUS` overrides the status, for example with `draft`.
 
 ## Keys
 

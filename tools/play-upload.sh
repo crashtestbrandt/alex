@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Upload an AAB to a Google Play track: tools/play-upload.sh <aab> <version name>. The release is named
+# Upload an AAB to Google Play tracks: tools/play-upload.sh <aab> <version name>. The release is named
 # "<version name> (<version code>)", such as "0.1.0 (1)".
 #
 # The release workflow runs this (docs/releases.md). It needs:
 #
 # - PLAY_SERVICE_ACCOUNT_JSON: the path to a Google Cloud service account key that Play Console has granted
 #   release rights on the app.
-# - PLAY_TRACK: the track, `internal` when unset.
+# - PLAY_TRACKS: the tracks, space-separated, `internal alpha` when unset. `alpha` is the closed testing track.
 # - PLAY_RELEASE_STATUS: `completed` when unset. An app with no release published from Play Console takes only `draft`.
 #
 # It talks to the Play Developer API with curl, openssl and jq, so the key reaches no third-party code.
@@ -19,7 +19,7 @@ fi
 aab="$1"
 version_name="$2"
 key_file="${PLAY_SERVICE_ACCOUNT_JSON:?PLAY_SERVICE_ACCOUNT_JSON is not set}"
-track="${PLAY_TRACK:-internal}"
+tracks="${PLAY_TRACKS:-internal alpha}"
 status="${PLAY_RELEASE_STATUS:-completed}"
 package="io.github.crashtestbrandt.alex"
 api="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$package"
@@ -65,8 +65,10 @@ printf 'play: uploading %s\n' "$aab"
 version_code="$(call -X POST -H 'Content-Type: application/octet-stream' --data-binary "@$aab" \
 	"$upload_api/edits/$edit/bundles?uploadType=media" | jq -r .versionCode)"
 release_name="$version_name ($version_code)"
-body="$(jq -cn --arg track "$track" --arg name "$release_name" --arg code "$version_code" --arg status "$status" \
-	'{track: $track, releases: [{name: $name, versionCodes: [$code], status: $status}]}')"
-call -X PUT -H 'Content-Type: application/json' --data "$body" "$api/edits/$edit/tracks/$track" > /dev/null
+for track in $tracks; do
+	body="$(jq -cn --arg track "$track" --arg name "$release_name" --arg code "$version_code" --arg status "$status" \
+		'{track: $track, releases: [{name: $name, versionCodes: [$code], status: $status}]}')"
+	call -X PUT -H 'Content-Type: application/json' --data "$body" "$api/edits/$edit/tracks/$track" > /dev/null
+done
 call -X POST "$api/edits/$edit:commit" > /dev/null
-printf 'play: version code %s is on the %s track as %s (%s)\n' "$version_code" "$track" "$release_name" "$status"
+printf 'play: version code %s is on the %s tracks as %s (%s)\n' "$version_code" "$tracks" "$release_name" "$status"
