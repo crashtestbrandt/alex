@@ -169,3 +169,11 @@ hold_seconds = 3.0
 danger = true
 text = "Hold 3 seconds to delete"
 autowrap_mode = 3
+
+[node name="PrivacyButton" type="Button" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+script = ExtResource("hold")
+shape = 1
+text = "Hold to read the privacy policy"

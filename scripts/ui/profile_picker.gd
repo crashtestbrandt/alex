@@ -3,11 +3,16 @@ class_name ProfilePicker
 ## The adults' screen opens, creates and permanently deletes profiles, changes their saved looks, and adds
 ## scenes to them. Style pills preview immediately. Saving a look, adding a scene or completing the delete
 ## hold changes a profile.
+##
+## It also links the privacy policy, which Google Play's Families policy requires inside the app. The picker is
+## the first screen at launch, so the link is a hold: a learner's tap never leaves the app.
 
 signal profile_chosen(profile_id: String)
 signal profile_deleted(profile_id: String)
 
 enum Mode { PICK, CREATE, LOOK }
+
+const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md"
 
 @onready var _profiles: GridContainer = %Profiles
 @onready var _name_edit: SdfField = %NameEdit
@@ -26,6 +31,7 @@ enum Mode { PICK, CREATE, LOOK }
 @onready var _delete_button: HoldButton = %DeleteButton
 @onready var _scene_section: VBoxContainer = %SceneSection
 @onready var _scene_rows: VBoxContainer = %SceneRows
+@onready var _privacy_button: HoldButton = %PrivacyButton
 
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
@@ -38,6 +44,7 @@ func _ready() -> void:
 	_back_button.pressed.connect(_on_back)
 	_new_button.pressed.connect(_on_new_profile)
 	_delete_button.held.connect(_on_delete_held)
+	_privacy_button.held.connect(_on_privacy_held)
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()
@@ -237,6 +244,13 @@ func _on_delete_held() -> void:
 		_name_edit.grab_focus()
 	else:
 		_new_button.grab_focus()
+
+func _on_privacy_held() -> void:
+	var err: Error = OS.shell_open(PRIVACY_URL)
+	if err != OK:
+		_status.text = "The privacy policy is at %s" % PRIVACY_URL
+		_status.show()
+		_sheet.ensure_control_visible(_status)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and _mode != Mode.PICK and _back_button.visible and event.is_action_pressed("ui_cancel"):
