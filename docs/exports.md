@@ -21,8 +21,8 @@ writes no output.
   placeholder `0.0.0`. With `ALEX_VERSION=X.Y.Z` set, `tools/export.sh` stamps that version for the length of
   the export. A release sets it from the tag (docs/releases.md).
 - `just testflight` uploads only with `ALEX_VERSION` set.
-- Both Android presets take the commit count as their version code. `tools/export.sh` stamps it for the length
-  of the export.
+- Both Android presets take the build number as their version code: `ALEX_BUILD` in a release (docs/releases.md
+  "Build numbers"), or the commit count. `tools/export.sh` stamps it for the length of the export.
 - `Google Play` installs Godot's Gradle build template into `android/`, which git ignores. The first build
   downloads Gradle and its dependencies.
 
@@ -115,7 +115,8 @@ The script checks both and prints these steps when one is missing.
 tag (docs/releases.md).
 
 - It refuses a working tree with uncommitted changes, so every upload maps to a commit.
-- The build number is the commit count. Xcode raises it when App Store Connect already holds that number.
+- The build number is `ALEX_BUILD` in a release, or the commit count. Xcode raises it when App Store Connect
+  already holds that number.
 - `tools/testflight.sh build/<commit> --export-only` signs the `.ipa` into `build/<commit>/ipa/` and uploads
   nothing.
 

@@ -10,6 +10,7 @@
 # - PLAY_RELEASE_STATUS: `completed` when unset. An app with no release published from Play Console takes only `draft`.
 # - PLAY_PRODUCTION: `try` when unset, which also sends the release to production and only warns when Play
 #   refuses. `skip` leaves production out.
+# - PLAY_LISTING: `skip` leaves the store listing and its images as they are. A release candidate sets it.
 #
 # It talks to the Play Developer API with curl, openssl and jq, so the key reaches no third-party code.
 set -euo pipefail
@@ -95,6 +96,12 @@ if [[ "${PLAY_PRODUCTION:-try}" == "try" ]]; then
 			echo "::warning::Google Play refused production. The release is on the testing tracks."
 		fi
 	fi
+fi
+
+# A release candidate leaves the listing as it is (PLAY_LISTING=skip).
+if [[ "${PLAY_LISTING:-set}" == "skip" ]]; then
+	printf 'play: listing left as it is\n'
+	exit 0
 fi
 
 # The store listing and its images, from store/play/, in an edit of its own after the bundle, so a bad listing

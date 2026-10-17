@@ -13,10 +13,11 @@
 # ALEX_VERSION, when set, is the version every preset exports with. The release workflow sets it from the tag.
 # Without it a build carries project.godot's placeholder, 0.0.0.
 #
-# ALEX_LABEL is the whole tag, such as 0.1.2-rc.1. Every export stamps it, or "dev", with the commit count for
+# ALEX_LABEL is the whole tag, such as 0.1.2-rc.1. Every export stamps it, or "dev", with the build number for
 # the profile picker's build stamp (BuildStamp).
 #
-# Both Android presets take the commit count as their version code, the build number iOS uses too.
+# Both Android presets take the build number as their version code, the number iOS uses too: ALEX_BUILD, or the
+# commit count without it.
 #
 # project.godot and export_presets.cfg are stamped for the length of the export and restored after it.
 #
@@ -107,8 +108,13 @@ if [[ -n "${ALEX_VERSION:-}" ]]; then
 fi
 
 # The build stamp the profile picker shows (BuildStamp): the tag's label, such as 0.1.2-rc.1, and the build
-# number every store sees, the commit count.
-code="$(git rev-list --count HEAD 2> /dev/null || echo 1)"
+# number every store sees. A release sets ALEX_BUILD (docs/releases.md); without it the number is the commit
+# count.
+code="${ALEX_BUILD:-$(git rev-list --count HEAD 2> /dev/null || echo 1)}"
+if [[ ! "$code" =~ ^[1-9][0-9]*$ ]]; then
+	printf 'export: ALEX_BUILD is "%s". It must be a whole number above zero.\n' "$code" >&2
+	exit 2
+fi
 label="${ALEX_LABEL:-${ALEX_VERSION:-dev}}"
 if [[ ! "$label" =~ ^[0-9A-Za-z.+-]+$ ]]; then
 	printf 'export: ALEX_LABEL is "%s". It takes letters, digits, dots, plus and minus.\n' "$label" >&2
