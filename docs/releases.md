@@ -5,15 +5,17 @@ it.
 
 ## Cut a release
 
-1. Raise `application/config/version` in `project.godot` in a pull request, and merge it.
-2. On an up-to-date `main`, run `just release`. It tags `HEAD` as `v<version>` and pushes the tag.
-3. The release workflow runs. The GitHub Release leaves draft once every job passes.
+1. On an up-to-date `main`, run `just release X.Y.Z`. It tags `HEAD` as `vX.Y.Z` and pushes the tag.
+2. The release workflow runs. The GitHub Release leaves draft once every job passes.
 
+- The tag is the version. `project.godot` keeps the placeholder `0.0.0`, and no pull request changes it.
+- The workflow passes the tag's version to every export as `ALEX_VERSION`.
 - A version is three numbers, `X.Y.Z`. iOS and Google Play refuse anything else.
+- `just release` refuses a version lower than the latest tag, because iOS and Google Play refuse one too.
 - The build number is the commit count on `main`. iOS and Android both use it.
 - The release notes are the merged PR titles since the previous tag.
-- Running the workflow by hand (Actions > release > Run workflow) builds, signs and checks every platform and
-  publishes nothing.
+- Running the workflow by hand (Actions > release > Run workflow) builds, signs and checks every platform as
+  `0.0.0` and publishes nothing.
 
 ## What a release publishes
 

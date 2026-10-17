@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
-# Tag main with the version in project.godot and push the tag: tools/release.sh.
+# Tag main with a version and push the tag: tools/release.sh X.Y.Z.
 #
-# `just release` runs this (docs/releases.md). The pushed tag starts .github/workflows/release.yml. The version
-# changes in a pull request first; this script only tags what main already holds.
+# `just release X.Y.Z` runs this (docs/releases.md). The pushed tag starts .github/workflows/release.yml,
+# which builds every platform with that version. project.godot keeps a placeholder; the tag is the version.
 set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+	printf 'usage: tools/release.sh X.Y.Z\n' >&2
+	exit 2
+fi
+version="$1"
+if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	printf 'release: the version is "%s". It must be X.Y.Z.\n' "$version" >&2
+	exit 2
+fi
+tag="v$version"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-
-version="$(sed -n 's/^config\/version="\(.*\)"$/\1/p' project.godot)"
-if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-	printf 'release: project.godot has version "%s". It must be X.Y.Z.\n' "$version" >&2
-	exit 1
-fi
-tag="v$version"
 
 if [[ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]]; then
 	printf 'release: check out main first.\n' >&2
@@ -29,7 +33,13 @@ if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
 	exit 1
 fi
 if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
-	printf 'release: %s already exists. Raise application/config/version in a pull request first.\n' "$tag" >&2
+	printf 'release: %s already exists.\n' "$tag" >&2
+	exit 1
+fi
+# iOS and Google Play refuse a version lower than one they already hold.
+latest="$(git tag --list 'v*' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
+if [[ -n "$latest" && "$(printf '%s\n%s\n' "$latest" "$version" | sort -V | tail -1)" != "$version" ]]; then
+	printf 'release: %s is lower than the latest release, %s.\n' "$version" "$latest" >&2
 	exit 1
 fi
 

@@ -59,7 +59,8 @@ app's name, no screen speaks it, and the app has no persona.
   about a specific child is in code (docs/design.md, docs/profiles.md).
 - **Godot 4.7-stable**, GDScript only (no C#); pass the `godot-docs` MCP `version: "4.7"`.
 - **Mobile renderer** on every platform; phones and tablets are the targets; mouse emulates touch.
-- **A `vX.Y.Z` tag on `main` releases every platform** (docs/releases.md). `just release` tags it.
+- **A `vX.Y.Z` tag on `main` releases every platform** (docs/releases.md). `just release X.Y.Z` tags it. The
+  tag is the version; `project.godot` keeps `0.0.0`.
 - **Six export presets** (docs/exports.md): Android, Google Play, iOS, macOS, Windows, Linux. `just exports`
   builds and checks them.
 - No ADRs. Record decisions in the README, a `docs/` page or a script header comment.

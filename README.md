@@ -136,7 +136,7 @@ just export-android   # one preset into build/<commit>/android/; also -play, -io
 just exports          # every preset, then check what each export holds
 just run-ios          # export iOS and run it on the paired iPhone or iPad
 just testflight       # export iOS, archive it and upload it for TestFlight
-just release          # tag main with project.godot's version; CI builds, signs and publishes it
+just release X.Y.Z    # tag main as vX.Y.Z; CI builds, signs and publishes it
 ```
 
 Each needs the Godot export templates of the same version. Android also needs a JDK and an Android SDK, and iOS
