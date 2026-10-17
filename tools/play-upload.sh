@@ -73,30 +73,6 @@ for track in $tracks; do
 	call -X PUT -H 'Content-Type: application/json' --data "$body" "$api/edits/$edit/tracks/$track" > /dev/null
 done
 
-# The store listing and its images, from store/play/, in the same edit. The API has no Chromebook image type,
-# so that set was uploaded once in Play Console.
-store="$(cd "$(dirname "$0")/.." && pwd)/store/play"
-language="$(jq -r .language "$store/listing.json")"
-listing="$(jq -c --rawfile d "$store/description.txt" '{language, title, shortDescription: .short_description,
-	fullDescription: ($d | rtrimstr("\n"))}' "$store/listing.json")"
-call -X PUT -H 'Content-Type: application/json' --data "$listing" "$api/edits/$edit/listings/$language" > /dev/null
-# upload_images <image type> <file>...: replace every image of that type.
-upload_images() {
-	local type="$1" file
-	shift
-	call -X DELETE "$api/edits/$edit/listings/$language/$type" > /dev/null
-	for file in "$@"; do
-		call -X POST -H 'Content-Type: image/png' --data-binary "@$file" \
-			"$upload_api/edits/$edit/listings/$language/$type?uploadType=media" > /dev/null
-	done
-}
-upload_images icon "$store/icon-512.png"
-upload_images featureGraphic "$store/feature-1024x500.png"
-for type in phoneScreenshots sevenInchScreenshots tenInchScreenshots; do
-	upload_images "$type" "$store"/screenshot-*.png
-done
-printf 'play: listing and images set from store/play/\n'
-
 call -X POST "$api/edits/$edit:commit" > /dev/null
 printf 'play: version code %s is on the %s tracks as %s (%s)\n' "$version_code" "$tracks" "$release_name" "$status"
 
@@ -120,3 +96,31 @@ if [[ "${PLAY_PRODUCTION:-try}" == "try" ]]; then
 		fi
 	fi
 fi
+
+# The store listing and its images, from store/play/, in an edit of its own after the bundle, so a bad listing
+# never holds a build back from testers. A failure here still fails the job. The API has no Chromebook image
+# type, so that set was uploaded once in Play Console.
+store="$(cd "$(dirname "$0")/.." && pwd)/store/play"
+language="$(jq -r .language "$store/listing.json")"
+listing_edit="$(call -X POST "$api/edits" | jq -r .id)"
+listing="$(jq -c --rawfile d "$store/description.txt" '{language, title, shortDescription: .short_description,
+	fullDescription: ($d | rtrimstr("\n"))}' "$store/listing.json")"
+call -X PUT -H 'Content-Type: application/json' --data "$listing" \
+	"$api/edits/$listing_edit/listings/$language" > /dev/null
+# upload_images <image type> <file>...: replace every image of that type.
+upload_images() {
+	local type="$1" file
+	shift
+	call -X DELETE "$api/edits/$listing_edit/listings/$language/$type" > /dev/null
+	for file in "$@"; do
+		call -X POST -H 'Content-Type: image/png' --data-binary "@$file" \
+			"$upload_api/edits/$listing_edit/listings/$language/$type?uploadType=media" > /dev/null
+	done
+}
+upload_images icon "$store/icon-512.png"
+upload_images featureGraphic "$store/feature-1024x500.png"
+for type in phoneScreenshots sevenInchScreenshots tenInchScreenshots; do
+	upload_images "$type" "$store"/screenshot-*.png
+done
+call -X POST "$api/edits/$listing_edit:commit" > /dev/null
+printf 'play: listing and images set from store/play/\n'

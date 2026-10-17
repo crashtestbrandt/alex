@@ -50,8 +50,9 @@ signing key. A device can move between the two without losing its recordings.
   was attached once in Play Console.
 - The listing is `store/play/listing.json` and `description.txt`. `just store-graphics` renders its icon,
   feature graphic and five 1920x1080 screenshots into `store/play/`.
-- Every upload sets the listing, the icon, the feature graphic and the phone and tablet screenshots in the
-  same edit as the bundle. The API has no Chromebook image type, so that set was uploaded once in Play Console.
+- Every upload sets the listing, the icon, the feature graphic and the phone and tablet screenshots. They go in
+  an edit of their own after the bundle, so a bad listing never holds a build back from testers.
+- The API has no Chromebook image type, so that set was uploaded once in Play Console.
 
 ## App Store
 
