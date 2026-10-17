@@ -6,7 +6,7 @@ class_name Profile
 ## A profile is the unit of configurability (docs/profiles.md). Everything a family or clinician tailors
 ## lives here or in the style preset it names. Nothing about one child is in code.
 
-const SCHEMA_VERSION: int = 3
+const SCHEMA_VERSION: int = 4
 
 var id: String = ""
 var display_name: String = ""
@@ -17,8 +17,10 @@ var style_id: String = "calm"
 ## The starter pack this profile was seeded from, for the record. Empty for a blank start.
 var starter_id: String = ""
 ## Every pack this profile holds, the starter first, in the order they were added (`Starter.add_to`). A pack
-## is added once.
+## is added once. `remove_scene` takes one out.
 var scenes: PackedStringArray = PackedStringArray()
+## The scene whose first room Explore opens on (`explore_room`). Empty for the profile's first room.
+var entry: String = ""
 ## Unix time of creation.
 var created_at: int = 0
 var gestalts: Array[Gestalt] = []
@@ -50,6 +52,72 @@ func gestalt_by_text(text: String) -> Gestalt:
 ## Whether this profile holds the pack `scene_id`.
 func has_scene(scene_id: String) -> bool:
 	return scene_id in scenes
+
+## The scene that brought in the gestalt, room or board `item_id`. An added pack's ids are scoped to it
+## (`Starter.scoped`). Any other id came from the starter.
+func scene_of(item_id: String) -> String:
+	var prefix: String = item_id.get_slice(Starter.SCOPE_MARK, 0)
+	if item_id.contains(Starter.SCOPE_MARK) and has_scene(prefix):
+		return prefix
+	return starter_id
+
+## Whether the scene `scene_id` brought in a room.
+func scene_has_room(scene_id: String) -> bool:
+	for r: Room in rooms:
+		if scene_of(r.id) == scene_id:
+			return true
+	return false
+
+## The room Explore opens on: the entry scene's first room, else the first room. Null with no room.
+func explore_room() -> Room:
+	for r: Room in rooms:
+		if not entry.is_empty() and scene_of(r.id) == entry:
+			return r
+	if rooms.is_empty():
+		return null
+	return rooms[0]
+
+## Make `scene_id` the scene Explore opens on. Returns false, changing nothing, for a scene the profile does
+## not hold or one with no room.
+func set_entry(scene_id: String) -> bool:
+	if not has_scene(scene_id) or not scene_has_room(scene_id):
+		return false
+	entry = scene_id
+	return true
+
+## Remove the scene `scene_id`: its rooms, its boards, and its phrases nothing else names. A phrase with a
+## recording stays in the bank, so adding the scene again finds the recording. Returns false, changing
+## nothing, for a scene the profile does not hold.
+func remove_scene(scene_id: String) -> bool:
+	if not has_scene(scene_id):
+		return false
+	var kept_rooms: Array[Room] = []
+	for r: Room in rooms:
+		if scene_of(r.id) != scene_id:
+			kept_rooms.push_back(r)
+	var kept_boards: Array[Board] = []
+	for b: Board in boards:
+		if scene_of(b.id) != scene_id:
+			kept_boards.push_back(b)
+	var named: Dictionary[String, bool] = {}
+	for r: Room in kept_rooms:
+		for s: Spot in r.spots:
+			named[s.gestalt_id] = true
+			named[s.alt_gestalt_id] = true
+	for b: Board in kept_boards:
+		for gid: String in b.gestalt_ids:
+			named[gid] = true
+	var kept_gestalts: Array[Gestalt] = []
+	for g: Gestalt in gestalts:
+		if scene_of(g.id) != scene_id or named.has(g.id) or not g.recording.is_empty():
+			kept_gestalts.push_back(g)
+	rooms = kept_rooms
+	boards = kept_boards
+	gestalts = kept_gestalts
+	scenes.remove_at(scenes.find(scene_id))
+	if entry == scene_id:
+		entry = ""
+	return true
 
 ## A separate utterance; its recording uses media/name/ to avoid bank filename collisions.
 func name_gestalt() -> Gestalt:
@@ -123,6 +191,7 @@ func to_dict() -> Dictionary:
 		"style": style_id,
 		"starter": starter_id,
 		"scenes": Array(scenes),
+		"entry": entry,
 		"created_at": created_at,
 		"gestalts": gestalt_dicts,
 		"boards": board_dicts,
@@ -137,6 +206,8 @@ static func from_dict(d: Dictionary) -> Profile:
 		return from_dict(migrate_v1(d))
 	if schema == 2:
 		return from_dict(migrate_v2(d))
+	if schema == 3:
+		return from_dict(migrate_v3(d))
 	if schema != SCHEMA_VERSION:
 		return null
 	var profile_id: String = JsonValue.to_text(d.get("id")).strip_edges()
@@ -153,6 +224,9 @@ static func from_dict(d: Dictionary) -> Profile:
 		var scene_id: String = JsonValue.to_text(item).strip_edges()
 		if not scene_id.is_empty() and not scene_id in p.scenes:
 			p.scenes.push_back(scene_id)
+	var entry_id: String = JsonValue.to_text(d.get("entry")).strip_edges()
+	if entry_id in p.scenes:
+		p.entry = entry_id
 	p.created_at = JsonValue.to_int(d.get("created_at"), 0)
 	for row: Dictionary in JsonValue.to_dict_rows(d.get("gestalts")):
 		var g: Gestalt = Gestalt.from_dict(row)
@@ -181,4 +255,11 @@ static func migrate_v2(d: Dictionary) -> Dictionary:
 	migrated["schema"] = 3
 	var starter: String = JsonValue.to_text(d.get("starter")).strip_edges()
 	migrated["scenes"] = [starter] if not starter.is_empty() else []
+	return migrated
+
+## Version 3 had no entry scene. Explore opened on the first room, which an empty entry keeps.
+static func migrate_v3(d: Dictionary) -> Dictionary:
+	var migrated: Dictionary = d.duplicate(true)
+	migrated["schema"] = 4
+	migrated["entry"] = ""
 	return migrated

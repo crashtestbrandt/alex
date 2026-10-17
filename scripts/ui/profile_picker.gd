@@ -1,8 +1,8 @@
 extends Control
 class_name ProfilePicker
-## The adults' screen opens, creates and permanently deletes profiles, changes their saved looks, and adds
-## scenes to them. Style pills preview immediately. Saving a look, adding a scene or completing the delete
-## hold changes a profile.
+## The adults' screen opens, creates and permanently deletes profiles, changes their saved looks, and adds,
+## removes and picks the entry scene for them. Style pills preview immediately. Saving a look, changing a
+## scene or completing the delete hold changes a profile.
 ##
 ## It also shows the privacy policy, which Google Play's Families policy requires inside the app. The text is
 ## PRIVACY.md, shipped in every export ([PolicyText]), so nothing leaves the app to show it. The picker is the
@@ -55,6 +55,7 @@ func _ready() -> void:
 	resized.connect(_layout_profiles)
 	_starter_row.resized.connect(_layout_choices)
 	_style_row.resized.connect(_layout_choices)
+	_scene_rows.resized.connect(_layout_choices)
 	Style.changed.connect(func(_preset: StylePreset) -> void: _layout_choices.call_deferred())
 	refresh()
 
@@ -71,6 +72,13 @@ func _layout_choices() -> void:
 			natural += button.get_combined_minimum_size().x + PillBar.GAP_PX
 		row.vertical = row.size.x < natural - PillBar.GAP_PX
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# A scene row puts its title over its buttons when the two do not fit side by side.
+	for row: BoxContainer in _scene_rows.get_children():
+		var title: Label = row.get_child(0) as Label
+		var actions: Control = row.get_child(1) as Control
+		var font: Font = title.get_theme_font("font")
+		var title_px: float = font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, title.get_theme_font_size("font_size")).x
+		row.vertical = row.size.x < title_px + 12.0 + actions.get_combined_minimum_size().x
 
 ## Re-read the profiles on disk, with separate actions to open each profile or change its look.
 func refresh() -> void:
@@ -97,7 +105,7 @@ func refresh() -> void:
 		card.add_child(button)
 		var edit: SdfButton = SdfButton.new()
 		edit.text = "Edit"
-		edit.tooltip_text = "Change look or delete profile"
+		edit.tooltip_text = "Change look or scenes, or delete profile"
 		edit.shape = SdfButton.Shape.PILL
 		edit.quiet = true
 		edit.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -184,16 +192,19 @@ func _on_edit_profile(profile_id: String) -> void:
 	_on_style_pressed(profile.style_id)
 	_style_bar.items()[_current_style_index()].grab_focus()
 
-## One row per shipped scene: its title, and Add, or Added for a scene the profile holds.
+## One row per shipped scene: its title, then Add, or Start here and Remove for a scene the profile holds.
+## The scene Explore opens on reads Starts here and takes no tap.
 func _fill_scenes(profile: Profile) -> void:
 	for child: Node in _scene_rows.get_children():
 		_scene_rows.remove_child(child)
 		child.queue_free()
+	var opens: Room = profile.explore_room()
+	var entry: String = profile.scene_of(opens.id) if opens != null else ""
 	for s: Starter in _starters:
 		if not s.is_scene():
 			continue
-		var row: HBoxContainer = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
+		var row: BoxContainer = BoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
 		var title: Label = Label.new()
 		title.text = s.title
 		title.tooltip_text = s.description
@@ -202,21 +213,45 @@ func _fill_scenes(profile: Profile) -> void:
 		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(title)
-		var held: bool = profile.has_scene(s.id)
-		var add: SdfButton = SdfButton.new()
-		add.text = "Added" if held else "Add"
-		add.disabled = held
-		add.shape = SdfButton.Shape.PILL
-		add.quiet = held
-		add.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		add.pressed.connect(_on_add_scene.bind(s))
-		row.add_child(add)
+		var actions: HBoxContainer = HBoxContainer.new()
+		actions.alignment = BoxContainer.ALIGNMENT_END
+		actions.add_theme_constant_override("separation", 12)
+		row.add_child(actions)
+		if not profile.has_scene(s.id):
+			actions.add_child(_scene_button("Add", false, _on_add_scene.bind(s)))
+		else:
+			if profile.scene_has_room(s.id):
+				var here: bool = s.id == entry
+				actions.add_child(_scene_button("Starts here" if here else "Start here", here, _on_entry_scene.bind(s)))
+			actions.add_child(_scene_button("Remove", false, _on_remove_scene.bind(s)))
 		_scene_rows.add_child(row)
+	_layout_choices.call_deferred()
+
+func _scene_button(text: String, done: bool, on_pressed: Callable) -> SdfButton:
+	var button: SdfButton = SdfButton.new()
+	button.text = text
+	button.disabled = done
+	button.shape = SdfButton.Shape.PILL
+	button.quiet = done
+	button.pressed.connect(on_pressed)
+	return button
 
 func scene_rows() -> Array[Node]:
 	return _scene_rows.get_children()
 
 func _on_add_scene(s: Starter) -> void:
+	_change_scene(s.add_to, "Added %s." % s.title, "Could not save the scene. Try again.")
+
+func _on_remove_scene(s: Starter) -> void:
+	var remove: Callable = func(p: Profile) -> bool: return p.remove_scene(s.id)
+	_change_scene(remove, "Removed %s. Phrases you recorded stay." % s.title, "Could not remove the scene. Try again.")
+
+func _on_entry_scene(s: Starter) -> void:
+	var make_entry: Callable = func(p: Profile) -> bool: return p.set_entry(s.id)
+	_change_scene(make_entry, "Explore opens on %s." % s.title, "Could not save the change. Try again.")
+
+## Apply `change` to a fresh copy of the profile and save it. `change` returns false when it changed nothing.
+func _change_scene(change: Callable, done: String, failed: String) -> void:
 	if _editing_id.is_empty():
 		return
 	# Reload before changing, so a previewed look never rides along.
@@ -225,14 +260,15 @@ func _on_add_scene(s: Starter) -> void:
 		_status.text = "Could not open the profile."
 		_status.show()
 		return
-	if not s.add_to(profile):
+	var changed: bool = change.call(profile)
+	if not changed:
 		_fill_scenes(profile)
 		return
 	if ProfileStore.save_profile(profile) != OK:
-		_status.text = "Could not save the scene. Try again."
+		_status.text = failed
 		_status.show()
 		return
-	_status.text = "Added %s." % s.title
+	_status.text = done
 	_status.show()
 	_fill_scenes(profile)
 

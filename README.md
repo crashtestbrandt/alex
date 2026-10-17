@@ -85,7 +85,7 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 Early and usable.
 
-- **Ships:** two scene packs, a bedroom and a bathroom, that a profile can start with or add, a Words
+- **Ships:** two scene packs, a bedroom and a bathroom, that a profile can add, remove and open on, a Words
   palette and a chunk builder, three looks, and recording in your own voice.
 - **Coming:** moving between a profile's rooms, more objects and reactions, recording each chunk so the
   builder speaks in your voice, the learner's own songs and clips, and a bank view for caregivers.
