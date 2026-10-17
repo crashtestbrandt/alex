@@ -34,7 +34,6 @@ Alex keeps the following on your device, in its own app storage:
 
 - To delete one profile and its recordings, choose **Edit** in the profile picker and hold the delete button.
 - To delete everything, uninstall Alex.
-- On iOS, deleting one profile does not work yet. Uninstalling still deletes everything.
 
 ## Other services
 

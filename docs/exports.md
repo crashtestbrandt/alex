@@ -152,8 +152,4 @@ xcodebuild -project build/<commit>/ios/alex.xcodeproj -scheme alex -destination 
 - Android: a Galaxy Z Fold3 on Android 15 ran the release-signed APK (version code 20). It launched, asked for
   the microphone when the recording overlay opened, recorded a take, kept it, and played it from the object.
 - iOS: an iPhone on iOS 27 installs from TestFlight and from `just run-ios`, asks for the microphone on first
-  launch, and records.
-
-## Known device issues
-
-- iOS: deleting a profile does not work (#39).
+  launch, records, and deletes a profile.
