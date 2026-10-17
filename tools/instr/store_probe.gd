@@ -1,24 +1,34 @@
 extends Control
-## Google Play store graphics (`just store-graphics`), written to store/play/:
+## Store graphics (`just store-graphics`).
+##
+## store/play/, for Google Play:
 ##
 ## - icon-512.png: the app icon at 512 px, 32-bit PNG.
 ## - feature-1024x500.png: the icon centered on its own background color.
-## - screenshot-*.png: 1920x1080. Play takes 16:9 for phones, 7-inch and 10-inch tablets, and 1080 px is the
-##   10-inch minimum, so one set serves all three.
+## - screenshot-*.png: 1920x1080. Play takes 16:9 for phones, 7-inch and 10-inch tablets and Chromebooks.
 ##
-## Windowed, because it needs a renderer. The window is sized in pixels, so the screen must be at least
-## 1920x1080 pixels; a smaller capture fails. The profiles it makes live in an isolated repository and are
-## deleted on the way out. Re-run it whenever the screens change.
+## store/app-store/, for the App Store, with no alpha channel as Apple requires:
+##
+## - iphone/screenshot-*.png: 2556x1179, the iPhone size App Store Connect requires.
+## - ipad/screenshot-*.png: 2752x2064, the 13-inch iPad size it requires.
+##
+## Windowed, because it needs a renderer. Each set resizes the window in pixels, and a capture of any other size
+## fails. The profiles it makes live in an isolated repository and are deleted on the way out. Re-run it
+## whenever the screens change.
 ##
 ## The root is a Control, not a Node: a theme set on the window propagates only through Control and Window
 ## nodes, so a plain Node here would leave the top bar on Godot's default theme.
 
 const _MAIN: PackedScene = preload("res://scenes/main.tscn")
 const _ICON: String = "res://assets/brand/icon.png"
-const _OUT_DIR: String = "res://store/play"
-const _SHOT_SIZE: Vector2i = Vector2i(1920, 1080)
+const _PLAY_DIR: String = "res://store/play"
+const _SHOT_DIRS: PackedStringArray = ["res://store/play", "res://store/app-store/iphone", "res://store/app-store/ipad"]
+const _SHOT_SIZES: Array[Vector2i] = [Vector2i(1920, 1080), Vector2i(2556, 1179), Vector2i(2752, 2064)]
 const _ICON_SIZE: int = 512
 const _FEATURE_SIZE: Vector2i = Vector2i(1024, 500)
+
+var _out_dir: String = _PLAY_DIR
+var _shot_size: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
 	_run()
@@ -54,19 +64,32 @@ func _graphics() -> Error:
 	return _save_image(feature, "feature-1024x500.png")
 
 func _screenshots() -> Error:
-	get_window().size = _SHOT_SIZE
 	var repo: ProfileRepo = ProfileRepo.new("user://store_probe_%s" % OS.get_process_id())
 	ProfileStore.repo = repo
 	var home_profile: Profile = repo.create_profile("Sam", Starter.find("home_routines"), "bold")
 	var bath_profile: Profile = repo.create_profile("Sam", Starter.find("bath_time"), "calm")
-	# The window opens under the real cursor, which would hover a button into its bordered state.
-	Input.warp_mouse(Vector2(4.0, 4.0))
-	var main: Main = _MAIN.instantiate() as Main
-	add_child(main)
-	await get_tree().process_frame
-	var err: Error = await _home_shots(main, home_profile)
-	if err == OK:
-		err = await _bath_shot(main, bath_profile)
+	var err: Error = OK
+	for i: int in _SHOT_DIRS.size():
+		_out_dir = _SHOT_DIRS[i]
+		_shot_size = _SHOT_SIZES[i]
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_out_dir))
+		# macOS fits a titled window to the screen. A borderless one keeps the size, so the 13-inch iPad set
+		# renders on a shorter display.
+		get_window().borderless = true
+		get_window().position = Vector2i.ZERO
+		get_window().size = _shot_size
+		# The window opens under the real cursor, which would hover a button into its bordered state.
+		Input.warp_mouse(Vector2(4.0, 4.0))
+		var main: Main = _MAIN.instantiate() as Main
+		add_child(main)
+		await get_tree().create_timer(0.3).timeout
+		err = await _home_shots(main, home_profile)
+		if err == OK:
+			err = await _bath_shot(main, bath_profile)
+		main.queue_free()
+		await get_tree().process_frame
+		if err != OK:
+			break
 	repo.delete_profile(home_profile.id)
 	repo.delete_profile(bath_profile.id)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(repo.root))
@@ -137,14 +160,16 @@ func _bath_shot(main: Main, p: Profile) -> Error:
 func _shoot(file: String) -> Error:
 	RenderingServer.force_draw()
 	var image: Image = get_viewport().get_texture().get_image()
-	if image.get_size() != _SHOT_SIZE:
+	if image.get_size() != _shot_size:
 		print("STORE %s is %dx%d, not %dx%d. The screen is too small for the window." % [file,
-			image.get_width(), image.get_height(), _SHOT_SIZE.x, _SHOT_SIZE.y])
+			image.get_width(), image.get_height(), _shot_size.x, _shot_size.y])
 		return ERR_INVALID_DATA
+	# The App Store refuses a screenshot with an alpha channel.
+	image.convert(Image.FORMAT_RGB8)
 	return _save_image(image, file)
 
 func _save_image(image: Image, file: String) -> Error:
-	var path: String = "%s/%s" % [_OUT_DIR, file]
+	var path: String = "%s/%s" % [_out_dir, file]
 	var err: Error = image.save_png(path)
 	if err == OK:
 		print("STORE %s %dx%d" % [path, image.get_width(), image.get_height()])

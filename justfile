@@ -79,8 +79,9 @@ mic-probe:
 screenshot:
     "{{godot}}" --path . tools/instr/screenshot_probe.tscn
 
-# Google Play graphics under store/play/: the icon, the feature graphic and five 1920x1080 screenshots
-# (tools/instr/store_probe.gd). Windowed, on a screen of at least 1920x1080 pixels. Re-run when the screens change.
+# Store graphics (tools/instr/store_probe.gd): Google Play's icon, feature graphic and screenshots under
+# store/play/, and the App Store's iPhone and 13-inch iPad screenshots under store/app-store/. Windowed, in a
+# borderless window that may run past the screen. Re-run when the screens change.
 store-graphics:
     "{{godot}}" --path . tools/instr/store_probe.tscn
 
@@ -123,6 +124,17 @@ run-ios DEVICE="":
 # Export iOS, archive it and upload it for TestFlight (docs/exports.md "TestFlight"). Refuses uncommitted changes.
 testflight:
     tools/testflight.sh build/{{commit}}
+
+# The App Store listing for X.Y.Z from store/app-store/: metadata, age rating and screenshots
+# (tools/app-store.sh). Needs the ASC_KEY_* variables tools/testflight.sh uses.
+app-store version:
+    tools/app-store.sh metadata {{version}}
+    tools/app-store.sh age-rating
+    tools/app-store.sh screenshots {{version}}
+
+# Send X.Y.Z's newest processed build to App Review (tools/app-store.sh submit).
+app-store-submit version:
+    tools/app-store.sh submit {{version}}
 
 # Install the Android export on the one device `adb devices` lists.
 install-android:
