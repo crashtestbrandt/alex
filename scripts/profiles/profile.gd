@@ -249,7 +249,8 @@ static func from_dict(d: Dictionary) -> Profile:
 		var r: Room = Room.from_dict(row)
 		if r != null:
 			p.rooms.push_back(r)
-	# A take row is a key and a path. A row with either missing or not text is skipped; a key is normalized.
+	# A take row is a key and a path. A row with either missing or not text is skipped, as is a path that
+	# leaves media/ (`ChunkTakes.is_safe_path`); a key is normalized.
 	var takes: Dictionary = JsonValue.to_dict(d.get("chunk_takes"))
 	for raw_key: Variant in takes.keys():
 		var raw_path: Variant = takes[raw_key]
@@ -258,7 +259,7 @@ static func from_dict(d: Dictionary) -> Profile:
 		var key_text: String = raw_key
 		var chunk_key: String = ChunkTakes.key(key_text)
 		var path: String = JsonValue.to_text(raw_path).strip_edges()
-		if not chunk_key.is_empty() and not path.is_empty():
+		if not chunk_key.is_empty() and ChunkTakes.is_safe_path(path):
 			p.chunk_takes[chunk_key] = path
 	return p
 

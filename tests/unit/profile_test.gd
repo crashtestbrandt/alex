@@ -163,8 +163,11 @@ func test_chunk_takes_round_trip_by_key_and_skip_bad_rows() -> void:
 	rows["nothing"] = ""
 	rows["number"] = 3
 	rows["list"] = ["chunks/x.wav"]
+	rows["up"] = "chunks/../../other/profile.json"
+	rows["root"] = "/etc/passwd"
+	rows["user"] = "user://profiles/other/media/x.wav"
 	back = Profile.from_dict(d)
-	assert_eq(back.chunk_takes.size(), 2, "bad rows dropped")
+	assert_eq(back.chunk_takes.size(), 2, "bad rows and paths that leave media/ dropped")
 	assert_eq(back.chunk_takes.get("outside", ""), "chunks/outside-2.wav", "a key is normalized and a path trimmed")
 
 func test_gestalt_by_text_ignores_marks_and_casing() -> void:

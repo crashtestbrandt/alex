@@ -43,6 +43,12 @@ func test_file_name_is_safe_stable_and_distinct() -> void:
 	assert_true(long_name.length() <= ChunkTakes.SLUG_MAX + 13, "a long key is cut before the hash (%s)" % long_name)
 	assert_eq(ChunkTakes.relative_path("Let's go"), "chunks/" + name, "under the chunks directory")
 
+func test_safe_path_stays_under_media() -> void:
+	assert_true(ChunkTakes.is_safe_path("chunks/let_s_go-1.wav"), "a take under chunks/")
+	assert_true(ChunkTakes.is_safe_path("lets_go.wav"), "a whole-phrase take")
+	for bad: String in ["", "../x.wav", "chunks/../../x.wav", "/x.wav", "\\x.wav", "user://x.wav", "C:/x.wav", "chunks//x.wav", "./x.wav"]:
+		assert_false(ChunkTakes.is_safe_path(bad), "rejected: " + bad)
+
 func test_take_for_matches_by_key() -> void:
 	var takes: Dictionary[String, String] = {"let's go": "chunks/x.wav"}
 	assert_eq(ChunkTakes.take_for("LET'S GO ", takes), "chunks/x.wav", "any casing and spacing")

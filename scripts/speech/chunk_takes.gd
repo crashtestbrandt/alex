@@ -57,6 +57,16 @@ static func file_name(chunk: String) -> String:
 static func relative_path(chunk: String) -> String:
 	return "%s/%s" % [DIR, file_name(chunk)]
 
+## Whether `path` stays under the media directory: relative, with no empty or `..` segment. A saved profile
+## is a file a person can edit, and a take path is removed as well as played.
+static func is_safe_path(path: String) -> bool:
+	if path.is_empty() or path.is_absolute_path() or path.begins_with("/") or path.begins_with("\\"):
+		return false
+	for segment: String in path.replace("\\", "/").split("/"):
+		if segment.is_empty() or segment == "." or segment == "..":
+			return false
+	return true
+
 ## The take `takes` holds for `chunk`, relative to the media directory, or empty for none.
 static func take_for(chunk: String, takes: Dictionary[String, String]) -> String:
 	return takes.get(key(chunk), "")

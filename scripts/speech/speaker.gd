@@ -19,6 +19,9 @@ var _queue: Array[AudioStream] = []
 var _queue_text: PackedStringArray = PackedStringArray()
 ## Bumped by every `say` and `stop`, so a gap timer from an earlier utterance plays nothing.
 var _serial: int = 0
+## The id the OS utterance playing now was spoken with (the serial at that time), or -1. A callback for any
+## other id is stale: the cancel from `stop()` can arrive after the next `say()` has queued its segments.
+var _tts_utterance: int = -1
 
 func _ready() -> void:
 	add_child(_player)
@@ -55,6 +58,8 @@ func stop() -> void:
 	_queue_text.clear()
 	if _player.playing:
 		_player.stop()
+	# Forget the utterance before cancelling it, so its cancel callback is stale whenever it arrives.
+	_tts_utterance = -1
 	if DisplayServer.tts_is_speaking():
 		DisplayServer.tts_stop()
 	_current = null
@@ -80,7 +85,8 @@ func _play_next() -> void:
 		return
 	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_tts_ended)
 	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_CANCELED, _on_tts_ended)
-	DisplayServer.tts_speak(text, _tts_voice, 50, 1.0, 1.0, 0, true)
+	_tts_utterance = _serial
+	DisplayServer.tts_speak(text, _tts_voice, 50, 1.0, 1.0, _tts_utterance, true)
 
 ## A short quiet between two segments, then the next one. Nothing between the last and the end.
 func _after_gap() -> void:
@@ -101,9 +107,12 @@ func _finish() -> void:
 func _on_player_finished() -> void:
 	_after_gap()
 
-func _on_tts_ended(_utterance_id: int) -> void:
-	if _current != null:
-		_after_gap()
+## The OS finished or cancelled an utterance. Only the one playing now moves the queue on.
+func _on_tts_ended(utterance_id: int) -> void:
+	if utterance_id != _tts_utterance or _current == null:
+		return
+	_tts_utterance = -1
+	_after_gap()
 
 ## A recording by extension. Returns null, with the reason printed, for a file that cannot be loaded.
 static func _load_recording(path: String) -> AudioStream:
