@@ -67,8 +67,15 @@ api() {
 	printf '%s' "$body"
 }
 
+# The app's id. A caller's `id="$(app_id)"` stops the script, under set -e, when there is no record.
 app_id() {
-	api GET "/v1/apps?filter%5BbundleId%5D=$BUNDLE_ID" | jq -r '.data[0].id // empty'
+	local id
+	id="$(api GET "/v1/apps?filter%5BbundleId%5D=$BUNDLE_ID" | jq -r '.data[0].id // empty')"
+	if [[ -z "$id" ]]; then
+		printf 'app-store: no App Store Connect app record for %s\n' "$BUNDLE_ID" >&2
+		return 1
+	fi
+	printf '%s' "$id"
 }
 
 META="$ROOT/store/app-store/metadata.json"
@@ -245,6 +252,10 @@ cmd_submit() {
 	if [[ -z "$sid" ]]; then
 		sid="$(api POST /v1/reviewSubmissions "$(jq -cn --arg a "$id" '{data: {type: "reviewSubmissions",
 			attributes: {platform: "IOS"}, relationships: {app: {data: {type: "apps", id: $a}}}}}')" | jq -r .data.id)"
+	fi
+	# A submission left open by an earlier run may hold other items, or none for this version.
+	if ! api GET "/v1/reviewSubmissions/$sid/items?include=appStoreVersion" \
+		| jq -e --arg v "$vid" 'any(.data[]; .relationships.appStoreVersion.data.id? == $v)' > /dev/null; then
 		api POST /v1/reviewSubmissionItems "$(jq -cn --arg s "$sid" --arg v "$vid" '{data: {type: "reviewSubmissionItems",
 			relationships: {reviewSubmission: {data: {type: "reviewSubmissions", id: $s}},
 			appStoreVersion: {data: {type: "appStoreVersions", id: $v}}}}}')" > /dev/null
@@ -257,10 +268,6 @@ cmd_submit() {
 cmd_status() {
 	local id
 	id="$(app_id)"
-	if [[ -z "$id" ]]; then
-		printf 'app-store: no app record for %s\n' "$BUNDLE_ID" >&2
-		exit 1
-	fi
 	api GET "/v1/apps/$id" | jq -r '.data.attributes | "app: \(.name) (\(.bundleId)), primary locale \(.primaryLocale)"'
 	api GET "/v1/apps/$id/appInfos" | jq -r '.data[] | "app info \(.id): \(.attributes.state // .attributes.appStoreState)"'
 	api GET "/v1/apps/$id/appStoreVersions" \
