@@ -66,6 +66,26 @@ func _drag_scroll(scroll: ScrollContainer, at: Vector2) -> void:
 	await _settle()
 	_check(scroll.scroll_vertical > before_drag, "drag scrolls %s" % scroll.name)
 
+## A real press through the viewport that moves by `motion`, held for the button's full time, then released.
+func _drag_hold(button: HoldButton, motion: Vector2) -> void:
+	var press: InputEventMouseButton = InputEventMouseButton.new()
+	press.position = button.get_global_rect().get_center()
+	press.global_position = press.position
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	get_viewport().push_input(press, true)
+	var drag: InputEventMouseMotion = InputEventMouseMotion.new()
+	drag.relative = motion
+	drag.position = press.position + motion
+	drag.global_position = drag.position
+	drag.button_mask = MOUSE_BUTTON_MASK_LEFT
+	get_viewport().push_input(drag, true)
+	button._process(button.hold_seconds)
+	press.pressed = false
+	press.position = drag.position
+	press.global_position = drag.position
+	get_viewport().push_input(press, true)
+
 func _run() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg == "--capture" or arg.begins_with("--capture="):
@@ -263,10 +283,13 @@ func _profile_deletion(main: Main, picker: ProfilePicker, target: Profile) -> vo
 	_check(ProfileStore.load_profile(target.id) != null, "losing window focus cancels deletion")
 	var real_repo: ProfileRepo = ProfileStore.repo
 	ProfileStore.repo = DeleteFailureRepo.new(real_repo.root)
-	button.button_down.emit()
-	button._process(button.hold_seconds)
-	button.button_up.emit()
+	(picker.get_node("%Status") as Label).hide()
+	_drag_hold(button, Vector2(1.0, 3.0))
+	_check((picker.get_node("%Status") as Label).visible, "a finger's jitter keeps the delete hold")
 	_check((picker.get_node("%Status") as Label).visible, "deletion errors remain on the caregiver screen")
+	(picker.get_node("%Status") as Label).hide()
+	_drag_hold(button, Vector2(0.0, -40.0))
+	_check(not (picker.get_node("%Status") as Label).visible, "a drag past the scroll distance cancels the delete hold")
 	_check(real_repo.load_profile(target.id) != null and App.active_profile != null, "failed delete preserves selection and disk data")
 	ProfileStore.repo = real_repo
 	sheet.ensure_control_visible(button)

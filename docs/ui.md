@@ -132,6 +132,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Profile rows keep their Look action inline. Creation and look editing have separate forms.
 - Keyboard focus stays inside the recording overlay. Back and Escape restore focus to the initiating control.
 - A scroll or lost window focus cancels a caregiver hold. Losing focus also cancels an unfinished recording.
+- A scroll begins after a press moves 24 px, the room's `DRAG_PX` (`gui/common/default_scroll_deadzone`). A resting finger's jitter keeps a hold.
 - The current phrase has one caption. Repeated taps replace it; view changes clear it.
 - Shadows remain dark in every style. Glyphs change color while pressed. Chunk text keeps the text color on its pill.
 
