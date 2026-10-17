@@ -370,3 +370,31 @@ jobs:
           APP_REVIEW_PHONE: ${{ secrets.APP_REVIEW_PHONE }}
         # The lowest processed build from the commit's first number on: a candidate's, when one shares the commit.
         run: tools/app-store.sh release "$ALEX_VERSION" "$(( $(git rev-list --count HEAD) * 100 ))"
+
+  # External TestFlight testers, for every tag: the build the ios job uploaded goes to the public-link group, with
+  # Beta App Review when Apple asks for it. Apple processes a build for 10 to 30 minutes first, so this waits on
+  # its own runner.
+  testflight:
+    runs-on: ubuntu-latest
+    needs: [plan, ios]
+    if: needs.plan.outputs.publish == 'true'
+    environment: release
+    timeout-minutes: 120
+    env:
+      ALEX_VERSION: ${{ needs.plan.outputs.version }}
+      ALEX_BUILD: ${{ needs.plan.outputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/apple-keys
+        with:
+          asc-key: ${{ secrets.ASC_KEY_P8 }}
+          asc-key-id: ${{ secrets.ASC_KEY_ID }}
+          asc-issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+
+      - name: External testers
+        env:
+          APP_REVIEW_PHONE: ${{ secrets.APP_REVIEW_PHONE }}
+        run: |
+          tools/app-store.sh beta-setup
+          tools/app-store.sh beta "$ALEX_VERSION" "$ALEX_BUILD"

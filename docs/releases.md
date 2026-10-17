@@ -42,7 +42,7 @@ for a final. iOS takes it as the build number and Android as the version code.
 | Where | A candidate | A final `vX.Y.Z` |
 | --- | --- | --- |
 | GitHub | A pre-release, never "Latest", with every download named `alex-X.Y.Z-rc.N-…` | The release, marked "Latest" |
-| TestFlight | The build, as `X.Y.Z` | The build |
+| TestFlight | The build, as `X.Y.Z`, for internal and external testers | The same |
 | Google Play | The internal and closed testing tracks | Those tracks, the listing, and production |
 | App Store | Nothing | Listing and App Review |
 
@@ -97,6 +97,12 @@ signing key. A device can move between the two without losing its recordings.
 
 - The app is `io.github.crashtestbrandt.alex`, "Alex Language Explorer", in the Kids category for ages 5 and
   under. Its age rating answers are in `store/app-store/age-rating.json`.
+- External TestFlight testers join the "Testers" group through its public link,
+  `https://testflight.apple.com/join/2AYBxYbr`. They get no App Store Connect access.
+- Every tag sends its build to that group (`tools/app-store.sh beta`), with "What to Test" from `metadata.json`.
+  Apple's Beta App Review checks the first build of each version, usually within a day.
+- `tools/app-store.sh beta-setup` sets the test information, the review contact and the group. The release
+  workflow runs it before each build, and it changes nothing when they are already set.
 - `just app-store X.Y.Z` sets the listing from `store/app-store/`: `metadata.json`, `description.txt`, the age
   rating and the iPhone and iPad screenshots. `just store-graphics` renders the screenshots.
 - `just app-store-submit X.Y.Z` attaches the newest processed build of X.Y.Z and sends it to App Review.
@@ -118,6 +124,7 @@ signing key. A device can move between the two without losing its recordings.
 | `android` | Ubuntu | Exports the APK and the AAB, checks them, attaches the APK, uploads the AAB to Play. |
 | `macos` | macOS | Exports, signs, notarizes (`tools/notarize-macos.sh`), checks, attaches. |
 | `ios` | macOS | Exports, archives and uploads to TestFlight (`tools/testflight.sh`). |
+| `testflight` | Ubuntu | After `ios`: the build to the external group, with Beta App Review when Apple asks (`tools/app-store.sh beta`). |
 | `publish` | Ubuntu | Takes the release out of draft. |
 | `app-store` | Ubuntu | After `ios`: sets the listing, waits for Apple to process the build, submits it (`tools/app-store.sh`). |
 
