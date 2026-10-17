@@ -15,7 +15,7 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 and 2 forward before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1, 2 and 3 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
@@ -23,6 +23,7 @@ this repository.
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
 | `scenes` | Every pack the profile holds, the starter first, in the order added. Added in schema 3. |
+| `entry` | The scene Explore opens on, or empty for the first room. Added in schema 4. |
 | `gestalts` | The bank. See below. |
 | `rooms` | Explorable screens of spots. The first is the learner's Explore. See below. |
 | `boards` | Lists of gestalt ids. Together they are the learner's Words tiles (docs/ui.md "The mode strip"). |
@@ -95,7 +96,24 @@ profile and records its id in `scenes`:
 - A pack is added once. A second Add changes nothing.
 - A pack carries no recordings. A family's recordings never enter the repository.
 - The bank is the union, so every added scene's phrases are in Words and in Build.
-- Explore shows the first room until room choice lands (docs/ui.md "The mode strip").
+
+### Removing a scene
+
+Edit shows Remove beside every scene the profile holds. `Profile.remove_scene` takes the scene out:
+
+- Its rooms and boards are removed.
+- Its phrases are removed unless another scene's room or board names them.
+- A phrase with a recording stays in the bank. Adding the scene again reuses it, recording and all.
+- The starter is a scene like any other and can be removed.
+- `Profile.scene_of` names the scene behind an id. A scoped id is its pack's. Every other id is the starter's.
+
+### The entry scene
+
+Explore opens on the entry scene's first room (`Profile.explore_room`).
+
+- Edit shows Start here beside every held scene with a room. The entry reads Starts here.
+- With no entry, Explore opens on the profile's first room.
+- Removing the entry scene clears the entry.
 
 Packs are read with `DirAccess` at runtime. **Every export preset includes `starters/*.json`**, so a build
 ships the packs under any export mode (docs/exports.md).

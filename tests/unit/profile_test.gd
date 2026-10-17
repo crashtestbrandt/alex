@@ -141,3 +141,44 @@ func test_gestalt_by_text_ignores_marks_and_casing() -> void:
 	assert_eq(p.gestalt_by_text("Let's go | outside").id, "a", "the authored form")
 	assert_eq(p.gestalt_by_text("let's GO outside").id, "a", "the spoken form, any casing")
 	assert_null(p.gestalt_by_text("Let's go inside"), "another phrase is not it")
+
+func test_v3_migration_opens_on_the_first_room() -> void:
+	var p: Profile = _sample()
+	p.scenes = PackedStringArray(["home_routines"])
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 3
+	old.erase("entry")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 3 loads")
+	assert_eq(back.entry, "", "no entry scene")
+	assert_eq(back.explore_room().id, "room", "Explore opens on the first room")
+	assert_eq(old["schema"], 3, "migration does not mutate its input")
+
+func test_entry_round_trips_only_for_a_held_scene() -> void:
+	var p: Profile = _sample()
+	p.scenes = PackedStringArray(["home_routines", "bath_time"])
+	p.entry = "bath_time"
+	assert_eq(Profile.from_dict(p.to_dict()).entry, "bath_time", "the entry survives the trip")
+	var d: Dictionary = p.to_dict()
+	d["entry"] = "garden"
+	assert_eq(Profile.from_dict(d).entry, "", "an entry the profile does not hold is dropped")
+
+func test_scene_of_reads_the_scope() -> void:
+	var p: Profile = _sample()
+	p.starter_id = "home_routines"
+	p.scenes = PackedStringArray(["home_routines", "bath_time"])
+	assert_eq(p.scene_of("bath_time.tub"), "bath_time", "a scoped id is its pack's")
+	assert_eq(p.scene_of("tub"), "home_routines", "an unscoped id is the starter's")
+	assert_eq(p.scene_of("garden.tub"), "home_routines", "a scope the profile does not hold is the starter's")
+
+func test_set_entry_needs_a_held_scene_with_a_room() -> void:
+	var p: Profile = _sample()
+	p.starter_id = "home_routines"
+	p.scenes = PackedStringArray(["home_routines", "bath_time", "songs"])
+	p.rooms.push_back(Room.from_dict({"id": "bath_time.bath", "spots": []}))
+	assert_eq(p.explore_room().id, "room", "with no entry, Explore opens on the first room")
+	assert_true(p.set_entry("bath_time"), "a held scene with a room")
+	assert_eq(p.explore_room().id, "bath_time.bath", "Explore opens on its room")
+	assert_false(p.set_entry("songs"), "a scene with no room is refused")
+	assert_false(p.set_entry("garden"), "a scene the profile does not hold is refused")
+	assert_eq(p.entry, "bath_time", "and neither changes the entry")

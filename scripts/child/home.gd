@@ -3,8 +3,8 @@ class_name ChildHome
 ## The learner's screen: the room or the tiles, a strip of two modes to move between them, and a held button
 ## back to the adults' picker. No scores, no timers, no wrong answers (docs/design.md).
 ##
-## The strip reads Explore and Words, never a room's or a board's title. Explore is the profile's first room;
-## room choice inside it waits until a profile has a second room. Words is the whole bank
+## The strip reads Explore and Words, never a room's or a board's title. Explore is the entry scene's room
+## (`Profile.explore_room`); room choice inside it waits. Words is the whole bank
 ## (`Profile.words_gestalts`) in two modes on a floating widget: Palette, a column of tiles, and Build, a
 ## strip the learner fills from the bank's chunks ([BuildView]). Holding a spot or a tile opens the
 ## caregiver's recording overlay for that gestalt.
@@ -91,10 +91,11 @@ func set_safe_area(rect: Rect2) -> void:
 	_record_overlay.set_safe_area(rect)
 	_layout_home.call_deferred()
 
-## Explore: the profile's first room.
+## Explore: the entry scene's room (`Profile.explore_room`).
 func show_explore() -> void:
-	if not _profile.rooms.is_empty():
-		show_room(_profile.rooms[0])
+	var r: Room = _profile.explore_room()
+	if r != null:
+		show_room(r)
 
 func show_room(r: Room) -> void:
 	_speaker.stop()

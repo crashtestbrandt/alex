@@ -38,7 +38,7 @@ is `PASS`, so a tap on its padding does not.
 ## The mode strip
 
 - The learner's strip has two pills, Explore and Words, in that order.
-- Explore shows the profile's first room.
+- Explore shows the entry scene's room (docs/profiles.md "The entry scene").
 - Words shows the whole bank: the boards' phrases first, in board order, then the rest in bank order
   (`Profile.words_gestalts`). A room's phrases are in the bank, so they are in Words.
 - A mode with nothing to show has no pill. With one pill, the strip hides.
@@ -101,7 +101,9 @@ for the shader to read.
 - The first screen lists profile rows. The name opens the profile; an inline Edit action opens its style and deletion controls.
 - New profile opens a separate form. An empty profile list opens that form directly.
 - The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
-- Edit also lists every shipped scene. Add copies the scene's room and phrases into the profile and saves it (docs/profiles.md "Adding a scene"). A scene the profile holds reads Added and takes no tap.
+- Edit also lists every shipped scene. Add copies the scene's room and phrases into the profile and saves it (docs/profiles.md "Adding a scene").
+- A scene the profile holds shows Remove (docs/profiles.md "Removing a scene").
+- A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.

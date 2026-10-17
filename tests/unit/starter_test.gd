@@ -94,3 +94,47 @@ func test_home_routines_is_mitigable() -> void:
 		if g.chunks.size() > 1:
 			multi += 1
 	assert_true(multi >= s.gestalts.size() / 2, "most of the pack splits into chunks")
+
+func test_remove_scene_undoes_add_to() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	Starter.find("home_routines").seed(p)
+	var before: Dictionary = p.to_dict()
+	assert_true(Starter.find("bath_time").add_to(p), "added")
+	assert_true(p.set_entry("bath_time"), "the scene is the entry")
+	assert_true(p.remove_scene("bath_time"), "removed")
+	assert_eq(p.to_dict(), before, "the profile is as it was before the add")
+	assert_false(p.remove_scene("bath_time"), "a second remove is refused")
+
+func test_removing_the_starter_keeps_what_another_scene_says() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	Starter.find("home_routines").seed(p)
+	assert_true(Starter.find("bath_time").add_to(p), "added")
+	assert_true(p.remove_scene("home_routines"), "the starter is removed")
+	assert_eq(p.scenes, PackedStringArray(["bath_time"]), "one scene is left")
+	assert_eq(p.rooms.size(), 1, "the starter's room is gone")
+	assert_eq(p.rooms[0].id, "bath_time.bath", "the added scene's room stays")
+	assert_eq(p.boards.size(), 1, "the starter's board is gone")
+	assert_null(p.gestalt("lets_go_outside"), "a phrase only the starter said is gone")
+	assert_not_null(p.gestalt("time_for_a_bath"), "a phrase the bath says stays")
+	for r: Room in p.rooms:
+		for s: Spot in r.spots:
+			assert_not_null(p.gestalt(s.gestalt_id), "%s names a phrase the bank holds" % s.id)
+	for b: Board in p.boards:
+		for gid: String in b.gestalt_ids:
+			assert_not_null(p.gestalt(gid), "board %s names a phrase the bank holds: %s" % [b.id, gid])
+
+func test_remove_scene_keeps_recordings_for_the_next_add() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	Starter.find("blank").seed(p)
+	var bath: Starter = Starter.find("bath_time")
+	assert_true(bath.add_to(p), "added")
+	p.gestalt("bath_time.splash_splash").recording = "bath_time.splash_splash.wav"
+	assert_true(p.set_entry("bath_time"), "the entry")
+	assert_true(p.remove_scene("bath_time"), "removed")
+	assert_true(p.rooms.is_empty() and p.boards.is_empty(), "its room and board are gone")
+	assert_eq(p.gestalts.size(), 1, "only the recorded phrase stays")
+	assert_eq(p.entry, "", "the entry is cleared")
+	assert_null(p.explore_room(), "Explore has no room")
+	assert_true(bath.add_to(p), "added again")
+	assert_eq(p.gestalt("bath_time.splash_splash").recording, "bath_time.splash_splash.wav", "the recording is found again")
+	assert_eq(p.gestalts.size(), bath.gestalts.size(), "the phrase is not copied twice")
