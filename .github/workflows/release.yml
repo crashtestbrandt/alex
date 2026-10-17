@@ -87,7 +87,7 @@ jobs:
             # With REQUIRE_CANDIDATE on, a final ships only what testers had: a candidate of the same version
             # on the same commit (docs/releases.md "Release candidates").
             if [[ "$candidate" == "false" && "$REQUIRE_CANDIDATE" == "true" ]] \
-              && ! git tag --points-at "$GITHUB_SHA" | grep -qx "v${version//./\\.}-rc\.[0-9]*"; then
+              && ! git tag --points-at "$GITHUB_SHA" | grep -qx "v${version//./\\.}-rc\.[0-9][0-9]*"; then
               echo "::error::$GITHUB_REF_NAME has no candidate on its commit. Tag v$version-rc.N there first."
               exit 1
             fi

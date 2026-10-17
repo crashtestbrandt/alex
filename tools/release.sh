@@ -55,7 +55,7 @@ if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
 fi
 # A final ships what testers had: a candidate of the same version on this commit. The REQUIRE_CANDIDATE
 # repository variable makes that a rule, which the release workflow checks again.
-if [[ "$version" != *-rc.* ]] && ! git tag --points-at HEAD | grep -qx "v${version//./\\.}-rc\.[0-9]*"; then
+if [[ "$version" != *-rc.* ]] && ! git tag --points-at HEAD | grep -qx "v${version//./\\.}-rc\.[0-9][0-9]*"; then
 	required="$(gh variable get REQUIRE_CANDIDATE 2> /dev/null || true)"
 	if [[ "$required" == "true" ]]; then
 		printf 'release: no candidate of %s is on this commit. Run just release %s-rc.1 first.\n' "$version" "$version" >&2
