@@ -73,23 +73,43 @@ func stop() -> AudioStreamWAV:
 static func file_name(gestalt_id: String) -> String:
 	return "%s.wav" % gestalt_id
 
+## The name the previous take keeps beside `name`: `<stem>.prev.<extension>`.
+static func previous_name(name: String) -> String:
+	return "%s.prev.%s" % [name.get_basename(), name.get_extension()]
+
 ## Save `stream` as the recording for `g`, keeping the previous take beside it as `<id>.prev.wav`. Updates
 ## `g.recording` on success. Returns the error, OK on success.
 static func save(stream: AudioStreamWAV, g: Gestalt, media_dir: String) -> Error:
-	var err: Error = DirAccess.make_dir_recursive_absolute(media_dir)
+	var name: String = file_name(g.id)
+	var err: Error = save_at(stream, media_dir, name)
 	if err != OK:
 		return err
-	var name: String = file_name(g.id)
-	var path: String = "%s/%s" % [media_dir, name]
+	g.recording = name
+	return OK
+
+## Save `stream` at `relative` under `media_dir`, creating the directory and keeping a take already there as
+## the previous take ([method previous_name]). Returns the error, OK on success.
+static func save_at(stream: AudioStreamWAV, media_dir: String, relative: String) -> Error:
+	var path: String = media_dir.path_join(relative)
+	var err: Error = DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	if err != OK:
+		return err
 	if FileAccess.file_exists(path):
-		var previous: String = "%s/%s.prev.wav" % [media_dir, g.id]
+		var previous: String = media_dir.path_join(previous_name(relative))
 		if FileAccess.file_exists(previous):
 			DirAccess.remove_absolute(previous)
 		err = DirAccess.rename_absolute(path, previous)
 		if err != OK:
 			return err
-	err = stream.save_to_wav(path)
-	if err != OK:
-		return err
-	g.recording = name
+	return stream.save_to_wav(path)
+
+## Remove the take at `relative` under `media_dir` and its previous take. A take already gone is OK.
+static func remove_at(media_dir: String, relative: String) -> Error:
+	for name: String in [relative, previous_name(relative)]:
+		var path: String = media_dir.path_join(name)
+		if not FileAccess.file_exists(path):
+			continue
+		var err: Error = DirAccess.remove_absolute(path)
+		if err != OK:
+			return err
 	return OK

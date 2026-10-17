@@ -58,7 +58,10 @@ it. Words reopens in the mode the learner last used.
 - A tap on a chunk lands it on the strip and says it. A tap on the strip says the whole. A tap on a chunk in
   the strip takes it off. There is no send button and no clear button.
 - A strip that says a phrase the bank holds is that phrase (`ChunkBank.find`), so it plays in the
-  caregiver's voice. Any other strip is said as itself, by the OS voice until per-chunk takes exist (#24).
+  caregiver's voice. Any other strip is said chunk by chunk, each from its take or by the OS voice
+  (docs/profiles.md "Recordings").
+- A chunk landing on the strip plays its take, or the bank's own one-chunk phrase, or the OS voice.
+- Hold a chunk to record that chunk. Hold the strip to record what it says.
 - The strip keeps what the learner built until they change it, across Explore and back.
 
 ## Chunk colors
@@ -87,7 +90,8 @@ it. Words reopens in the mode the learner last used.
 | `SdfPanel` | `PanelContainer` | A panel with an `SdfShape` behind its content, a larger radius, and `inner_radius()` for what sits in it. |
 | `PillBar` | `MarginContainer` | A floating pill of quiet pill buttons in one toggle group: the mode strip. |
 | `GlyphBar` | `PillBar` | A pill bar of glyph buttons, one of them the current state: the view widget, the Words widget. A glyph button is seven tenths of the tile floor, never under 96 px, and emits on every tap so the current one can reset. |
-| `ChunkButton` | `SdfButton` | A chunk the learner taps in Build: a pill in its chunk's color at the tile floor, text in the style's text color. |
+| `ChunkButton` | `HoldButton` | A chunk the learner taps in Build: a pill in its chunk's color at the tile floor, text in the style's text color. A hold records it. |
+| `TakePill` | `ChunkButton` | A pill on the recording overlay: a chunk in its color, or the whole phrase on the surface. A tap picks it; the picked pill has a thick border; a pill with a take carries a microphone mark. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
 | `HoldButton` | `SdfButton` | Fires only after a hold. Every adult screen sits behind one. |
 | `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. `floating` gives the pills the style's relief. |

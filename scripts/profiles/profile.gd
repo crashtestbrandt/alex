@@ -6,7 +6,7 @@ class_name Profile
 ## A profile is the unit of configurability (docs/profiles.md). Everything a family or clinician tailors
 ## lives here or in the style preset it names. Nothing about one child is in code.
 
-const SCHEMA_VERSION: int = 4
+const SCHEMA_VERSION: int = 5
 
 var id: String = ""
 var display_name: String = ""
@@ -26,6 +26,9 @@ var created_at: int = 0
 var gestalts: Array[Gestalt] = []
 var boards: Array[Board] = []
 var rooms: Array[Room] = []
+## A take per chunk, keyed by the chunk's text (`ChunkTakes.key`), as a path under `media/`. One take
+## serves every phrase the chunk appears in. Added in schema 5.
+var chunk_takes: Dictionary[String, String] = {}
 
 static func make(profile_id: String, name: String) -> Profile:
 	var p: Profile = Profile.new()
@@ -182,6 +185,9 @@ func to_dict() -> Dictionary:
 	var room_dicts: Array[Dictionary] = []
 	for r: Room in rooms:
 		room_dicts.push_back(r.to_dict())
+	var takes: Dictionary = {}
+	for chunk_key: String in chunk_takes.keys():
+		takes[chunk_key] = chunk_takes[chunk_key]
 	return {
 		"schema": SCHEMA_VERSION,
 		"id": id,
@@ -196,6 +202,7 @@ func to_dict() -> Dictionary:
 		"gestalts": gestalt_dicts,
 		"boards": board_dicts,
 		"rooms": room_dicts,
+		"chunk_takes": takes,
 	}
 
 ## A profile from a saved dictionary. Returns null for a missing id or a schema this build does not read.
@@ -208,6 +215,8 @@ static func from_dict(d: Dictionary) -> Profile:
 		return from_dict(migrate_v2(d))
 	if schema == 3:
 		return from_dict(migrate_v3(d))
+	if schema == 4:
+		return from_dict(migrate_v4(d))
 	if schema != SCHEMA_VERSION:
 		return null
 	var profile_id: String = JsonValue.to_text(d.get("id")).strip_edges()
@@ -240,6 +249,18 @@ static func from_dict(d: Dictionary) -> Profile:
 		var r: Room = Room.from_dict(row)
 		if r != null:
 			p.rooms.push_back(r)
+	# A take row is a key and a path. A row with either missing or not text is skipped, as is a path that
+	# leaves media/ (`ChunkTakes.is_safe_path`); a key is normalized.
+	var takes: Dictionary = JsonValue.to_dict(d.get("chunk_takes"))
+	for raw_key: Variant in takes.keys():
+		var raw_path: Variant = takes[raw_key]
+		if not raw_key is String or not raw_path is String:
+			continue
+		var key_text: String = raw_key
+		var chunk_key: String = ChunkTakes.key(key_text)
+		var path: String = JsonValue.to_text(raw_path).strip_edges()
+		if not chunk_key.is_empty() and ChunkTakes.is_safe_path(path):
+			p.chunk_takes[chunk_key] = path
 	return p
 
 ## Version 1 had no name recording. Preserve the bank, rooms and media references.
@@ -262,4 +283,11 @@ static func migrate_v3(d: Dictionary) -> Dictionary:
 	var migrated: Dictionary = d.duplicate(true)
 	migrated["schema"] = 4
 	migrated["entry"] = ""
+	return migrated
+
+## Version 4 had no chunk takes. Every phrase keeps its whole-phrase recording.
+static func migrate_v4(d: Dictionary) -> Dictionary:
+	var migrated: Dictionary = d.duplicate(true)
+	migrated["schema"] = 5
+	migrated["chunk_takes"] = {}
 	return migrated

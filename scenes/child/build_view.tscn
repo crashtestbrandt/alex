@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/child/build_view.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/ui/sdf_button.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/hold_button.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/ui/chunk_row.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/ui/sdf_scroll.gd" id="4"]
 

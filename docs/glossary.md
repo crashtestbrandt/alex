@@ -26,5 +26,6 @@ The words the README and the docs use, and what each means in Alex.
 | Views | Front, Top and Tilt. A caregiver chooses which a room offers. |
 | Hold | A two-second press. The only way to an adult screen or the recorder. |
 | Take | One recording of a phrase in a caregiver's voice. Keep saves it and keeps the previous take. |
+| Chunk take | A take of one chunk, keyed by its text. It speaks in every phrase the chunk appears in and in Build. |
 | Look | A style preset: colors, type size, motion, corners and the room's materials. |
 | Chunk color | The color a chunk carries everywhere, keyed by its text. Identity only, never a judgment. |

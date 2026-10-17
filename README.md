@@ -47,12 +47,15 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
 ## What a caregiver does
 
 1. **Make a profile.** A name, a starter pack, a look. One minute.
-2. **Record the phrases in your own voice.** Hold any object or tile for two seconds, hold the big button,
-   say the phrase, let go, hear it back, keep it. Until you do, the device's own voice fills in.
+2. **Record the phrases in your own voice.** Hold any object, tile or chunk for two seconds. Tap the whole
+   phrase or one of its chunks, hold the big button, say it, let go, hear it back, keep it. A chunk you
+   record once speaks in every phrase it appears in, and in the builder. Until you record, the device's own
+   voice fills in. A recorded part shows a microphone; pick it and hold **Hold to remove this recording** to
+   go back to the device's voice.
 3. **Record the name.** Hold the profile name to record it; tap the name to hear it.
 4. **Hand it over.**
 
-![The recording overlay: the phrase, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
+![The recording overlay: the phrase as pills, whole and by chunk, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
 
 To permanently remove a profile and all its recordings, choose **Edit** in the profile picker and hold
 **Hold 3 seconds to delete**. There is no undo.
@@ -86,9 +89,9 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 Early and usable.
 
 - **Ships:** two scene packs, a bedroom and a bathroom, that a profile can add, remove and open on, a Words
-  palette and a chunk builder, three looks, and recording in your own voice.
-- **Coming:** moving between a profile's rooms, more objects and reactions, recording each chunk so the
-  builder speaks in your voice, the learner's own songs and clips, and a bank view for caregivers.
+  palette and a chunk builder, three looks, and recording in your own voice, by phrase or by chunk.
+- **Coming:** moving between a profile's rooms, more objects and reactions, the learner's own songs and
+  clips, and a bank view for caregivers.
 - **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Recording is tried on an Android
   phone and an iPhone.
 
@@ -126,10 +129,10 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `scenes/` | `main.tscn`, the adults' `ui/profile_picker.tscn` and `ui/record_overlay.tscn`, the learner's `child/home.tscn`, `child/room_view.tscn` and `child/gestalt_tile.tscn`. |
 | `scripts/profiles/` | The data model: `Profile`, `Gestalt`, `Room`, `Spot`, `Board`, `NlaStage`, `Starter`, `JsonValue`, `ProfileRepo`, the `ProfileStore` autoload. |
 | `scripts/style/` | `StylePreset` (a resource), the `Style` autoload that turns one into a Theme, and `ChunkColors`. |
-| `scripts/speech/` | `Speaker` (a recording, else OS text to speech) and `Recorder` (the microphone). |
+| `scripts/speech/` | `Speaker` (the whole take, else chunk takes, else OS text to speech), `Recorder` (the microphone) and `ChunkTakes` (a take per chunk, keyed by text). |
 | `scripts/geometry/` | Objects as recipes and the camera math: `Sdf`, `Mesher`, `Primitive`, `Recipe`, `RecipeBuilder`, `ObjectRecipes`, `Picker`, `CameraFraming`, `RoomSpace`. |
 | `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
-| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `ChunkRow`, `UiGeometry`. |
+| `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `TakePill`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `ChunkRow`, `UiGeometry`. |
 | `shaders/ui/` | `shape.gdshader` and `glyph.gdshader`, the two fields every control is drawn from. |
 | `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
