@@ -16,6 +16,11 @@ if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
 	exit 2
 fi
 tag="v$version"
+# A candidate's number is the last two digits of its build number (docs/releases.md "Build numbers").
+if [[ "$version" =~ -rc\.([0-9]+)$ ]] && (( 10#${BASH_REMATCH[1]} < 1 || 10#${BASH_REMATCH[1]} > 98 )); then
+	printf 'release: a candidate is numbered 1 to 98, not %s.\n' "${BASH_REMATCH[1]}" >&2
+	exit 2
+fi
 
 # order_key <version>: a key sort -V orders correctly. X.Y.Z-rc.N comes after X.Y.(Z-1) and before X.Y.Z.
 order_key() {

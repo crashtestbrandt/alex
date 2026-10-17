@@ -14,34 +14,44 @@ is a gap to close.
 - The workflow passes the tag's version to every export as `ALEX_VERSION`.
 - A version is three numbers, `X.Y.Z`. iOS and Google Play refuse anything else.
 - `just release` refuses a version lower than the latest tag, because iOS and Google Play refuse one too.
+- The release notes are the merged PR titles since the previous tag.
+- Running the workflow by hand (Actions > release > Run workflow) builds, signs and checks every platform as
+  `0.0.0` and publishes nothing.
+
+## Build numbers
+
+Every tag gets its own build number: the commit count on `main` times 100, plus the candidate's number, or 99
+for a final. iOS takes it as the build number and Android as the version code.
+
+| Tag | Commit count | Build number |
+| --- | --- | --- |
+| `v0.1.2-rc.1` | 37 | 3701 |
+| `v0.1.2-rc.2` | 37 | 3702 |
+| `v0.1.2` | 37 | 3799 |
+
+- A final outranks its candidates on the same commit, so Play and TestFlight take both.
+- A commit holds up to 98 candidates.
+- Every export stamps the tag, such as `0.1.2-rc.1`, and the build number into `project.godot`'s
+  `alex/build/*` settings. The profile picker shows them in a corner, so a tester can say which build they have.
+- A local export, with no `ALEX_BUILD`, uses the commit count alone.
 
 ## Release candidates
 
-`just release X.Y.Z-rc.N` tags a release candidate, for testers only:
+`just release X.Y.Z-rc.N` tags a release candidate, for testers:
 
 | Where | A candidate | A final `vX.Y.Z` |
 | --- | --- | --- |
 | GitHub | A pre-release, never "Latest", with every download named `alex-X.Y.Z-rc.N-…` | The release, marked "Latest" |
 | TestFlight | The build, as `X.Y.Z` | The build |
+| Google Play | The internal and closed testing tracks | Those tracks, the listing, and production |
 | App Store | Nothing | Listing and App Review |
-| Google Play | Nothing | Every track, listing, production |
 
 - A candidate builds as `X.Y.Z`, because iOS and Google Play take only digits. The rc number is in the tag,
-  the GitHub release and the file names.
-- A candidate stays off Google Play. A final tag on the same commit has the same version code, and Play
-  refuses one twice.
+  the GitHub release, the file names, the Play release name and the build stamp.
 - A final tag on a candidate's commit submits the candidate's TestFlight build to App Review, the build testers
-  had. Its own upload gets a higher build number, and it goes unused.
+  had: the lowest processed build from that commit's first number on.
 - Versions order as `0.1.1` < `0.1.2-rc.1` < `0.1.2-rc.2` < `0.1.2`. A candidate after its own final is refused.
-- Issue #49 tracks the rest: a final tag that moves the candidate's build to Play production instead of
-  building again, and a rule that a final tag needs a candidate.
-- The build number is the commit count on `main`. iOS and Android both use it.
-- Every export stamps the tag, such as `0.1.2-rc.1`, and the build number into `project.godot`'s
-  `alex/build/*` settings. The profile picker shows them in a corner, so a tester can say which build they have.
-  A build that App Store Connect renumbered at upload still shows the commit count.
-- The release notes are the merged PR titles since the previous tag.
-- Running the workflow by hand (Actions > release > Run workflow) builds, signs and checks every platform as
-  `0.0.0` and publishes nothing.
+- Issue #49 tracks the rest: a rule that a final tag needs a candidate.
 
 ## What a release publishes
 
@@ -63,7 +73,8 @@ signing key. A device can move between the two without losing its recordings.
 - Play App Signing holds the release key, uploaded with Google's PEPK tool. The release key is also the upload key.
 - Automatic protection is off. Its failed-check prompt would appear on the learner's screen, and Google collects
   data from apps it protects. Play applies the setting when it processes a bundle, so it stays off for every upload.
-- Version codes 1 to 3 were uploaded by hand. A CI upload uses the commit count on `main`, which is higher.
+- Version codes 1 to 3 were uploaded by hand. A CI upload uses the build number ("Build numbers"), which is
+  higher.
 - Production needs a closed test with 12 testers opted in for 14 days in a row, because the account is personal.
 - Every upload also tries production, in an edit of its own. Until Google grants production access, Play
   refuses and the job warns. After that, every tag reaches production with no change here.

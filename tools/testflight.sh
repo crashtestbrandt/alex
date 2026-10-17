@@ -6,8 +6,8 @@
 # the Team ID the export carries, and an App Store Connect app record for the preset's bundle ID.
 #
 # - A working tree with changes is refused, so every upload maps to a commit.
-# - The archive's build number is the commit count. Xcode raises it at upload when App Store Connect already
-#   holds that number for the version, which a squash merge can cause.
+# - The archive's build number is ALEX_BUILD, or the commit count without it. Xcode raises it at upload when App
+#   Store Connect already holds that number for the version.
 # - --export-only signs the .ipa into <build directory>/ipa/ and uploads nothing.
 # - An upload needs ALEX_VERSION, the X.Y.Z it ships as. Without it the build carries project.godot's 0.0.0.
 # - ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID sign and upload with an App Store Connect API key instead of
@@ -52,7 +52,8 @@ if [[ -z "$team" ]]; then
 	printf 'testflight: the iOS export names no team (docs/exports.md "Signing").\n' >&2
 	exit 1
 fi
-build="$(git rev-list --count HEAD)"
+# A release sets ALEX_BUILD, the same number Android's version code takes (docs/releases.md).
+build="${ALEX_BUILD:-$(git rev-list --count HEAD)}"
 
 # Without an App Store Connect API key, the account Xcode is signed in to signs the archive and the export.
 #

@@ -221,8 +221,9 @@ cmd_screenshots() {
 }
 
 # wait_for_build <app id> <version> <build number>: the id of the lowest processed build of the version numbered
-# at least <build number>. A release candidate on the same commit uploaded that number first, so a final tag
-# takes the candidate's build, the one testers had, and Xcode numbers the final's own upload higher.
+# at least <build number>. A release passes its commit's first number, the commit count times 100. A candidate
+# on the same commit holds a lower number than the final, so a final tag takes the candidate's build, the one
+# testers had (docs/releases.md "Build numbers").
 # Processing takes 10 to 30 minutes after an upload; this polls each minute for up to 90.
 wait_for_build() {
 	local id="$1" version="$2" number="$3" i builds bid state

@@ -9,8 +9,9 @@ name: release
 # - The iOS build on TestFlight, then the App Store listing set and the version sent to App Review. An approved
 #   version goes live by itself.
 #
-# A release candidate, `vX.Y.Z-rc.N`, goes to testers only: a GitHub pre-release with every download, and
-# TestFlight. It skips Google Play and App Review.
+# A release candidate, `vX.Y.Z-rc.N`, goes to testers only: a GitHub pre-release with every download,
+# TestFlight, and Google Play's internal and closed testing tracks. It skips Play production, the Play listing
+# and App Review. Each tag has its own build number (docs/releases.md "Build numbers").
 #
 # The release leaves draft when every job passed. A run by hand (workflow_dispatch) builds, signs and checks
 # everything and publishes nothing.
@@ -40,6 +41,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       label: ${{ steps.version.outputs.label }}
+      build: ${{ steps.version.outputs.build }}
       candidate: ${{ steps.version.outputs.candidate }}
       publish: ${{ steps.version.outputs.publish }}
     steps:
@@ -58,15 +60,23 @@ jobs:
           label=0.0.0
           candidate=false
           publish=false
+          # The build number every store sees: the commit count times 100, plus the candidate's number, or 99
+          # for a final. Each tag gets its own, and a final outranks its candidates on the same commit.
+          slot=99
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
             label="${GITHUB_REF_NAME#v}"
-            if [[ "$GITHUB_REF_NAME" != v* || ! "$label" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-rc\.[0-9]+)?$ ]]; then
+            if [[ "$GITHUB_REF_NAME" != v* || ! "$label" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-rc\.([0-9]+))?$ ]]; then
               echo "::error::The tag is $GITHUB_REF_NAME. It must be vX.Y.Z or vX.Y.Z-rc.N."
               exit 1
             fi
             version="${BASH_REMATCH[1]}"
             if [[ -n "${BASH_REMATCH[2]}" ]]; then
               candidate=true
+              slot="${BASH_REMATCH[3]}"
+              if (( 10#$slot < 1 || 10#$slot > 98 )); then
+                echo "::error::$GITHUB_REF_NAME is candidate $slot. A candidate is numbered 1 to 98."
+                exit 1
+              fi
             fi
             if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
               echo "::error::$GITHUB_REF_NAME is not on main."
@@ -74,13 +84,15 @@ jobs:
             fi
             publish=true
           fi
+          build=$(( $(git rev-list --count HEAD) * 100 + 10#$slot ))
           {
             echo "version=$version"
             echo "label=$label"
+            echo "build=$build"
             echo "candidate=$candidate"
             echo "publish=$publish"
           } >> "$GITHUB_OUTPUT"
-          echo "Version $version ($label), build $(git rev-list --count HEAD), candidate $candidate, publish $publish"
+          echo "Version $version ($label), build $build, candidate $candidate, publish $publish"
 
       # A release candidate is a pre-release, for testers. It never becomes "Latest".
       - name: Draft the release
@@ -103,6 +115,7 @@ jobs:
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
       ALEX_LABEL: ${{ needs.plan.outputs.label }}
+      ALEX_BUILD: ${{ needs.plan.outputs.build }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -148,6 +161,7 @@ jobs:
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
       ALEX_LABEL: ${{ needs.plan.outputs.label }}
+      ALEX_BUILD: ${{ needs.plan.outputs.build }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -190,22 +204,26 @@ jobs:
           cp build/release/android/alex.apk "build/release/alex-$ALEX_LABEL-android.apk"
           gh release upload "$GITHUB_REF_NAME" "build/release/alex-$ALEX_LABEL-android.apk" --clobber
 
-      # A release candidate stays off Play. Its version code would collide with the final tag's on the same
-      # commit, and Play refuses a version code twice.
+      # Every tag has its own version code, so a candidate reaches the testing tracks too. A candidate leaves
+      # production and the store listing alone; a final sets both.
       - name: Google Play
-        if: needs.plan.outputs.publish == 'true' && needs.plan.outputs.candidate != 'true'
+        if: needs.plan.outputs.publish == 'true'
         env:
           PLAY_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           PLAY_TRACKS: ${{ vars.PLAY_TRACKS }}
           PLAY_RELEASE_STATUS: ${{ vars.PLAY_RELEASE_STATUS }}
+          CANDIDATE: ${{ needs.plan.outputs.candidate }}
         run: |
           set -euo pipefail
           if [[ -z "$PLAY_KEY" ]]; then
             echo "::warning::PLAY_SERVICE_ACCOUNT_JSON is not set, so nothing went to Google Play."
             exit 0
           fi
+          if [[ "$CANDIDATE" == "true" ]]; then
+            export PLAY_PRODUCTION=skip PLAY_LISTING=skip
+          fi
           printf '%s' "$PLAY_KEY" > "$RUNNER_TEMP/play.json"
-          PLAY_SERVICE_ACCOUNT_JSON="$RUNNER_TEMP/play.json" tools/play-upload.sh build/release/play/alex.aab "$ALEX_VERSION"
+          PLAY_SERVICE_ACCOUNT_JSON="$RUNNER_TEMP/play.json" tools/play-upload.sh build/release/play/alex.aab "$ALEX_LABEL"
 
   macos:
     runs-on: macos-26
@@ -216,6 +234,7 @@ jobs:
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
       ALEX_LABEL: ${{ needs.plan.outputs.label }}
+      ALEX_BUILD: ${{ needs.plan.outputs.build }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -262,6 +281,7 @@ jobs:
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
       ALEX_LABEL: ${{ needs.plan.outputs.label }}
+      ALEX_BUILD: ${{ needs.plan.outputs.build }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -323,6 +343,7 @@ jobs:
     env:
       ALEX_VERSION: ${{ needs.plan.outputs.version }}
       ALEX_LABEL: ${{ needs.plan.outputs.label }}
+      ALEX_BUILD: ${{ needs.plan.outputs.build }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -338,4 +359,5 @@ jobs:
       - name: Listing and App Review
         env:
           APP_REVIEW_PHONE: ${{ secrets.APP_REVIEW_PHONE }}
-        run: tools/app-store.sh release "$ALEX_VERSION" "$(git rev-list --count HEAD)"
+        # The lowest processed build from the commit's first number on: a candidate's, when one shares the commit.
+        run: tools/app-store.sh release "$ALEX_VERSION" "$(( $(git rev-list --count HEAD) * 100 ))"
