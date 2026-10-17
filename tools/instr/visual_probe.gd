@@ -110,15 +110,16 @@ func _run() -> void:
 			var display: Control = room.get_node("%ViewportContainer") as Control
 			_check(absf(float(viewport.size.x) / viewport.size.y - display.size.x / display.size.y) < 0.002, "3D render aspect matches display")
 			_inside(home.get_node("%TopBar") as Control, screen, "header")
-			_inside(home.get_node("%PlaceStrip") as Control, screen, "places")
+			_inside(home.get_node("%ModeStrip") as Control, screen, "modes")
 			_inside(room.get_node("%ViewWidget") as Control, screen, "views")
-			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP, CameraFraming.View.TILT]:
 				room.set_view(view, false)
 				await _settle()
-				for body: SpotBody in room.bodies():
-					_check(room.safe_rect().grow(1.0).encloses(room.screen_bounds(body)), "%s bounds are visible in view %s" % [body.spot.id, view])
-				if view == CameraFraming.View.SIDE and viewport_size == Vector2i(1280, 800):
-					_shot("side")
+				if view != CameraFraming.View.TILT:
+					for body: SpotBody in room.bodies():
+						_check(room.safe_rect().grow(1.0).encloses(room.screen_bounds(body)), "%s bounds are visible in view %s" % [body.spot.id, view])
+				if view == CameraFraming.View.TILT and viewport_size == Vector2i(1280, 800):
+					_shot("tilt")
 				if view == CameraFraming.View.FRONT:
 					room.body("door").react()
 					await get_tree().create_timer(0.55).timeout
@@ -131,7 +132,7 @@ func _run() -> void:
 			if captions.get_child_count() == 1:
 				_inside(captions.get_child(0) as Control, screen, "caption")
 			_shot("caption")
-			home.show_board(profile.boards[0])
+			home.show_words()
 			await _settle()
 			_check(grid.size.x <= screen.size.x, "board fits horizontally")
 			for child: Node in grid.get_children():
@@ -139,12 +140,24 @@ func _run() -> void:
 				_check(tile.size.x <= 320.0, "Words tiles do not stretch to fill a row")
 				_check(tile.size.x >= Style.current.tile_min_size and tile.size.y >= Style.current.tile_min_size, "tile meets touch floor")
 				_inside(tile.get_node("%Chunks") as Control, tile.get_global_rect(), "tile chunks")
-			var places: PillBar = home.get_node("%PlaceStrip") as PillBar
+			var modes: PillBar = home.get_node("%ModeStrip") as PillBar
 			var selected: int = 0
-			for button: SdfButton in places.items():
+			for button: SdfButton in modes.items():
 				selected += 1 if button.button_pressed else 0
-			_check(selected == 1, "exactly one selected place")
+			_check(selected == 1, "exactly one selected mode")
+			_check(home.mode_button(ChildHome.Mode.WORDS).button_pressed, "Words is the selected mode")
+			_inside(home.get_node("%WordsWidget") as Control, screen, "words widget")
 			_shot("board")
+			home.show_build()
+			await _settle()
+			var build: BuildView = home.build_view()
+			_inside(build, screen, "build view")
+			for button: ChunkButton in build.beginning_buttons() + build.ending_buttons():
+				_check(button.size.y >= Style.current.tile_min_size, "chunk button meets touch floor")
+				_check(button.get_global_rect().end.x <= screen.end.x + 1.0, "chunk button fits horizontally")
+			_shot("build")
+			home.show_palette()
+			await _settle()
 			overlay.open(Gestalt.from_text("long", "Let's go outside together and look at the trees in the garden"), profile)
 			await _settle()
 			_square(overlay.get_node("%RecordButton") as Control, "record button")
@@ -173,6 +186,13 @@ func _run() -> void:
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()
 			_inside(picker.get_node("%StyleBar") as Control, screen, "existing profile look choices")
+			var scene_rows: Control = picker.get_node("%SceneRows") as Control
+			_check(scene_rows.get_child_count() >= 2, "every shipped scene is listed (%d)" % scene_rows.get_child_count())
+			sheet.ensure_control_visible(scene_rows)
+			await _settle()
+			_inside(scene_rows, screen, "scene choices")
+			sheet.ensure_control_visible(create)
+			await _settle()
 			_inside(create, screen, "save look reachable")
 			_shot("profile-look")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
@@ -359,12 +379,13 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 		ids.push_back(id)
 	var board: Board = Board.make("long", "Words for our time in the garden", ids)
 	profile.boards.push_back(board)
+	profile.rooms[0].title = "The bedroom where we get ready in the morning"
 	profile.display_name = "A profile with a longer display name"
 	profile.style_id = "calm"
 	ProfileStore.save_profile(profile)
 	main.open_profile(profile.id)
 	home.show_profile(profile)
-	home.show_board(board)
+	home.show_words()
 	await _settle()
 	var screen: Rect2 = home.get_global_rect()
 	var grid: HFlowContainer = home.get_node("%Board") as HFlowContainer
@@ -381,7 +402,10 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	_check(not overlay.visible, "drag scrolling does not open the recorder")
 	_square(home.get_node("%ProfilesButton") as Control, "profile button with wrapped navigation")
 	_inside(home.get_node("%TopBar") as Control, screen, "long name header")
-	_inside(home.get_node("%PlaceStrip") as Control, screen, "long place titles")
+	_inside(home.get_node("%ModeStrip") as Control, screen, "mode strip beside a long name")
+	_check(home.mode_button(ChildHome.Mode.EXPLORE).text == "Explore", "a long room title stays off the strip")
+	_check(home.mode_button(ChildHome.Mode.WORDS).text == "Words", "a long board title stays off the strip")
+	_check(grid.get_child_count() == profile.words_gestalts().size(), "Words holds every board's tiles (%d)" % grid.get_child_count())
 	for child: Node in grid.get_children():
 		var tile: GestaltTile = child as GestaltTile
 		_inside(tile.get_node("%Chunks") as Control, tile.get_global_rect(), "long phrase chunks")
@@ -389,7 +413,7 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	stage.ensure_control_visible(last)
 	await _settle()
 	_inside(last, stage.get_global_rect(), "last tile reachable")
-	last.play_split(0.5)
+	last.play(0.5)
 	await get_tree().create_timer(0.3).timeout
 	_inside(last.get_node("%Chunks") as Control, last.get_global_rect(), "animated chunks")
 	var holds: Array[int] = [0]
@@ -469,10 +493,10 @@ func _safe_areas(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Re
 			_check(absf(transform.get_scale().x - transform.get_scale().y) < 0.001, "safe layout preserves uniform scale")
 			_check(room.get_global_rect().is_equal_approx(main.get_global_rect()), "world remains edge to edge")
 			_inside(home.get_node("%TopBar") as Control, safe, "header avoids cutouts")
-			_inside(home.get_node("%PlaceStrip") as Control, safe, "places avoid cutouts")
+			_inside(home.get_node("%ModeStrip") as Control, safe, "modes avoid cutouts")
 			_inside(room.get_node("%ViewWidget") as Control, safe, "views avoid gesture area")
 			_square(home.get_node("%ProfilesButton") as Control, "profile control")
-			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP]:
 				room.set_view(view, false)
 				await _settle()
 				for body: SpotBody in room.bodies():
@@ -484,7 +508,7 @@ func _safe_areas(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Re
 			var captions: Control = room.get_node("%Captions") as Control
 			_inside(captions.get_child(0) as Control, safe, "caption avoids cutouts")
 			_shot("room")
-			home.show_board(profile.boards[0])
+			home.show_words()
 			await _settle()
 			_inside(home.get_node("%Stage") as Control, safe, "board scroll area avoids cutouts")
 			_shot("board")

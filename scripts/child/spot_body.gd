@@ -80,6 +80,8 @@ func pick_target() -> Picker.Target:
 		t.parts[part] = _parts[part].transform
 	t.center = center_point()
 	t.radius = _bounds.size.length() / 2.0 * 1.3 + 0.1
+	# The doorway stays the door's to tap once the leaf has swung out of it.
+	t.opening = ObjectRecipes.opening(spot.kind, size_m)
 	return t
 
 ## Toggle the state and play the reaction.

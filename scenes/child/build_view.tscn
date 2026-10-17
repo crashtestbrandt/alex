@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/child/build_view.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_button.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/chunk_row.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_scroll.gd" id="4"]
+
+[node name="BuildView" type="VBoxContainer"]
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 16
+script = ExtResource("1")
+
+[node name="Strip" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+focus_mode = 2
+script = ExtResource("2")
+
+[node name="StripChunks" type="HFlowContainer" parent="Strip"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3")
+
+[node name="Columns" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="BeginningScroll" type="ScrollContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("4")
+
+[node name="Beginnings" type="VBoxContainer" parent="Columns/BeginningScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="BeginningSpacer" type="Control" parent="Columns/BeginningScroll/Beginnings"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="EndingScroll" type="ScrollContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("4")
+
+[node name="Endings" type="VBoxContainer" parent="Columns/EndingScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="EndingSpacer" type="Control" parent="Columns/EndingScroll/Endings"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2

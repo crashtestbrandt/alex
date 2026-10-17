@@ -26,6 +26,27 @@ func test_board_gestalts_follow_board_order_and_skip_unknown_ids() -> void:
 	assert_eq(listed.size(), 2, "the missing id is skipped")
 	assert_eq(listed[0].id, "b", "board order, not bank order")
 
+func test_words_are_the_boards_first_then_the_rest_of_the_bank() -> void:
+	var p: Profile = _sample()
+	p.put_gestalt(Gestalt.from_text("c", "See you | later"))
+	p.put_gestalt(Gestalt.from_text("d", "All done"))
+	p.boards.push_back(Board.make("more", "More", PackedStringArray(["a", "c"])))
+	var ids: PackedStringArray = PackedStringArray()
+	for g: Gestalt in p.words_gestalts():
+		ids.push_back(g.id)
+	assert_eq(ids, PackedStringArray(["b", "a", "c", "d"]), "board order, a repeat dropped, a missing id skipped, the rest of the bank after")
+
+func test_words_hold_the_whole_bank() -> void:
+	var p: Profile = _sample()
+	p.boards.clear()
+	assert_eq(p.words_gestalts().size(), 2, "no boards: the whole bank")
+	p.boards.push_back(Board.make("gone", "Gone", PackedStringArray(["missing"])))
+	assert_eq(p.words_gestalts().size(), 2, "boards that name nothing held: still the whole bank")
+	p.boards.push_back(Board.make("one", "One", PackedStringArray(["b"])))
+	assert_eq(p.words_gestalts()[0].id, "b", "a board's phrase comes first")
+	assert_eq(p.words_gestalts().size(), 2, "and a room's phrase is never left out")
+	assert_true(Profile.make("p2", "Empty").words_gestalts().is_empty(), "an empty bank has no words")
+
 func test_dict_round_trip() -> void:
 	var p: Profile = _sample()
 	var back: Profile = Profile.from_dict(p.to_dict())
@@ -86,4 +107,37 @@ func test_v1_migration_preserves_existing_recordings() -> void:
 	assert_eq(back.gestalts[0].recording, "a.wav", "familiar recordings preserved")
 	assert_eq(back.rooms[0].to_dict(), p.rooms[0].to_dict(), "room configuration preserved")
 	assert_eq(old["schema"], 1, "migration does not mutate its input")
-	assert_eq(back.to_dict()["schema"], 2, "next save writes version 2")
+	assert_eq(back.to_dict()["schema"], Profile.SCHEMA_VERSION, "next save writes the current version")
+	assert_true(back.scenes.is_empty(), "a version 1 profile with no starter has no scene")
+
+func test_v2_migration_records_the_starter_as_the_scene() -> void:
+	var p: Profile = _sample()
+	p.starter_id = "home_routines"
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 2
+	old.erase("scenes")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 2 loads")
+	assert_eq(back.scenes, PackedStringArray(["home_routines"]), "the starter is its one scene")
+	assert_eq(old["schema"], 2, "migration does not mutate its input")
+	var blank: Dictionary = p.to_dict()
+	blank["schema"] = 2
+	blank.erase("scenes")
+	blank["starter"] = ""
+	assert_true(Profile.from_dict(blank).scenes.is_empty(), "a blank start has no scene")
+
+func test_scenes_round_trip_once_each() -> void:
+	var p: Profile = _sample()
+	p.scenes = PackedStringArray(["home_routines", "bath_time"])
+	var back: Profile = Profile.from_dict(p.to_dict())
+	assert_eq(back.scenes, PackedStringArray(["home_routines", "bath_time"]), "scenes survive the trip in order")
+	assert_true(back.has_scene("bath_time") and not back.has_scene("garden"), "has_scene reads the list")
+	var d: Dictionary = p.to_dict()
+	d["scenes"] = ["home_routines", "home_routines", "", " "]
+	assert_eq(Profile.from_dict(d).scenes, PackedStringArray(["home_routines"]), "a repeat and a blank are dropped")
+
+func test_gestalt_by_text_ignores_marks_and_casing() -> void:
+	var p: Profile = _sample()
+	assert_eq(p.gestalt_by_text("Let's go | outside").id, "a", "the authored form")
+	assert_eq(p.gestalt_by_text("let's GO outside").id, "a", "the spoken form, any casing")
+	assert_null(p.gestalt_by_text("Let's go inside"), "another phrase is not it")

@@ -1,7 +1,8 @@
 extends Control
 class_name ProfilePicker
-## The adults' screen opens, creates and permanently deletes profiles, and changes their saved looks.
-## Style pills preview immediately. Saving a look or completing the delete hold changes a profile.
+## The adults' screen opens, creates and permanently deletes profiles, changes their saved looks, and adds
+## scenes to them. Style pills preview immediately. Saving a look, adding a scene or completing the delete
+## hold changes a profile.
 
 signal profile_chosen(profile_id: String)
 signal profile_deleted(profile_id: String)
@@ -23,6 +24,8 @@ enum Mode { PICK, CREATE, LOOK }
 @onready var _back_button: SdfButton = %BackButton
 @onready var _delete_section: VBoxContainer = %DeleteSection
 @onready var _delete_button: HoldButton = %DeleteButton
+@onready var _scene_section: VBoxContainer = %SceneSection
+@onready var _scene_rows: VBoxContainer = %SceneRows
 
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
@@ -136,6 +139,7 @@ func _show_mode(mode: Mode) -> void:
 	_style_row.visible = mode != Mode.PICK
 	_actions.visible = mode != Mode.PICK
 	_delete_section.visible = mode == Mode.LOOK
+	_scene_section.visible = mode == Mode.LOOK
 	_back_button.visible = mode != Mode.PICK and _profiles.get_child_count() > 0
 	_create_button.text = "Save" if mode == Mode.LOOK else "Create"
 	_heading.text = "New profile" if mode == Mode.CREATE else "Choose a profile"
@@ -156,8 +160,61 @@ func _on_edit_profile(profile_id: String) -> void:
 	_previous_style = Style.current
 	_show_mode(Mode.LOOK)
 	_heading.text = "Edit %s" % profile.display_name
+	_fill_scenes(profile)
 	_on_style_pressed(profile.style_id)
 	_style_bar.items()[_current_style_index()].grab_focus()
+
+## One row per shipped scene: its title, and Add, or Added for a scene the profile holds.
+func _fill_scenes(profile: Profile) -> void:
+	for child: Node in _scene_rows.get_children():
+		_scene_rows.remove_child(child)
+		child.queue_free()
+	for s: Starter in _starters:
+		if not s.is_scene():
+			continue
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		var title: Label = Label.new()
+		title.text = s.title
+		title.tooltip_text = s.description
+		title.mouse_filter = Control.MOUSE_FILTER_PASS
+		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(title)
+		var held: bool = profile.has_scene(s.id)
+		var add: SdfButton = SdfButton.new()
+		add.text = "Added" if held else "Add"
+		add.disabled = held
+		add.shape = SdfButton.Shape.PILL
+		add.quiet = held
+		add.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		add.pressed.connect(_on_add_scene.bind(s))
+		row.add_child(add)
+		_scene_rows.add_child(row)
+
+func scene_rows() -> Array[Node]:
+	return _scene_rows.get_children()
+
+func _on_add_scene(s: Starter) -> void:
+	if _editing_id.is_empty():
+		return
+	# Reload before changing, so a previewed look never rides along.
+	var profile: Profile = ProfileStore.load_profile(_editing_id)
+	if profile == null:
+		_status.text = "Could not open the profile."
+		_status.show()
+		return
+	if not s.add_to(profile):
+		_fill_scenes(profile)
+		return
+	if ProfileStore.save_profile(profile) != OK:
+		_status.text = "Could not save the scene. Try again."
+		_status.show()
+		return
+	_status.text = "Added %s." % s.title
+	_status.show()
+	_fill_scenes(profile)
 
 func _on_back() -> void:
 	if _previous_style != null:

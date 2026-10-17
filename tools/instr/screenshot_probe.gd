@@ -37,7 +37,7 @@ func _run() -> void:
 		var body: SpotBody = room_view.body(id)
 		if body != null:
 			room_view.tap(body)
-	# Mid-utterance: the door has finished swinging and the first chunk is lit.
+	# Mid-utterance: the door has finished swinging and the first chunk is marked.
 	await get_tree().create_timer(0.6).timeout
 	RenderingServer.force_draw()
 	var err: Error = _save(_OUT)

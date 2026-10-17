@@ -50,3 +50,20 @@ func test_a_moved_part_is_hit_where_it_is() -> void:
 	assert_eq(Picker.pick(origin, Vector3.DOWN, targets), -1, "closed: nothing in front of the door")
 	target.parts = {"leaf": Transform3D(Basis(Vector3.UP, -PI / 2.0), pivot)}
 	assert_eq(Picker.pick(origin, Vector3.DOWN, targets), 0, "open: the leaf is there")
+
+func test_the_doorway_is_the_doors_once_the_leaf_has_swung() -> void:
+	var door: Recipe = ObjectRecipes.make(Spot.Kind.DOOR, 2.0, StylePreset.new())
+	var target: Picker.Target = _target(door, Vector3.ZERO)
+	target.radius += 1.0
+	target.parts = {"leaf": Transform3D(Basis(Vector3.UP, -PI / 2.0), door.pivot("leaf"))}
+	# A ray from the room straight through the middle of the doorway.
+	var origin: Vector3 = Vector3(0.0, 1.0, 2.0)
+	var targets: Array[Picker.Target] = [target]
+	assert_eq(Picker.pick(origin, Vector3.FORWARD, targets), -1, "with no opening the doorway is air")
+	target.opening = ObjectRecipes.opening(Spot.Kind.DOOR, 2.0)
+	assert_eq(Picker.pick(origin, Vector3.FORWARD, targets), 0, "with the opening the doorway is the door")
+	assert_almost_eq(Picker.march(origin, Vector3.FORWARD, target), 2.0, 0.0001, "hit in the wall plane")
+	var beside: Vector3 = Vector3(1.5, 1.0, 2.0)
+	assert_eq(Picker.pick(beside, Vector3.FORWARD, targets), -1, "beside the frame is still air")
+	assert_eq(Picker.through_opening(Vector3(0.0, 1.0, -2.0), Vector3.FORWARD, target.opening), INF, "a ray leaving the plane never crosses it")
+	assert_eq(Picker.through_opening(Vector3(0.0, 1.0, 2.0), Vector3.RIGHT, target.opening), INF, "a ray along the plane never crosses it")

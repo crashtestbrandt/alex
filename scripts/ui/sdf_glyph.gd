@@ -8,14 +8,16 @@ const _SHADER: Shader = preload("res://shaders/ui/glyph.gdshader")
 ## The figure's radius as a fraction of the control's shorter side.
 const RADIUS_FRACTION: float = 0.26
 
-## The shader's `figure` cases, in order.
+## The shader's `figure` cases, in order. SIDE is drawn by the shader and used by no button.
 enum Figure {
 	FRONT = 0,
 	SIDE = 1,
 	TOP = 2,
-	TURN = 3,
+	TILT = 3,
 	DOTS = 4,
 	MICROPHONE = 5,
+	PALETTE = 6,
+	BUILD = 7,
 }
 
 @export var figure: Figure = Figure.FRONT:

@@ -1,6 +1,6 @@
 extends UnitTest
-## [CameraFraming]: the fit, the touch floor, the orbit limits and the camera basis are what the room view
-## relies on, all pure.
+## [CameraFraming]: the fit, the pan and zoom limits, Tilt's limits and basis, and the orbit basis are what
+## the room view relies on, all pure.
 
 const ROOM: Vector3 = Vector3(4.0, 2.6, 3.0)
 
@@ -17,35 +17,111 @@ func test_elevation_adds_the_floor_to_the_fit() -> void:
 	var top: float = CameraFraming.fit_extent(0.0, 90.0, ROOM, 2.0)
 	assert_almost_eq(top, 3.0 * CameraFraming.MARGIN, 0.001, "straight down is the depth")
 
-func test_floor_pulls_the_frame_in() -> void:
-	var fit: float = CameraFraming.fit_extent(0.0, 18.0, ROOM, 1.6)
-	var tiny: float = CameraFraming.frame_extent(0.0, 18.0, ROOM, 1.6, 0.3, 600.0, 160.0)
-	assert_true(tiny < fit, "a small spot pulls the camera in")
-	assert_almost_eq(tiny, fit / CameraFraming.MAX_PULL_IN, 0.0001, "a tiny spot pulls in only to the limit")
-	var medium: float = CameraFraming.frame_extent(0.0, 18.0, ROOM, 1.6, 0.9, 600.0, 160.0)
-	assert_true(medium < fit and medium > tiny, "a medium spot pulls in less")
-	assert_almost_eq(CameraFraming.projected_px(0.9, medium, 600.0), 160.0, 0.001, "and projects exactly at the floor")
-	var big: float = CameraFraming.frame_extent(0.0, 18.0, ROOM, 1.6, 2.0, 600.0, 160.0)
-	assert_almost_eq(big, fit, 0.0001, "a big spot leaves the fit alone")
-	assert_almost_eq(CameraFraming.frame_extent(0.0, 18.0, ROOM, 1.6, 0.0, 600.0, 160.0), fit, 0.0001, "no spots, the fit")
-
 func test_perspective_distance_matches_the_extent() -> void:
 	var d: float = CameraFraming.perspective_distance(2.0, 90.0)
 	assert_almost_eq(d, 1.0, 0.0001, "a 90 degree camera sees twice its distance")
 
-func test_orbit_is_clamped() -> void:
-	var c: Vector2 = CameraFraming.clamp_orbit(500.0, -30.0)
-	assert_almost_eq(c.x, CameraFraming.AZIMUTH_LIMIT_DEG, 0.0001, "azimuth limit")
-	assert_almost_eq(c.y, CameraFraming.ELEVATION_MIN_DEG, 0.0001, "never below the floor")
-	assert_almost_eq(CameraFraming.clamp_orbit(0.0, 200.0).y, CameraFraming.ELEVATION_MAX_DEG, 0.0001, "never past straight down")
+func test_zoom_is_clamped_between_the_fit_and_its_limit() -> void:
+	assert_almost_eq(CameraFraming.clamp_zoom(0.2), CameraFraming.ZOOM_MIN, 0.0001, "never wider than the fit")
+	assert_almost_eq(CameraFraming.clamp_zoom(50.0), CameraFraming.ZOOM_MAX, 0.0001, "never closer than the limit")
+	assert_almost_eq(CameraFraming.clamp_zoom(2.0), 2.0, 0.0001, "inside the range it is itself")
 
-func test_every_view_is_within_the_orbit() -> void:
-	for v: int in CameraFraming.View.values():
-		var view: CameraFraming.View = v as CameraFraming.View
+func test_room_silhouette_follows_the_view() -> void:
+	var target: Vector3 = Vector3(0.0, 1.0, 0.0)
+	var level: Rect2 = CameraFraming.room_silhouette(ROOM, target, 0.0, 0.0)
+	assert_almost_eq(level.size.x, 4.0, 0.0001, "level from the front, the room's width")
+	assert_almost_eq(level.size.y, 2.6, 0.0001, "and its height")
+	assert_almost_eq(level.position.y, -1.0, 0.0001, "the floor is a meter under the target")
+	assert_almost_eq(level.get_center().x, 0.0, 0.0001, "centered across")
+	var raised: Rect2 = CameraFraming.room_silhouette(ROOM, target, 0.0, 18.0)
+	assert_almost_eq(raised.size.y, 2.6 * cos(deg_to_rad(18.0)) + 3.0 * sin(deg_to_rad(18.0)), 0.0001, "raised, the floor's depth joins the height")
+	var top: Rect2 = CameraFraming.room_silhouette(ROOM, target, 0.0, 90.0)
+	assert_almost_eq(top.size.y, 3.0, 0.0001, "straight down, the depth")
+	assert_almost_eq(top.size.x, 4.0, 0.0001, "and the width")
+
+func test_pan_stays_inside_the_room() -> void:
+	var room: Rect2 = Rect2(-2.0, -1.0, 4.0, 2.6)
+	var wide: Vector2 = CameraFraming.clamp_pan(Vector2(5.0, -5.0), Vector2(6.0, 4.0), room)
+	assert_true(wide.is_equal_approx(Vector2.ZERO), "a frame larger than the room does not pan")
+	var half: Vector2 = CameraFraming.clamp_pan(Vector2(100.0, -100.0), Vector2(2.0, 1.3), room)
+	assert_almost_eq(half.x, 1.0, 0.0001, "the frame's right edge stops at the right wall")
+	assert_almost_eq(half.y, -1.0 + 0.65, 0.0001, "the frame's bottom edge stops at the floor")
+	var other: Vector2 = CameraFraming.clamp_pan(Vector2(-100.0, 100.0), Vector2(2.0, 1.3), room)
+	assert_almost_eq(other.x, -1.0, 0.0001, "and the left wall")
+	assert_almost_eq(other.y, 1.6 - 0.65, 0.0001, "and the ceiling")
+	var inside: Vector2 = CameraFraming.clamp_pan(Vector2(0.3, -0.2), Vector2(2.0, 1.3), room)
+	assert_true(inside.is_equal_approx(Vector2(0.3, -0.2)), "inside the room it is itself")
+	var off_center: Rect2 = Rect2(-2.0, 0.5, 4.0, 2.6)
+	var rest: Vector2 = CameraFraming.clamp_pan(Vector2.ZERO, Vector2(2.0, 2.5), off_center)
+	assert_true(rest.is_equal_approx(Vector2.ZERO), "rest stays in range when the room sits off the target")
+	var slight: Vector2 = CameraFraming.clamp_pan(Vector2(0.0, -0.1), Vector2(2.0, 2.5), off_center)
+	assert_almost_eq(slight.y, 0.0, 0.0001, "but never past rest on the far side")
+	var tall: Vector2 = CameraFraming.clamp_pan(Vector2(0.0, 100.0), Vector2(2.0, 1.0), off_center)
+	assert_almost_eq(tall.y, 3.1 - 0.5, 0.0001, "the top edge stops at the ceiling")
+
+func test_meters_per_px_follows_the_zoom() -> void:
+	assert_almost_eq(CameraFraming.meters_per_px(3.0, 600.0, 1.0), 0.005, 0.0001, "the extent over the height")
+	assert_almost_eq(CameraFraming.meters_per_px(3.0, 600.0, 2.0), 0.0025, 0.0001, "half as much per pixel zoomed in")
+	assert_almost_eq(CameraFraming.meters_per_px(3.0, 0.0, 2.0), 0.0, 0.0001, "no height, nothing")
+
+func test_zoom_about_a_point_keeps_it_fixed() -> void:
+	var extent: float = 3.0
+	var height: float = 600.0
+	var point: Vector2 = Vector2(120.0, -90.0)
+	var pan: Vector2 = CameraFraming.zoom_about(Vector2.ZERO, extent, height, point, 1.0, 2.0)
+	# The world point under the finger was `point` pixels from the center at zoom 1. After the zoom it must sit
+	# at the same pixels, so the pan moves by its displacement at both zooms.
+	var before: Vector2 = Vector2(point.x, -point.y) * CameraFraming.meters_per_px(extent, height, 1.0)
+	var after: Vector2 = Vector2(point.x, -point.y) * CameraFraming.meters_per_px(extent, height, 2.0)
+	assert_true(pan.is_equal_approx(before - after), "the pan takes up the difference")
+	assert_true(pan.x > 0.0 and pan.y > 0.0, "zooming in on the upper right pans up and right")
+	var centered: Vector2 = CameraFraming.zoom_about(Vector2(0.3, 0.2), extent, height, Vector2.ZERO, 1.0, 3.0)
+	assert_true(centered.is_equal_approx(Vector2(0.3, 0.2)), "zooming about the center leaves the pan alone")
+
+func test_tilt_is_clamped_in_pitch_and_wraps_in_yaw() -> void:
+	var down: Vector2 = CameraFraming.clamp_tilt(0.0, -200.0)
+	assert_almost_eq(down.y, CameraFraming.TILT_PITCH_MIN_DEG, 0.0001, "never further down")
+	var up: Vector2 = CameraFraming.clamp_tilt(0.0, 200.0)
+	assert_almost_eq(up.y, CameraFraming.TILT_PITCH_MAX_DEG, 0.0001, "never further up")
+	assert_almost_eq(CameraFraming.clamp_tilt(190.0, 0.0).x, -170.0, 0.0001, "yaw wraps past a half turn")
+	assert_almost_eq(CameraFraming.clamp_tilt(-190.0, 0.0).x, 170.0, 0.0001, "and back the other way")
+	assert_almost_eq(CameraFraming.clamp_tilt(45.0, 10.0).x, 45.0, 0.0001, "inside the range it is itself")
+
+func test_tilt_zoom_narrows_the_view_within_limits() -> void:
+	assert_almost_eq(CameraFraming.tilt_fov(1.0), CameraFraming.FOV_DEG, 0.0001, "zoom 1 is the room's field of view")
+	assert_true(CameraFraming.tilt_fov(2.0) < CameraFraming.tilt_fov(1.0), "zooming in narrows the view")
+	assert_almost_eq(CameraFraming.tilt_fov(100.0), CameraFraming.FOV_DEG / CameraFraming.TILT_ZOOM_MAX, 0.0001, "never narrower than the limit")
+	assert_almost_eq(CameraFraming.tilt_fov(0.01), CameraFraming.FOV_DEG / CameraFraming.TILT_ZOOM_MIN, 0.0001, "never wider than the limit")
+	assert_true(CameraFraming.tilt_fov(CameraFraming.TILT_ZOOM_MIN) < 90.0, "the widest view is still a lens")
+
+func test_tilt_camera_turns_in_place_and_stays_upright() -> void:
+	var origin: Vector3 = Vector3(0.0, 1.4, 0.0)
+	var back: Transform3D = CameraFraming.tilt_transform(origin, 0.0, 0.0)
+	assert_true(back.origin.is_equal_approx(origin), "stands where it is put")
+	assert_almost_eq((-back.basis.z).dot(Vector3.FORWARD), 1.0, 0.0001, "yaw 0 faces the back wall")
+	assert_almost_eq(back.basis.y.dot(Vector3.UP), 1.0, 0.0001, "level is upright")
+	var right: Transform3D = CameraFraming.tilt_transform(origin, 90.0, 0.0)
+	assert_almost_eq((-right.basis.z).dot(Vector3.RIGHT), 1.0, 0.0001, "yaw 90 faces the right wall")
+	var front: Transform3D = CameraFraming.tilt_transform(origin, 180.0, 0.0)
+	assert_almost_eq((-front.basis.z).dot(Vector3.BACK), 1.0, 0.0001, "yaw 180 faces the open front")
+	var up: Transform3D = CameraFraming.tilt_transform(origin, 0.0, CameraFraming.TILT_PITCH_MAX_DEG)
+	assert_true((-up.basis.z).y > 0.0, "positive pitch looks up")
+	assert_true(up.basis.y.y > 0.0, "and the camera stays upright")
+	var down: Transform3D = CameraFraming.tilt_transform(origin, 0.0, CameraFraming.TILT_PITCH_MIN_DEG)
+	assert_true((-down.basis.z).y < 0.0, "negative pitch looks down")
+	assert_true(down.basis.y.y > 0.0, "upright looking down too")
+	for yaw: float in [-170.0, -45.0, 30.0, 120.0]:
+		var xf: Transform3D = CameraFraming.tilt_transform(origin, yaw, -20.0)
+		assert_almost_eq(xf.origin.distance_to(origin), 0.0, 0.0001, "never leaves the center at yaw %.0f" % yaw)
+		assert_true(xf.basis.x.y < 0.0001 and xf.basis.x.y > -0.0001, "no roll at yaw %.0f" % yaw)
+
+func test_every_orbit_view_is_above_the_floor_and_at_the_open_front() -> void:
+	for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP]:
 		var angles: Vector2 = CameraFraming.view_angles(view)
-		var clamped: Vector2 = CameraFraming.clamp_orbit(angles.x, angles.y)
-		assert_almost_eq(clamped.x, angles.x, 0.0001, "view %d azimuth is reachable" % v)
-		assert_almost_eq(clamped.y, angles.y, 0.0001, "view %d elevation is reachable" % v)
+		assert_almost_eq(angles.x, 0.0, 0.0001, "view %d faces the back wall" % view)
+		assert_true(angles.y > 0.0 and angles.y <= CameraFraming.ELEVATION_MAX_DEG, "view %d is above the floor" % view)
+	var tilt: Vector2 = CameraFraming.view_angles(CameraFraming.View.TILT)
+	assert_true(tilt.is_equal_approx(CameraFraming.view_angles(CameraFraming.View.FRONT)), "tilt takes the front's angles on the orbit")
 
 func test_camera_basis_is_continuous_and_looks_at_the_target() -> void:
 	var target: Vector3 = Vector3(0.0, 1.3, 0.0)
@@ -78,7 +154,7 @@ func test_perspective_points_fit_asymmetric_safe_bands() -> void:
 	for viewport: Vector2 in [Vector2(640, 1385), Vector2(1385, 640), Vector2(1280, 800), Vector2(1920, 1080)]:
 		for edges: Vector2 in [Vector2(16, 32), Vector2(120, 32), Vector2(240, 32), Vector2(32, 240)]:
 			var safe: Rect2 = Rect2(edges.x, 160.0, viewport.x - edges.x - edges.y, viewport.y - 340.0)
-			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.SIDE, CameraFraming.View.TOP, CameraFraming.View.TURN]:
+			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP]:
 				var angles: Vector2 = CameraFraming.view_angles(view)
 				var extent: float = CameraFraming.points_extent(points, target, angles.x, angles.y, viewport, safe)
 				var distance: float = CameraFraming.perspective_distance(extent, CameraFraming.FOV_DEG)

@@ -19,6 +19,14 @@ const DIR: String = "res://styles"
 @export var surface: Color = Color("ffffff")
 @export var accent: Color = Color("2f6f8f")
 @export var text: Color = Color("1e2a32")
+## The fills a chunk's pill draws from (ChunkColors). Each carries `text` at 4.5:1 or better, at rest and
+## brightened. A color is identity only: it never means right, wrong, a stage or a function.
+@export var chunk_palette: PackedColorArray = PackedColorArray([
+	Color(0.9901, 0.7702, 0.7485), Color(0.7679, 0.8708, 0.6998), Color(0.6848, 0.8570, 0.9866),
+	Color(0.9654, 0.7665, 0.8587), Color(0.8781, 0.8355, 0.6443), Color(0.6330, 0.8832, 0.9120),
+	Color(0.8918, 0.7858, 0.9541), Color(0.9591, 0.7967, 0.6643), Color(0.6684, 0.8887, 0.8034),
+	Color(0.7874, 0.8201, 1.0000),
+])
 ## The materials a room's objects are built from (ObjectRecipes). Vertex colors, no texture.
 @export_group("Room materials")
 @export var wood: Color = Color(0.62, 0.45, 0.30)

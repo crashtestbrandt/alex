@@ -88,8 +88,8 @@
   "rooms": [
     {
       "id": "home",
-      "title": "Home",
-      "camera": "views",
+      "title": "Explore",
+      "camera": "tilt",
       "spots": [
         {
           "id": "door",

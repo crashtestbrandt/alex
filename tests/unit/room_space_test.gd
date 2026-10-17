@@ -39,6 +39,35 @@ func test_smallest_spot() -> void:
 	assert_almost_eq(RoomSpace.smallest_spot_m(r), 0.1 * RoomSpace.WIDTH, 0.0001, "the smallest, in meters")
 	assert_almost_eq(RoomSpace.smallest_spot_m(Room.new()), 0.0, 0.0001, "an empty room has none")
 
+func test_inside_the_box() -> void:
+	assert_true(RoomSpace.inside(Vector3(0.0, 1.4, 0.0)), "the center is inside")
+	assert_false(RoomSpace.inside(Vector3(0.0, 1.4, 5.0)), "the open front is outside")
+	assert_false(RoomSpace.inside(Vector3(0.0, 4.0, 0.0)), "above the ceiling is outside")
+	assert_false(RoomSpace.inside(Vector3(3.0, 1.0, 0.0)), "past a side wall is outside")
+	assert_true(RoomSpace.inside(RoomSpace.tilt_origin(null)), "tilt stands inside")
+
+func test_tilt_stands_at_the_center_over_what_is_under_it() -> void:
+	var empty: Vector3 = RoomSpace.tilt_origin(Room.new())
+	assert_almost_eq(empty.x, 0.0, 0.0001, "centered across")
+	assert_almost_eq(empty.z, 0.0, 0.0001, "centered in depth")
+	assert_almost_eq(empty.y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "eye height with nothing under it")
+	assert_almost_eq(RoomSpace.tilt_origin(null).y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "no room, eye height")
+	var rug: Room = Room.from_dict({"id": "r", "spots": [{"id": "rug", "gestalt": "g", "x": 0.5, "y": 0.5, "size": 0.4}]})
+	assert_almost_eq(RoomSpace.tilt_origin(rug).y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "a wide low thing at the center leaves eye height")
+	var tub: Room = Room.from_dict({"id": "r", "spots": [{"id": "tub", "kind": "tub", "gestalt": "g", "x": 0.65, "y": 0.25, "size": 0.5}]})
+	assert_almost_eq(RoomSpace.tilt_origin(tub).y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "a long tub off center leaves eye height")
+	var bed: Room = Room.from_dict({"id": "r", "spots": [{"id": "bed", "kind": "bed", "gestalt": "g", "x": 0.62, "y": 0.2, "size": 0.5}]})
+	assert_almost_eq(RoomSpace.tilt_origin(bed).y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "the bedroom's bed leaves eye height")
+	var lamp_height: float = ObjectRecipes.make(Spot.Kind.LIGHT, 0.5 * RoomSpace.WIDTH, StylePreset.new()).aabb().end.y
+	var tall: Room = Room.from_dict({"id": "r", "spots": [{"id": "lamp", "kind": "light", "gestalt": "g", "x": 0.5, "y": 0.5, "size": 0.5}]})
+	assert_almost_eq(RoomSpace.tilt_origin(tall).y, lamp_height + RoomSpace.TILT_CLEARANCE, 0.0001, "a tall thing at the center raises the camera by its real height")
+	var corner: Room = Room.from_dict({"id": "r", "spots": [{"id": "lamp", "kind": "light", "gestalt": "g", "x": 0.05, "y": 0.05, "size": 0.5}]})
+	assert_almost_eq(RoomSpace.tilt_origin(corner).y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "a tall thing in a corner is not under the camera")
+	var wall: Room = Room.from_dict({"id": "r", "spots": [{"id": "door", "gestalt": "g", "wall": "back", "x": 0.5, "size": 0.6}]})
+	assert_almost_eq(RoomSpace.tilt_origin(wall).y, RoomSpace.TILT_EYE_HEIGHT, 0.0001, "a wall object is never under the camera")
+	var huge: Room = Room.from_dict({"id": "r", "spots": [{"id": "bed", "kind": "bed", "gestalt": "g", "x": 0.5, "y": 0.5, "height": 0.7, "size": 0.6}]})
+	assert_almost_eq(RoomSpace.tilt_origin(huge).y, RoomSpace.HEIGHT - RoomSpace.TILT_CLEARANCE, 0.0001, "never up to the ceiling")
+
 func test_content_box_stops_at_the_tallest_spot() -> void:
 	var r: Room = Room.from_dict({"id": "r", "spots": [
 		{"id": "door", "gestalt": "g", "wall": "back", "size": 0.5},

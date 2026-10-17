@@ -54,28 +54,38 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
 - **Rooms.** An explorable 3D room of a handful of objects. Touch the door and it swings open as "Let's go
   outside" plays. Touch it again and it closes with "Let's go inside". Objects are built from primitives and
   described in data, so a caregiver can add a room without art or code (docs/geometry.md).
-- **Views.** Front, Side and Top buttons move the camera between three angles, and a caregiver can allow a
-  Turn button and a drag that orbits. Every view is reversible, every view returns to Front after a short
-  idle, and a room can be set to no view buttons at all. Views are the first step in scene complexity a
+- **Views.** Front and Top buttons move the camera between two angles, and a drag or a pinch pans and zooms
+  within them. A caregiver can allow a Tilt button, which stands the camera in the middle of the room to
+  look around. Every view is reversible: a tap on its button puts it back, and a long idle returns to
+  Front. A room can be set to no view buttons at all. Views are the first step in scene complexity a
   caregiver can grow.
-- **Boards.** The plainer alternative: large tiles that say a phrase. Useful for phrases with no object.
+- **Explore and Words.** The learner's strip has two pills. Explore is the room. Words is the whole bank in
+  two modes: Palette, large tiles that say a phrase, and Build, a strip the learner fills by tapping chunk
+  beginnings and endings. Build is chunk-first and never word-first: the units are the seams the caregiver
+  authored, not words or symbols (docs/ui.md "Words").
 - **A gestalt bank.** Every phrase, with its chunks, where it came from, what it does for the learner, and
   the recording that voices it.
 - **One caregiver gesture.** Hold any object or tile to record its phrase in your own voice. Hold the big
   button, say it, let go, hear it back, keep it. The previous take is kept beside the new one.
-- **Starter packs and style presets.** Seed content and a look, chosen once at profile creation.
+- **Scene packs and style presets.** A pack is a scene: a room and its phrases. A profile starts with one
+  and adds any number from the adults' screen; its bank is the union, with a phrase held once however many
+  scenes say it. A look is chosen at creation and changed on the adults' screen.
 
 Planned, in rough order: more rooms and more reactions; the learner's own songs and clips, since so much
-echolalia comes from them; a remix board that offers chunk beginnings beside chunk endings; video
+echolalia comes from them; per-chunk recordings so Build speaks in a familiar voice; video
 self-modeling; a bank view for caregivers. Assessment features stay off the list unless a caregiver asks,
 and never reach the learner's screen.
 
 ## Making chunks visible
 
 A gestalt is authored with `|` chunk marks: `Let's go | to the park`. `Gestalt.from_text` keeps the spoken
-text and the chunk list. When an object is touched, its chunks float above it and light up in order while the
-phrase plays; on a tile, the chunks pull apart. The learner sees where the seams are without being told. A
-gestalt with no bar stays whole, which is right for a phrase that should not be broken yet.
+text and the chunk list.
+
+- Each chunk sits on a pill in its own color, keyed by its text, so the same chunk looks the same everywhere.
+- When an object is touched, its chunks float above it. When a tile is tapped, its chunks stay on the tile.
+- While the phrase plays, each chunk is marked in turn.
+- The learner sees where the seams are without being told.
+- A gestalt with no bar stays whole, which is right for a phrase that should not be broken yet.
 
 The same chunk list feeds the remix board later. Authoring the seam once, in the text, keeps every feature
 agreeing on where the seams are.

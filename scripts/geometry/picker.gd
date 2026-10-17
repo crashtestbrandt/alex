@@ -9,13 +9,16 @@ const MIN_STEP: float = 0.003
 const MAX_STEPS: int = 96
 
 ## What a pick runs against. `transform` takes object space to world; `parts` is each part's current
-## transform in object space; `center` and `radius` bound the object in world space.
+## transform in object space; `center` and `radius` bound the object in world space. `opening` is a
+## pick-only rectangle in the object's x/y plane at z 0: the doorway a swung leaf leaves empty, so a tap
+## through it still picks the door. Empty for none.
 class Target:
 	var recipe: Recipe = null
 	var transform: Transform3D = Transform3D.IDENTITY
 	var parts: Dictionary[String, Transform3D] = {}
 	var center: Vector3 = Vector3.ZERO
 	var radius: float = 1.0
+	var opening: Rect2 = Rect2()
 
 ## The index of the nearest target the ray hits, or -1.
 static func pick(origin: Vector3, direction: Vector3, targets: Array[Target]) -> int:
@@ -28,22 +31,34 @@ static func pick(origin: Vector3, direction: Vector3, targets: Array[Target]) ->
 			best = i
 	return best
 
-## Distance along the ray to the target's surface, or INF for a miss.
+## Distance along the ray to the target's surface or through its opening, or INF for a miss.
 static func march(origin: Vector3, direction: Vector3, target: Target) -> float:
 	var span: Vector2 = ray_sphere(origin, direction, target.center, target.radius)
 	if span.x == INF:
 		return INF
 	var inverse: Transform3D = target.transform.affine_inverse()
+	var through: float = through_opening(inverse * origin, inverse.basis * direction, target.opening)
 	var t: float = maxf(span.x, 0.0)
 	for _step: int in MAX_STEPS:
 		if t > span.y:
-			return INF
+			return through
 		var p: Vector3 = inverse * (origin + direction * t)
 		var d: float = target.recipe.distance(p, target.parts)
 		if d < HIT_EPS:
-			return t
+			return minf(t, through)
 		t += maxf(d, MIN_STEP)
-	return INF
+	return through
+
+## Distance along a ray, in object space, to where it crosses `opening` in the x/y plane at z 0, or INF
+## when the opening is empty or the ray misses it.
+static func through_opening(origin: Vector3, direction: Vector3, opening: Rect2) -> float:
+	if not opening.has_area() or absf(direction.z) < 0.000001:
+		return INF
+	var t: float = -origin.z / direction.z
+	if t < 0.0:
+		return INF
+	var p: Vector3 = origin + direction * t
+	return t if opening.has_point(Vector2(p.x, p.y)) else INF
 
 ## Entry and exit distances of a ray through a sphere, or (INF, INF) when it misses.
 static func ray_sphere(origin: Vector3, direction: Vector3, center: Vector3, radius: float) -> Vector2:

@@ -9,6 +9,8 @@
 [ext_resource type="Script" path="res://scripts/ui/sdf_glyph.gd" id="7"]
 
 [ext_resource type="Script" path="res://scripts/ui/sdf_scroll.gd" id="scroll"]
+[ext_resource type="PackedScene" path="res://scenes/child/build_view.tscn" id="build"]
+[ext_resource type="Script" path="res://scripts/child/words_widget.gd" id="words"]
 
 [node name="ChildHome" type="Control"]
 layout_mode = 3
@@ -77,7 +79,7 @@ clip_text = true
 alignment = 0
 tooltip_text = "Tap to hear your name; hold to record"
 
-[node name="PlaceStrip" type="MarginContainer" parent="Margin/Column/TopBar"]
+[node name="ModeStrip" type="MarginContainer" parent="Margin/Column/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -123,6 +125,22 @@ size_flags_vertical = 0
 mouse_filter = 2
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
+
+[node name="BoardSpacer" type="Control" parent="Margin/Column/Stage/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Build" parent="Margin/Column" instance=ExtResource("build")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="WordsWidget" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+script = ExtResource("words")
 
 [node name="RecordOverlay" parent="." instance=ExtResource("5")]
 unique_name_in_owner = true

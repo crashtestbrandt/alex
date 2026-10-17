@@ -92,15 +92,25 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   A new object kind is a `Spot.Kind` plus a recipe function, never an art asset.
 - **A recipe is a union of rigid primitives, with no seed.** The mesh (`Mesher`) and the field (`Sdf`) are
   twins; a primitive or an operation exists in both or in neither. The same spot is the same object every time.
-- **The learner's camera is perspective, on one clamped orbit.** Front, Side, Top and Turn are points on it,
-  `Room.camera` decides which buttons show, and a moved view returns to Front after the overlay's idle period.
-  Orthographic is for the editor. A drag that starts on an object never turns the view.
+- **The learner's camera is perspective.** Front and Top are points on one clamped orbit, each with a clamped
+  pan and pinch-zoom; Tilt stands at the room's center and turns in place with every wall up. `Room.camera`
+  decides which buttons show. A tap on a view pill resets that view, and a moved view returns to Front after
+  two minutes with nothing touched. Orthographic is for the editor.
+- **A press is a tap, a hold or a drag by distance and time.** Movement past `DRAG_PX` cancels the hold and
+  moves the view from wherever the press began, an object included. Release inside the threshold before the
+  hold elapses is a tap.
 - **The recording overlay writes nothing until Keep**, keeps the previous take, and closes itself when idle.
 - **A familiar voice beats a synthetic one.** The OS text-to-speech voice is a placeholder until a
   recording exists. Never make the synthetic voice the better experience.
 - **Gestalts are authored with `|` chunk marks** (`Gestalt.from_text`). The chunks are the mitigation
   model; a Stage 1 gestalt with no bar stays whole, on purpose.
+- **A chunk's color is keyed by its text alone** (`ChunkColors`, docs/ui.md "Chunk colors"). It carries
+  identity, never a judgment. Every chunk on screen is a `ChunkRow` pill, and its text keeps the preset's
+  text color.
 - **A stage is optional, informs the caregiver only, and never appears on the learner's screen.**
+- **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
+  in profile data and off the learner's screen. Words is the whole bank, as Palette tiles or as Build, a
+  strip filled from chunk beginnings and endings (`ChunkBank`), chunk-first and never word-first.
 - **Adult screens sit behind a `HoldButton`.** A stray tap never leaves the board.
 - **Motion respects the style's `motion` setting.** Every tween multiplies by `Style.motion_scale()` and
   skips at zero.
@@ -122,9 +132,12 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **Starter packs are JSON under `starters/`**, written for non-developers. `starter_test.gd` checks every
   board names gestalts the pack holds. Every export preset includes `starters/*.json`
   (`tools/check-export-presets.sh`).
+- **A profile adds a pack as a scene** (`Starter.add_to`, docs/profiles.md "Adding a scene"). Copied ids are
+  prefixed with the pack id, a phrase the bank already says is reused rather than copied, and a pack is
+  added once. The profile never reads the pack again.
 - **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
   preset also carries the room's materials (`wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`,
-  `wall_color`).
+  `wall_color`) and the `chunk_palette`. A palette color carries `text` at 4.5:1 (`style_preset_test.gd`).
 
 ## Gates (docs/gates.md)
 

@@ -27,6 +27,7 @@ func test_create_seeds_from_a_starter_and_is_listed() -> void:
 	assert_not_null(p, "created")
 	assert_eq(_repo.list_ids(), PackedStringArray([p.id]), "listed by id")
 	assert_eq(p.starter_id, "s", "remembers its starter")
+	assert_eq(p.scenes, PackedStringArray(["s"]), "the starter is its first scene")
 	assert_eq(p.gestalts.size(), 1, "seeded gestalts")
 	assert_eq(p.boards.size(), 1, "seeded boards")
 	assert_true(DirAccess.dir_exists_absolute(_repo.media_dir(p.id)), "media dir created")
