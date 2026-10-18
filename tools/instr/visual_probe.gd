@@ -241,6 +241,22 @@ func _run() -> void:
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()
 			_inside(picker.get_node("%StyleBar") as Control, screen, "existing profile look choices")
+			var scene_bar: PillBar = _scene_pins(picker)
+			_check(scene_bar != null, "a held scene carries a stage bar")
+			if scene_bar != null:
+				sheet.ensure_control_visible(scene_bar)
+				await _settle()
+				_inside(scene_bar, screen, "scene stage choices")
+				var scene_line: Control = scene_bar.get_parent().get_parent().get_child(2) as Control
+				sheet.ensure_control_visible(scene_line)
+				await _settle()
+				_inside(scene_line, screen, "scene stage line")
+			var notes_edit: Control = picker.get_node("%NotesEdit") as Control
+			sheet.ensure_control_visible(notes_edit)
+			await _settle()
+			_inside(notes_edit, screen, "notes field")
+			_check(notes_edit.size.y >= SdfTextArea.MIN_HEIGHT_PX, "notes field holds a few lines")
+			_shot("profile-stage")
 			var scene_rows: Control = picker.get_node("%SceneRows") as Control
 			_check(scene_rows.get_child_count() >= 2, "every shipped scene is listed (%d)" % scene_rows.get_child_count())
 			sheet.ensure_control_visible(scene_rows)
@@ -256,12 +272,19 @@ func _run() -> void:
 			sheet.ensure_control_visible(create)
 			await _settle()
 			_inside(create, screen, "create reachable by scrolling")
+			var stage_bar: Control = picker.get_node("%StageBar") as Control
+			_check(stage_bar.is_visible_in_tree(), "the starter scene's stage is offered on the form")
+			sheet.ensure_control_visible(stage_bar)
+			await _settle()
+			_inside(stage_bar, screen, "starter stage choices")
+			_inside(picker.get_node("%StageModel") as Control, screen, "starter stage line")
 			_shot("new-profile")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 			print("VISUAL checked %s" % _label)
 	await _safe_areas(main, home, picker, overlay, profile)
 	await _profile_looks(main, picker, profile)
 	_check(_profile_looks_complete, "profile look flow completed")
+	await _profile_stage_notes(main, picker, profile)
 	await _short_picker(main, picker)
 	await _stress(main, home, picker, overlay, profile)
 	await _long_bank(main, profile)
@@ -444,6 +467,94 @@ func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void
 	ProfileStore.repo.delete_profile(other.id)
 	_profile_looks_complete = true
 
+## Edit's stage and notes: picking a stage shows its name and model line, Save writes both, reopening reads
+## them back, and Back discards a change.
+func _profile_stage_notes(main: Main, picker: ProfilePicker, profile: Profile) -> void:
+	_label = "profile-stage-notes"
+	var note: String = "Quotes Bluey.\nTry \"Let's go | to the park\" next."
+	main.show_picker()
+	await _settle()
+	var card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	(card.get_child(1) as SdfButton).pressed.emit()
+	await _settle()
+	var notes: SdfTextArea = picker.get_node("%NotesEdit") as SdfTextArea
+	_check(not (picker.get_node("%StageSection") as Control).visible, "Edit has no profile-wide stage")
+	_check(notes.text.is_empty(), "a fresh profile has no notes")
+	# A held scene's stage bar stages the scene at once, and the rebuilt rows show the stage and its line.
+	var stages: PillBar = _scene_pins(picker)
+	_check(stages != null and picker.scene_rows().size() >= 4, "a held scene carries a stage bar")
+	if stages != null:
+		_check(stages.items().size() == 6 and stages.active_index() == 0, "the scene starts at stage 1")
+		_check(_scene_stage_line(picker).begins_with(NlaStage.label(NlaStage.Stage.ECHOLALIA)), "and its line says so")
+		stages.items()[3].pressed.emit()
+		await _settle()
+		var staged: int = ProfileStore.load_profile(profile.id).scene_stages.get("home_routines", 0)
+		_check(staged == 4, "a scene's stage saves at once")
+		_check((picker.get_node("%Status") as Label).text == "Home says its stage 4 phrases.", "and says so")
+		stages = _scene_pins(picker)
+		_check(stages != null and stages.active_index() == 3, "the rebuilt bar shows the stage")
+		_check(_scene_stage_line(picker) == "%s. %s" % [NlaStage.label(NlaStage.Stage.EARLY_GRAMMAR), NlaStage.models(NlaStage.Stage.EARLY_GRAMMAR)], "and its line names the stage and what the adults model")
+	notes.text = note
+	(picker.get_node("%CreateButton") as SdfButton).pressed.emit()
+	await _settle()
+	var saved: Profile = ProfileStore.load_profile(profile.id)
+	_check(saved.notes == note and saved.stage_for_scene("home_routines") == NlaStage.Stage.EARLY_GRAMMAR, "Save writes the notes and keeps the scene's stage")
+	main.show_picker()
+	await _settle()
+	card = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	(card.get_child(1) as SdfButton).pressed.emit()
+	await _settle()
+	stages = _scene_pins(picker)
+	_check(stages != null and stages.active_index() == 3 and notes.text == note, "reopening Edit reads both back")
+	if stages != null:
+		stages.items()[0].pressed.emit()
+		await _settle()
+	_check(ProfileStore.load_profile(profile.id).stage_for_scene("home_routines") == NlaStage.Stage.ECHOLALIA, "stage 1 is set at once")
+	notes.text = "discarded"
+	(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+	await _settle()
+	_check(ProfileStore.load_profile(profile.id).notes == note, "Back discards a changed note")
+	# New profile offers the starter scene's stage and writes it at creation. A blank start offers none.
+	(picker.get_node("%NewProfileButton") as SdfButton).pressed.emit()
+	await _settle()
+	var section: Control = picker.get_node("%StageSection") as Control
+	var starter_stages: PillBar = picker.get_node("%StageBar") as PillBar
+	var starters: PillBar = picker.get_node("%StarterBar") as PillBar
+	var ids: PackedStringArray = PackedStringArray()
+	for s: Starter in Starter.list_all():
+		ids.push_back(s.id)
+	_check(section.visible and starter_stages.items().size() == 6, "the form offers the starter scene's stage")
+	starters.items()[ids.find("blank")].pressed.emit()
+	await _settle()
+	_check(not section.visible, "a blank start has no scene to stage")
+	starters.items()[ids.find("bath_time")].pressed.emit()
+	starter_stages.items()[2].pressed.emit()
+	await _settle()
+	_check(section.visible and (picker.get_node("%StageName") as Label).text == NlaStage.label(NlaStage.Stage.SINGLE_WORDS), "picking a stage shows its name")
+	(picker.get_node("%NameEdit") as LineEdit).text = "Staged start"
+	(picker.get_node("%CreateButton") as SdfButton).pressed.emit()
+	await _settle()
+	var made: Profile = App.active_profile
+	_check(made != null and made.display_name == "Staged start" and made.stage_for_scene("bath_time") == NlaStage.Stage.SINGLE_WORDS, "the new profile's starter scene carries the stage")
+	if made != null:
+		ProfileStore.repo.delete_profile(made.id)
+	main.open_profile(profile.id)
+	await _settle()
+
+## The line under the one held scene's stage bar on Edit.
+func _scene_stage_line(picker: ProfilePicker) -> String:
+	for entry: VBoxContainer in picker.scene_rows():
+		if entry.get_child_count() > 2:
+			return (entry.get_child(2) as Label).text
+	return ""
+
+## The stage bar of the one held scene on Edit, or null.
+func _scene_pins(picker: ProfilePicker) -> PillBar:
+	for entry: VBoxContainer in picker.scene_rows():
+		if entry.get_child_count() > 1:
+			return (entry.get_child(1) as BoxContainer).get_child(1) as PillBar
+	return null
+
 func _short_picker(main: Main, picker: ProfilePicker) -> void:
 	for style: String in ["calm", "bold", "quiet"]:
 		for window_size: Vector2i in [Vector2i(1280, 360), Vector2i(800, 240), Vector2i(640, 360), Vector2i(390, 280), Vector2i(640, 640)]:
@@ -464,9 +575,14 @@ func _short_picker(main: Main, picker: ProfilePicker) -> void:
 			screen = picker.get_global_rect()
 			var create: Control = picker.get_node("%CreateButton") as Control
 			var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
-			if sheet.get_v_scroll_bar().max_value > sheet.get_v_scroll_bar().page:
+			# Wheel ticks until the sheet is at its end, as a caregiver would, so a taller form still passes.
+			for tick: int in 8:
+				var bar: VScrollBar = sheet.get_v_scroll_bar()
+				if bar.value >= bar.max_value - bar.page - 0.5:
+					break
 				var wheel: InputEventMouseButton = InputEventMouseButton.new()
-				wheel.position = (picker.get_node("%StyleBar") as Control).get_global_rect().get_center()
+				# Over the sheet's middle, which is on screen however short the window, so the tick lands.
+				wheel.position = sheet.get_global_rect().get_center()
 				wheel.global_position = wheel.position
 				wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 				wheel.pressed = true

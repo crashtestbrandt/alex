@@ -109,9 +109,14 @@ to break it. These are decisions, and every progression issue cites them.
   nothing (`Starter.add_to`, docs/profiles.md "Adding a scene").
 - **A mixed-stage bank comes from variety across phrases**: `Let's go | outside` beside
   `Let's | go | in the car`. One phrase has one chunking at a time.
-- **The stage on a profile and on a gestalt shapes adult screens only.** It orders and labels. It never
-  hides Explore, Palette or Build, and it never advances on its own. The app cannot hear the child, so it has
-  no basis to change a stage.
+- **Each scene in a profile has its own stage, and it picks what every object in that scene says.** A spot
+  carries a phrase pair per stage, and says the pair written for the nearest stage at or below its
+  scene's (`Spot.gestalt_at`, `Profile.says`, `Profile.scene_stages`). A scene starts at stage 1, and
+  stages 1 and 2 say each object's first pair. There is no profile-wide stage. The stage is set where the
+  scene is chosen: on New profile for the starter, on Edit for every held scene.
+- **A stage never advances on its own.** The app cannot hear the child, so it has no basis to change a
+  stage. A stage never hides Explore, Palette or Build, and the learner's screen never shows it. The
+  stage on a gestalt labels the row for the adults.
 - **Sentence-forming is in scope.** Build is the sentence-former at chunk granularity. Later stages mean
   smaller chunks and longer strips, authored by the caregiver.
 
@@ -128,8 +133,10 @@ record a stage for the caregiver's reference. Nothing on the learner's screen sh
 | 2 | Mixes and matches chunks of gestalts. | Recombinations of chunks the learner already has. |
 | 3 | Isolates single words and makes two-word combinations. | Single words in context. |
 | 4 | Builds first original sentences, grammar still rough. | Natural sentences without correction. |
-| 5 | Uses more complex grammar. | |
-| 6 | Uses full, flexible sentences. | |
+| 5 | Uses more complex grammar. | Longer sentences, still without correction. |
+| 6 | Uses full, flexible sentences. | Conversation. |
+
+`NlaStage.models` carries the right-hand column, one line per stage, for Edit.
 
 ## Sources
 

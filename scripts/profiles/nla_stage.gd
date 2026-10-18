@@ -1,8 +1,9 @@
 extends RefCounted
 class_name NlaStage
-## The six stages of Natural Language Acquisition (Blanc), plus UNKNOWN for a profile nobody has staged yet.
-## A gestalt carries the stage it models; a profile carries the stage the child is working in. The stage never
-## gates what the child can see. It tells the adults what to model next (docs/design.md).
+## The six stages of Natural Language Acquisition (Blanc), plus UNKNOWN for a scene nobody has staged yet.
+## A gestalt carries the stage it models; a scene in a profile carries the stage its objects speak at
+## (`Profile.scene_stages`). A stage never advances on its own and never shows on the learner's screen
+## (docs/design.md "Progression").
 
 enum Stage {
 	UNKNOWN = 0,
@@ -24,9 +25,24 @@ const _LABELS: Dictionary[int, String] = {
 	Stage.FULL_GRAMMAR: "Stage 6 · Full grammar",
 }
 
+## What the adults model at each stage, one line, from the table in docs/design.md. Empty for UNKNOWN.
+const _MODELS: Dictionary[int, String] = {
+	Stage.UNKNOWN: "",
+	Stage.ECHOLALIA: "Adults model short, mitigable gestalts in a natural voice.",
+	Stage.MITIGATION: "Adults model recombinations of chunks the learner already has.",
+	Stage.SINGLE_WORDS: "Adults model single words in context.",
+	Stage.EARLY_GRAMMAR: "Adults model natural sentences without correction.",
+	Stage.COMPLEX_GRAMMAR: "Adults model longer sentences, still without correction.",
+	Stage.FULL_GRAMMAR: "Adults model conversation.",
+}
+
 ## The adult-facing label for `stage`.
 static func label(stage: Stage) -> String:
 	return _LABELS.get(stage, _LABELS[Stage.UNKNOWN])
+
+## The adult-facing line on what to model at `stage`. Empty for UNKNOWN.
+static func models(stage: Stage) -> String:
+	return _MODELS.get(stage, "")
 
 ## `value` as a Stage, or UNKNOWN for anything outside 1 to 6. Accepts an int or a numeric string, which is
 ## what a JSON file or a form hands back.

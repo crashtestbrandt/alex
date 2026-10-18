@@ -41,12 +41,13 @@ func test_create_without_a_starter_is_blank() -> void:
 
 func test_save_then_load_round_trips() -> void:
 	var p: Profile = _repo.create_profile("Sam", null, "calm")
-	p.stage = NlaStage.Stage.SINGLE_WORDS
+	p.scenes.push_back("home_routines")
+	assert_true(p.set_scene_stage("home_routines", NlaStage.Stage.SINGLE_WORDS), "staged")
 	p.put_gestalt(Gestalt.from_text("x", "All | done"))
 	assert_eq(_repo.save_profile(p), OK, "saved")
 	var back: Profile = _repo.load_profile(p.id)
 	assert_not_null(back, "loaded")
-	assert_eq(back.stage, NlaStage.Stage.SINGLE_WORDS, "stage persisted")
+	assert_eq(back.stage_for_scene("home_routines"), NlaStage.Stage.SINGLE_WORDS, "a scene's stage persisted")
 	assert_eq(back.gestalts.size(), 1, "gestalt persisted")
 
 func test_seeding_twice_does_not_duplicate() -> void:

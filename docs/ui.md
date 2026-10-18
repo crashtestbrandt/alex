@@ -95,9 +95,9 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 
 | Bank | Beginnings | Endings | Right column on a phone |
 | --- | --- | --- | --- |
-| `home_routines` alone | 11 | 13 | 2 screens |
-| `snack_time` alone | 10 | 28 | 5 screens |
-| Every shipped scene | 40 | 49 | 9 screens |
+| `home_routines` alone | 28 | 32 | 6 screens |
+| `snack_time` alone | 26 | 35 | 6 screens |
+| Every shipped scene | 55 | 65 | 12 screens |
 
 - **Build and the layout editor share the composition model and nothing else.** An object is a union of
   primitives with authored seams, a room is a layout of objects, and a sentence is a union of chunks with
@@ -132,6 +132,7 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 | `ChunkButton` | `HoldButton` | A chunk the learner taps in Build: a pill in its chunk's color at the tile floor, text in the style's text color. A hold records it. |
 | `TakePill` | `ChunkButton` | A pill on the recording overlay: a chunk in its color, or the whole phrase on the surface. A tap picks it; the picked pill has a thick border; a pill with a take carries a microphone mark. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
+| `SdfTextArea` | `TextEdit` | The multi-line partner of `SdfField`: the notes on Edit. It wraps and grows with its text from a few lines. |
 | `HoldButton` | `SdfButton` | Fires only after a hold, so a stray tap does nothing. The caregiver chord cancels a hold in progress. |
 | `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. `floating` gives the pills the style's relief. |
 
@@ -173,6 +174,9 @@ three seconds (`CaregiverChord`):
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
+- A stage belongs to a scene and is set where the scene is chosen (docs/design.md "Progression"). New profile shows a stage bar for the starter scene, 1 to 6, with the stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). A blank start shows none. Create writes it.
+- On Edit, every held scene's row carries its own stage bar, 1 to 6, and a line under it naming the stage and what the adults model there. A tap saves at once (`Profile.set_scene_stage`). A scene starts at 1.
+- Edit shows a Notes field, an `SdfTextArea`. Save writes the stage and the notes with the look. Back discards both. Neither reaches the learner's screen.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Caregiver guide opens `GUIDE.md` on a tap. Privacy policy opens `PRIVACY.md` on a tap (`PageText`).
 - `GUIDE.md` is the one place caregiver instructions live. The README lists the first steps and points to it. A change to how a caregiver does something updates `GUIDE.md` in the same PR.

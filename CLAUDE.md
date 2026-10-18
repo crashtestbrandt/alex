@@ -114,7 +114,10 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
 - **A chunk's color is keyed by its text alone** (`ChunkColors`, docs/ui.md "Chunk colors"). It carries
   identity, never a judgment. Every chunk on screen is a `ChunkRow` pill, and its text keeps the preset's
   text color.
-- **A stage is optional, informs the caregiver only, and never appears on the learner's screen.**
+- **Each scene in a profile has its own stage, and it picks what every object in it says** (docs/design.md
+  "Progression"). A spot carries a phrase pair per stage and says the nearest pair at or below its scene's.
+  There is no profile-wide stage. It is set where the scene is chosen. A stage never advances on its own
+  and never appears on the learner's screen.
 - **A profile grows by re-chunking a phrase in place** (docs/design.md "Progression"). One spoken phrase is
   one row, one recording and one tile. Moving it along is editing its bars.
 - **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay

@@ -2,8 +2,104 @@
   "schema": 1,
   "id": "play_room",
   "title": "Playroom",
-  "description": "A playroom for single words and pairs: a ball, a star, a cup, a door, a lamp. Every object says two words, and every word is a chunk on its own. Replace the words with the ones your child says on their own.",
+  "description": "A playroom to explore: a ball, a star, a cup, a door, a lamp, a rug. Playtime phrases with a pair written for every stage, and the single words a child says on their own. Replace the words with the ones your child uses.",
   "gestalts": [
+    {
+      "id": "lets_go_outside",
+      "text": "Let's go | outside",
+      "function": "routine",
+      "stage": 1
+    },
+    {
+      "id": "lets_go_inside",
+      "text": "Let's go | inside",
+      "function": "routine",
+      "stage": 2
+    },
+    {
+      "id": "look_outside",
+      "text": "Look | outside",
+      "function": "comment",
+      "stage": 2
+    },
+    {
+      "id": "look_at_the_star",
+      "text": "Look at | the star",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "so_pretty",
+      "text": "So | pretty",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "lights_on",
+      "text": "Lights | on",
+      "function": "routine",
+      "stage": 1
+    },
+    {
+      "id": "lights_off",
+      "text": "Lights | off",
+      "function": "routine",
+      "stage": 2
+    },
+    {
+      "id": "its_time_for_a_snack",
+      "text": "It's time for | a snack",
+      "function": "routine",
+      "stage": 1
+    },
+    {
+      "id": "i_want_more",
+      "text": "I want | more",
+      "function": "request",
+      "stage": 1
+    },
+    {
+      "id": "all_done",
+      "text": "All done",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "lets_jump",
+      "text": "Let's | jump",
+      "function": "request",
+      "stage": 1
+    },
+    {
+      "id": "lets_sit",
+      "text": "Let's | sit",
+      "function": "request",
+      "stage": 2
+    },
+    {
+      "id": "lets_play_ball",
+      "text": "Let's play | ball",
+      "function": "request",
+      "stage": 1
+    },
+    {
+      "id": "lets_get_your_shoes",
+      "text": "Let's get | your shoes",
+      "function": "routine",
+      "stage": 1
+    },
+    {
+      "id": "off_we_go",
+      "text": "Off | we go",
+      "function": "routine",
+      "stage": 2
+    },
+    {
+      "id": "my_turn",
+      "text": "My | turn",
+      "function": "request",
+      "stage": 1
+    },
     {
       "id": "door_open",
       "text": "Door | open",
@@ -14,30 +110,6 @@
       "id": "door_shut",
       "text": "Door | shut",
       "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "light_on",
-      "text": "Light | on",
-      "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "light_off",
-      "text": "Light | off",
-      "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "ball_up",
-      "text": "Ball | up",
-      "function": "comment",
-      "stage": 3
-    },
-    {
-      "id": "ball_down",
-      "text": "Ball | down",
-      "function": "comment",
       "stage": 3
     },
     {
@@ -59,21 +131,33 @@
       "stage": 3
     },
     {
-      "id": "more_juice",
-      "text": "More | juice",
+      "id": "light_on",
+      "text": "Light | on",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "all_done",
-      "text": "All | done",
-      "function": "comment",
+      "id": "light_off",
+      "text": "Light | off",
+      "function": "request",
       "stage": 3
     },
     {
       "id": "snack_time",
       "text": "Snack | time",
       "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "more_juice",
+      "text": "More | juice",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "done",
+      "text": "Done",
+      "function": "comment",
       "stage": 3
     },
     {
@@ -89,6 +173,18 @@
       "stage": 3
     },
     {
+      "id": "ball_up",
+      "text": "Ball | up",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "ball_down",
+      "text": "Ball | down",
+      "function": "comment",
+      "stage": 3
+    },
+    {
       "id": "shoes_on",
       "text": "Shoes | on",
       "function": "routine",
@@ -98,18 +194,6 @@
       "id": "go_out",
       "text": "Go | out",
       "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "my_turn",
-      "text": "My | turn",
-      "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "big_ball",
-      "text": "Big | ball",
-      "function": "comment",
       "stage": 3
     },
     {
@@ -128,12 +212,6 @@
       "id": "more",
       "text": "More",
       "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "done",
-      "text": "Done",
-      "function": "comment",
       "stage": 3
     },
     {
@@ -177,6 +255,102 @@
       "text": "Jump",
       "function": "request",
       "stage": 3
+    },
+    {
+      "id": "big_ball",
+      "text": "Big | ball",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "open_the_door",
+      "text": "Open | the | door",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "shut_the_door",
+      "text": "Shut | the | door",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "look_out_the_window",
+      "text": "Look | out | the | window",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "i_see_a_star",
+      "text": "I | see | a | star",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "turn_on_the_light",
+      "text": "Turn | on | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "turn_off_the_light",
+      "text": "Turn | off | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "its_time_to_eat",
+      "text": "It's | time | to | eat",
+      "function": "routine",
+      "stage": 4
+    },
+    {
+      "id": "i_want_more_juice",
+      "text": "I | want | more | juice",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "i_am_all_done",
+      "text": "I | am | all | done",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "jump_on_the_rug",
+      "text": "Jump | on | the | rug",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "sit_on_the_rug",
+      "text": "Sit | on | the | rug",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "throw_the_ball",
+      "text": "Throw | the | ball",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "catch_the_ball",
+      "text": "Catch | the | ball",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "put_on_your_shoes",
+      "text": "Put | on | your | shoes",
+      "function": "routine",
+      "stage": 4
+    },
+    {
+      "id": "lets_go_out_now",
+      "text": "Let's | go | out | now",
+      "function": "request",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -193,8 +367,18 @@
           "x": 0.25,
           "height": 0.0,
           "size": 0.5,
-          "gestalt": "door_open",
-          "alt_gestalt": "door_shut"
+          "gestalt": "lets_go_outside",
+          "alt_gestalt": "lets_go_inside",
+          "stages": {
+            "3": {
+              "gestalt": "door_open",
+              "alt_gestalt": "door_shut"
+            },
+            "4": {
+              "gestalt": "open_the_door",
+              "alt_gestalt": "shut_the_door"
+            }
+          }
         },
         {
           "id": "window",
@@ -204,7 +388,15 @@
           "x": 0.62,
           "height": 0.4,
           "size": 0.3,
-          "gestalt": "look_out"
+          "gestalt": "look_outside",
+          "stages": {
+            "3": {
+              "gestalt": "look_out"
+            },
+            "4": {
+              "gestalt": "look_out_the_window"
+            }
+          }
         },
         {
           "id": "star",
@@ -214,8 +406,18 @@
           "x": 0.3,
           "height": 0.65,
           "size": 0.12,
-          "gestalt": "big_star",
-          "alt_gestalt": "wow"
+          "gestalt": "look_at_the_star",
+          "alt_gestalt": "so_pretty",
+          "stages": {
+            "3": {
+              "gestalt": "big_star",
+              "alt_gestalt": "wow"
+            },
+            "4": {
+              "gestalt": "i_see_a_star",
+              "alt_gestalt": "wow"
+            }
+          }
         },
         {
           "id": "light",
@@ -224,8 +426,18 @@
           "x": 0.28,
           "y": 0.15,
           "size": 0.4,
-          "gestalt": "light_on",
-          "alt_gestalt": "light_off"
+          "gestalt": "lights_on",
+          "alt_gestalt": "lights_off",
+          "stages": {
+            "3": {
+              "gestalt": "light_on",
+              "alt_gestalt": "light_off"
+            },
+            "4": {
+              "gestalt": "turn_on_the_light",
+              "alt_gestalt": "turn_off_the_light"
+            }
+          }
         },
         {
           "id": "table",
@@ -234,7 +446,15 @@
           "x": 0.9,
           "y": 0.2,
           "size": 0.16,
-          "gestalt": "snack_time"
+          "gestalt": "its_time_for_a_snack",
+          "stages": {
+            "3": {
+              "gestalt": "snack_time"
+            },
+            "4": {
+              "gestalt": "its_time_to_eat"
+            }
+          }
         },
         {
           "id": "cup",
@@ -244,8 +464,18 @@
           "y": 0.2,
           "height": 0.2215384615,
           "size": 0.09,
-          "gestalt": "more_juice",
-          "alt_gestalt": "all_done"
+          "gestalt": "i_want_more",
+          "alt_gestalt": "all_done",
+          "stages": {
+            "3": {
+              "gestalt": "more_juice",
+              "alt_gestalt": "done"
+            },
+            "4": {
+              "gestalt": "i_want_more_juice",
+              "alt_gestalt": "i_am_all_done"
+            }
+          }
         },
         {
           "id": "rug",
@@ -254,8 +484,18 @@
           "x": 0.5,
           "y": 0.62,
           "size": 0.35,
-          "gestalt": "jump_up",
-          "alt_gestalt": "sit_down"
+          "gestalt": "lets_jump",
+          "alt_gestalt": "lets_sit",
+          "stages": {
+            "3": {
+              "gestalt": "jump_up",
+              "alt_gestalt": "sit_down"
+            },
+            "4": {
+              "gestalt": "jump_on_the_rug",
+              "alt_gestalt": "sit_on_the_rug"
+            }
+          }
         },
         {
           "id": "ball",
@@ -264,8 +504,17 @@
           "x": 0.58,
           "y": 0.72,
           "size": 0.12,
-          "gestalt": "ball_up",
-          "alt_gestalt": "ball_down"
+          "gestalt": "lets_play_ball",
+          "stages": {
+            "3": {
+              "gestalt": "ball_up",
+              "alt_gestalt": "ball_down"
+            },
+            "4": {
+              "gestalt": "throw_the_ball",
+              "alt_gestalt": "catch_the_ball"
+            }
+          }
         },
         {
           "id": "shoes",
@@ -274,8 +523,18 @@
           "x": 0.12,
           "y": 0.6,
           "size": 0.16,
-          "gestalt": "shoes_on",
-          "alt_gestalt": "go_out"
+          "gestalt": "lets_get_your_shoes",
+          "alt_gestalt": "off_we_go",
+          "stages": {
+            "3": {
+              "gestalt": "shoes_on",
+              "alt_gestalt": "go_out"
+            },
+            "4": {
+              "gestalt": "put_on_your_shoes",
+              "alt_gestalt": "lets_go_out_now"
+            }
+          }
         }
       ]
     }
@@ -285,12 +544,12 @@
       "id": "play",
       "title": "Play",
       "gestalts": [
+        "my_turn",
         "help",
         "more",
         "done",
         "up",
         "go",
-        "my_turn",
         "big_ball"
       ]
     }

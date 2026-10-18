@@ -14,9 +14,8 @@ func test_every_shipped_pack_parses() -> void:
 				assert_true(_holds(s, gid), "%s board '%s' names a gestalt the pack holds: %s" % [s.id, b.id, gid])
 		for r: Room in s.rooms:
 			for spot: Spot in r.spots:
-				assert_true(_holds(s, spot.gestalt_id), "%s room '%s' spot '%s' names a gestalt the pack holds" % [s.id, r.id, spot.id])
-				if not spot.alt_gestalt_id.is_empty():
-					assert_true(_holds(s, spot.alt_gestalt_id), "%s room '%s' spot '%s' alt names a gestalt the pack holds" % [s.id, r.id, spot.id])
+				for gid: String in spot.gestalt_ids():
+					assert_true(_holds(s, gid), "%s room '%s' spot '%s' names a gestalt the pack holds: %s" % [s.id, r.id, spot.id, gid])
 
 func _holds(s: Starter, gid: String) -> bool:
 	for g: Gestalt in s.gestalts:
@@ -44,7 +43,12 @@ func test_add_to_prefixes_ids_and_reuses_the_banks_phrases() -> void:
 	assert_not_null(p.gestalt("bath_time.lets_get_in_the_tub"), "a new phrase is copied with a scoped id")
 	assert_null(p.gestalt("bath_time.time_for_a_bath"), "a phrase the bank already says is not copied")
 	assert_null(p.gestalt("bath_time.lights_on"), "nor is another")
-	assert_eq(p.gestalts.size(), before + bath.gestalts.size() - 3, "three phrases were already in the bank")
+	var shared: int = 0
+	for g: Gestalt in bath.gestalts:
+		if Starter.find("home_routines").gestalts.any(func(h: Gestalt) -> bool: return ChunkColors.key(h.text) == ChunkColors.key(g.text)):
+			shared += 1
+	assert_true(shared >= 3, "the packs share phrases (%d)" % shared)
+	assert_eq(p.gestalts.size(), before + bath.gestalts.size() - shared, "a shared phrase is in the bank once")
 	var door: Spot = null
 	var light: Spot = null
 	for s: Spot in p.rooms[1].spots:
@@ -118,18 +122,26 @@ func _single_words(g: Gestalt) -> bool:
 			return false
 	return true
 
-## The two later packs are one stage each, so a caregiver can read a pack's title as its stage.
-func test_the_later_packs_are_one_stage_each() -> void:
-	for pair: Array in [["play_room", NlaStage.Stage.SINGLE_WORDS], ["snack_time", NlaStage.Stage.EARLY_GRAMMAR]]:
-		var pack_id: String = pair[0]
-		var stage: NlaStage.Stage = pair[1]
-		var s: Starter = Starter.find(pack_id)
-		assert_not_null(s, "%s ships" % pack_id)
-		if s == null:
+## Every spot in every shipped scene carries a pair for stage 3 and for stage 4, so the profile's stage
+## changes what every object says (docs/design.md "Progression"). A pair's rows carry that stage.
+func test_every_spot_carries_a_pair_for_stages_3_and_4() -> void:
+	for s: Starter in Starter.list_all():
+		if not s.is_scene():
 			continue
-		assert_true(s.is_scene() and s.rooms.size() == 1, "%s is a scene with a room" % pack_id)
-		for g: Gestalt in s.gestalts:
-			assert_eq(g.stage, stage, "%s '%s' is stage %d" % [pack_id, g.id, stage])
+		for r: Room in s.rooms:
+			for spot: Spot in r.spots:
+				for stage: NlaStage.Stage in [NlaStage.Stage.SINGLE_WORDS, NlaStage.Stage.EARLY_GRAMMAR]:
+					assert_true(spot.stage_gestalts.has(int(stage)), "%s '%s' has a stage %d pair" % [s.id, spot.id, stage])
+					var g: Gestalt = _gestalt(s, spot.gestalt_at(stage))
+					assert_true(g != null and g.stage == stage, "%s '%s' stage %d pair is a stage %d row" % [s.id, spot.id, stage, stage])
+				var base: Gestalt = _gestalt(s, spot.gestalt_id)
+				assert_true(base != null and base.stage <= NlaStage.Stage.MITIGATION, "%s '%s' base pair is stage 1 or 2 material" % [s.id, spot.id])
+
+func _gestalt(s: Starter, gid: String) -> Gestalt:
+	for g: Gestalt in s.gestalts:
+		if g.id == gid:
+			return g
+	return null
 
 func test_home_routines_is_mitigable() -> void:
 	var s: Starter = Starter.find("home_routines")
