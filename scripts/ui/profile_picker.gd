@@ -13,7 +13,6 @@ signal profile_deleted(profile_id: String)
 
 enum Mode { PICK, CREATE, LOOK, POLICY, GUIDE, GLOSSARY }
 
-const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md"
 ## The stages a scene can be at, in pill order. A bar's index is the stage less one.
 const _STAGES: Array[NlaStage.Stage] = [
 	NlaStage.Stage.ECHOLALIA, NlaStage.Stage.MITIGATION, NlaStage.Stage.SINGLE_WORDS,
@@ -27,6 +26,8 @@ const _STAGES: Array[NlaStage.Stage] = [
 @onready var _create_button: SdfButton = %CreateButton
 @onready var _status: Label = %Status
 @onready var _heading: Label = %Heading
+@onready var _subtitle: Label = %Subtitle
+@onready var _starter_hint: Label = %StarterHint
 @onready var _new_button: SdfButton = %NewProfileButton
 @onready var _starter_row: BoxContainer = %StarterRow
 @onready var _style_row: BoxContainer = %StyleRow
@@ -50,6 +51,7 @@ const _STAGES: Array[NlaStage.Stage] = [
 @onready var _page: VBoxContainer = %Page
 @onready var _build_stamp: Label = %BuildStamp
 
+var _scene_entries: Array[Node] = []
 var _starters: Array[Starter] = []
 var _style_ids: PackedStringArray = PackedStringArray()
 var _editing_id: String = ""
@@ -86,14 +88,14 @@ func _layout_choices() -> void:
 		_layout_choice_row(row)
 	# A scene row puts its title over its buttons when the two do not fit side by side, and its stage bar
 	# under its label the same way the profile's does.
-	for entry: VBoxContainer in _scene_rows.get_children():
+	for entry: VBoxContainer in scene_rows():
 		var row: BoxContainer = entry.get_child(0) as BoxContainer
 		var title: Label = row.get_child(0) as Label
 		var actions: Control = row.get_child(1) as Control
 		var font: Font = title.get_theme_font("font")
 		var title_px: float = font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, title.get_theme_font_size("font_size")).x
 		row.vertical = row.size.x < title_px + 12.0 + actions.get_combined_minimum_size().x
-		if entry.get_child_count() > 1:
+		if entry.get_child(1) is BoxContainer:
 			_layout_choice_row(entry.get_child(1) as BoxContainer)
 
 ## A label beside a pill bar, or over it when the two do not fit side by side.
@@ -154,6 +156,7 @@ func _fill_starters() -> void:
 		if _starters[i].id == "home_routines":
 			preferred = i
 	_starter_bar.set_active(preferred)
+	_starter_hint.text = _starters[preferred].description if not _starters.is_empty() else "No scenes are available."
 
 ## Whether the starter picked on the New profile form is a scene, and so takes a stage.
 func _starter_is_scene() -> bool:
@@ -163,6 +166,7 @@ func _starter_is_scene() -> bool:
 ## The stage row belongs to the starter scene. A blank start has none.
 func _on_starter_pressed(index: int) -> void:
 	_starter_bar.set_active(index)
+	_starter_hint.text = _starters[index].description
 	_stage_section.visible = _mode == Mode.CREATE and _starter_is_scene()
 	_layout_choices.call_deferred()
 
@@ -219,6 +223,7 @@ func _show_mode(mode: Mode) -> void:
 	_new_button.visible = mode == Mode.PICK
 	_name_edit.visible = mode == Mode.CREATE
 	_starter_row.visible = mode == Mode.CREATE
+	_starter_hint.visible = mode == Mode.CREATE
 	_style_row.visible = mode == Mode.CREATE or mode == Mode.LOOK
 	_actions.visible = mode != Mode.PICK
 	_delete_section.visible = mode == Mode.LOOK
@@ -244,6 +249,14 @@ func _show_mode(mode: Mode) -> void:
 			_heading.text = "Glossary"
 		_:
 			_heading.text = "Choose a profile"
+	_subtitle.visible = not reading
+	match mode:
+		Mode.PICK:
+			_subtitle.text = "Open a profile to explore, or edit its scenes and look."
+		Mode.CREATE:
+			_subtitle.text = "Choose a first scene and a comfortable look."
+		Mode.LOOK:
+			_subtitle.text = "Choose the scene Explore opens on and the phrases it says."
 	_status.hide()
 	_sheet.scroll_vertical = 0
 	_layout_choices.call_deferred()
@@ -273,18 +286,25 @@ func _fill_scenes(profile: Profile) -> void:
 	for child: Node in _scene_rows.get_children():
 		_scene_rows.remove_child(child)
 		child.queue_free()
+	_scene_entries.clear()
 	var opens: Room = profile.explore_room()
 	var entry: String = profile.scene_of(opens.id) if opens != null else ""
 	for s: Starter in _starters:
 		if not s.is_scene():
 			continue
 		var scene_entry: VBoxContainer = VBoxContainer.new()
-		scene_entry.add_theme_constant_override("separation", 8)
-		_scene_rows.add_child(scene_entry)
+		scene_entry.add_theme_constant_override("separation", 12)
+		var panel: SdfPanel = SdfPanel.new()
+		panel.inset = true
+		panel.content_margin = 18.0
+		_scene_rows.add_child(panel)
+		panel.add_child(scene_entry)
+		_scene_entries.push_back(scene_entry)
 		var row: BoxContainer = BoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		var title: Label = Label.new()
 		title.text = s.title
+		title.theme_type_variation = &"SectionLabel"
 		title.tooltip_text = s.description
 		title.mouse_filter = Control.MOUSE_FILTER_PASS
 		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -306,6 +326,11 @@ func _fill_scenes(profile: Profile) -> void:
 		if profile.has_scene(s.id):
 			scene_entry.add_child(_scene_stage_row(profile, s))
 			scene_entry.add_child(_scene_stage_line(profile, s))
+		var detail: Label = Label.new()
+		detail.theme_type_variation = &"HintLabel"
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.text = s.description
+		scene_entry.add_child(detail)
 	_layout_choices.call_deferred()
 
 ## A held scene's stage bar, 1 to 6. The active pill is the scene's stage.
@@ -351,7 +376,7 @@ func _scene_button(text: String, done: bool, on_pressed: Callable) -> SdfButton:
 	return button
 
 func scene_rows() -> Array[Node]:
-	return _scene_rows.get_children()
+	return _scene_entries
 
 func _on_add_scene(s: Starter) -> void:
 	_change_scene(s.add_to, "Added %s." % s.title, "Could not save the scene. Try again.")
@@ -422,19 +447,37 @@ func _show_page(path: String, mode: Mode) -> void:
 	for child: Node in _page.get_children():
 		_page.remove_child(child)
 		child.queue_free()
-	var headings: PackedStringArray = PageText.load_headings(path)
-	var blocks: PackedStringArray = PageText.load_blocks(path)
-	if mode == Mode.POLICY:
-		blocks.push_back("This policy is also at %s" % PRIVACY_URL)
-	for block: String in blocks:
-		var label: Label = Label.new()
-		label.text = block
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		if headings.has(block):
-			label.theme_type_variation = &"SectionLabel"
-		_page.add_child(label)
+	var label: RichTextLabel = RichTextLabel.new()
+	label.bbcode_enabled = true
+	label.fit_content = true
+	label.scroll_active = false
+	label.selection_enabled = true
+	label.mouse_filter = Control.MOUSE_FILTER_PASS
+	label.add_theme_color_override("default_color", Style.current.text)
+	label.add_theme_font_size_override("normal_font_size", Style.font_px(22))
+	label.add_theme_font_size_override("bold_font_size", Style.font_px(22))
+	label.add_theme_font_size_override("italics_font_size", Style.font_px(22))
+	label.add_theme_font_size_override("mono_font_size", Style.font_px(20))
+	label.add_theme_constant_override("line_separation", 5)
+	var markdown: String = FileAccess.get_file_as_string(path)
+	# Godot's synthetic bold font distorts MSDF glyphs. A one-pixel outline keeps the bundled
+	# font crisp at every canvas scale and gives Markdown emphasis a visible weight change.
+	label.add_theme_font_override("bold_font", label.get_theme_font("normal_font"))
+	var rich: String = PageMarkdown.render(markdown, Style.font_px(28))
+	var bold: String = "[b][outline_size=1][outline_color=#%s]" % Style.current.text.to_html(false)
+	label.text = rich.replace("[b]", bold).replace("[/b]", "[/outline_color][/outline_size][/b]")
+	label.meta_clicked.connect(_on_page_link)
+	_page.add_child(label)
 	# Focus stays put: the sheet follows focus, and the page reads from the top.
 	_show_mode(mode)
+
+## Links only open after an adult taps one in a caregiver page.
+func _on_page_link(meta: Variant) -> void:
+	if not meta is String:
+		return
+	var url: String = meta
+	if PageMarkdown.safe_link(url):
+		OS.shell_open(url)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and _mode != Mode.PICK and _back_button.visible and event.is_action_pressed("ui_cancel"):

@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 display_name = "Calm"
-background = Color(0.9569, 0.9451, 0.9176, 1)
+background = Color(0.9255, 0.9451, 0.9608, 1)
 surface = Color(1, 1, 1, 1)
 accent = Color(0.1843, 0.4353, 0.5608, 1)
 text = Color(0.1176, 0.1647, 0.1961, 1)

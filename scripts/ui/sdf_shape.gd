@@ -32,6 +32,11 @@ static var _white: ImageTexture = null
 	set(value):
 		relief = value
 		_apply()
+## A restrained tonal highlight for caregiver sheets; no background sampling.
+@export_range(0.0, 1.0) var sheen: float = 0.0:
+	set(value):
+		sheen = value
+		_apply()
 ## 0 at rest, 1 fully pressed.
 var press: float = 0.0:
 	set(value):
@@ -67,7 +72,8 @@ func _apply() -> void:
 	_material.set_shader_parameter("border_px", border_px)
 	_material.set_shader_parameter("relief", relief if relief >= 0.0 else preset.relief)
 	_material.set_shader_parameter("press", press)
-	_material.set_shader_parameter("shadow", Color(0.0, 0.0, 0.0, 0.28))
+	_material.set_shader_parameter("sheen", sheen)
+	_material.set_shader_parameter("shadow", Color(0.0, 0.0, 0.0, 0.18))
 	queue_redraw()
 
 func _on_style_changed(_preset: StylePreset) -> void:

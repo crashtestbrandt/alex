@@ -696,6 +696,13 @@ func _build_shell() -> void:
 			else:
 				var x: float = (w + t) / 2.0 * (-1.0 if wall == Spot.Wall.LEFT else 1.0)
 				_slab(Vector3(t, section.size.y, section.size.x), Vector3(x, mid.y, mid.x - RoomSpace.DEPTH / 2.0), color, group)
+			if section.position.y <= 0.001:
+				var trim: Color = Style.current.wood.lightened(0.30)
+				if wall == Spot.Wall.BACK:
+					_slab(Vector3(section.size.x, 0.09, 0.025), Vector3(mid.x - w / 2.0, 0.045, -RoomSpace.DEPTH / 2.0 + 0.0125), trim, group)
+				else:
+					var side_x: float = (w / 2.0 - 0.0125) * (-1.0 if wall == Spot.Wall.LEFT else 1.0)
+					_slab(Vector3(0.025, 0.09, section.size.x), Vector3(side_x, 0.045, mid.x - RoomSpace.DEPTH / 2.0), trim, group)
 		var upper_size: Vector3 = Vector3(w, 30.0, t) if wall == Spot.Wall.BACK else Vector3(t, 30.0, d)
 		var upper_at: Vector3 = Vector3(0.0, RoomSpace.HEIGHT + RoomSpace.WALL_RISE + 15.0, -RoomSpace.DEPTH / 2.0 - t / 2.0)
 		if wall != Spot.Wall.BACK:

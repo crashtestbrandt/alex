@@ -36,11 +36,11 @@ func refresh() -> void:
 	var preset: StylePreset = Style.current
 	_shape.radius_px = UiGeometry.rounded_radius(size, float(preset.corner_radius))
 	_shape.fill = preset.surface.lerp(preset.background, 0.35)
-	_shape.border_px = FOCUS_BORDER_PX if has_focus() else 0.0
-	_shape.border_color = preset.accent
+	_shape.border_px = FOCUS_BORDER_PX if has_focus() else 1.0
+	_shape.border_color = preset.accent if has_focus() else preset.text.lerp(preset.surface, 0.82)
 	_shape.relief = 0.0
 	add_theme_color_override("font_color", preset.text)
-	add_theme_color_override("font_placeholder_color", preset.text.lerp(preset.background, 0.5))
+	add_theme_color_override("font_placeholder_color", preset.text.lerp(preset.background, 0.3))
 	add_theme_color_override("caret_color", preset.accent)
 
 func _on_style_changed(_preset: StylePreset) -> void:

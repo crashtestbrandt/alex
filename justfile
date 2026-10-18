@@ -61,6 +61,10 @@ doc-size-check:
 room-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_probe.tscn
 
+# Tap visibility in every shipped room, from Front and Top in every style.
+content-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/content_probe.tscn
+
 # The rubber band at both ends of a scroll, from synthetic mouse drags, the events Godot emulates from a finger (tools/instr/overscroll_probe.gd).
 overscroll-probe:
     "{{godot}}" {{headless}} --path . tools/instr/overscroll_probe.tscn

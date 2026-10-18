@@ -51,6 +51,7 @@ horizontal_scroll_mode = 0
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 script = ExtResource("3")
+elevated = true
 
 [node name="Column" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2
@@ -59,7 +60,8 @@ alignment = 1
 
 [node name="Heading" type="Label" parent="Center/Panel/Column"]
 layout_mode = 2
-text = "Record this in your voice"
+theme_type_variation = &"SectionLabel"
+text = "Record in your voice"
 autowrap_mode = 3
 horizontal_alignment = 1
 

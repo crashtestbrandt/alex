@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "play_room",
   "title": "Playroom",
-  "description": "A playroom to explore: a ball, a star, a cup, a door, a lamp, a rug. Playtime phrases with a pair written for every stage, and the single words a child says on their own. Replace the words with the ones your child uses.",
+  "description": "A playroom with a sofa, a bookcase, a reading rug and an open floor for a bouncing ball.",
   "gestalts": [
     {
       "id": "lets_go_outside",
@@ -351,6 +351,54 @@
       "text": "Let's | go | out | now",
       "function": "request",
       "stage": 4
+    },
+    {
+      "id": "sofa_phrase",
+      "text": "Let's sit | together",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "sofa_sentence",
+      "text": "Come | sit | with | me",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "shelf_phrase",
+      "text": "Let's choose | a book",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "shelf_short",
+      "text": "book | please",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "shelf_sentence",
+      "text": "I | want | a | book",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "book_phrase",
+      "text": "Let's read | together",
+      "function": "comment",
+      "stage": 2
+    },
+    {
+      "id": "book_short",
+      "text": "read | book",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "book_sentence",
+      "text": "Read | with | me",
+      "function": "comment",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -363,8 +411,8 @@
           "id": "door",
           "kind": "door",
           "reaction": "open",
-          "wall": "left",
-          "x": 0.25,
+          "wall": "right",
+          "x": 0.7,
           "height": 0.0,
           "size": 0.5,
           "gestalt": "lets_go_outside",
@@ -385,8 +433,8 @@
           "kind": "window",
           "reaction": "glow",
           "wall": "back",
-          "x": 0.62,
-          "height": 0.4,
+          "x": 0.31,
+          "height": 0.48,
           "size": 0.3,
           "gestalt": "look_outside",
           "stages": {
@@ -403,8 +451,8 @@
           "kind": "star",
           "reaction": "spin",
           "wall": "back",
-          "x": 0.3,
-          "height": 0.65,
+          "x": 0.75,
+          "height": 0.67,
           "size": 0.12,
           "gestalt": "look_at_the_star",
           "alt_gestalt": "so_pretty",
@@ -423,9 +471,9 @@
           "id": "light",
           "kind": "light",
           "reaction": "glow",
-          "x": 0.28,
-          "y": 0.15,
-          "size": 0.4,
+          "x": 0.08,
+          "y": 0.23,
+          "size": 0.35,
           "gestalt": "lights_on",
           "alt_gestalt": "lights_off",
           "stages": {
@@ -443,9 +491,9 @@
           "id": "table",
           "kind": "table",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.2,
-          "size": 0.16,
+          "x": 0.82,
+          "y": 0.46,
+          "size": 0.17,
           "gestalt": "its_time_for_a_snack",
           "stages": {
             "3": {
@@ -460,10 +508,10 @@
           "id": "cup",
           "kind": "cup",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.2,
-          "height": 0.2215384615,
-          "size": 0.09,
+          "x": 0.82,
+          "y": 0.46,
+          "height": 0.23538461538461541,
+          "size": 0.075,
           "gestalt": "i_want_more",
           "alt_gestalt": "all_done",
           "stages": {
@@ -481,9 +529,9 @@
           "id": "rug",
           "kind": "circle",
           "reaction": "grow",
-          "x": 0.5,
-          "y": 0.62,
-          "size": 0.35,
+          "x": 0.45,
+          "y": 0.7,
+          "size": 0.37,
           "gestalt": "lets_jump",
           "alt_gestalt": "lets_sit",
           "stages": {
@@ -501,8 +549,8 @@
           "id": "ball",
           "kind": "ball",
           "reaction": "bounce",
-          "x": 0.58,
-          "y": 0.72,
+          "x": 0.59,
+          "y": 0.76,
           "size": 0.12,
           "gestalt": "lets_play_ball",
           "stages": {
@@ -514,15 +562,16 @@
               "gestalt": "throw_the_ball",
               "alt_gestalt": "catch_the_ball"
             }
-          }
+          },
+          "height": 0.007692307692307692
         },
         {
           "id": "shoes",
           "kind": "shoes",
           "reaction": "bounce",
-          "x": 0.12,
-          "y": 0.6,
-          "size": 0.16,
+          "x": 0.88,
+          "y": 0.88,
+          "size": 0.12,
           "gestalt": "lets_get_your_shoes",
           "alt_gestalt": "off_we_go",
           "stages": {
@@ -535,6 +584,58 @@
               "alt_gestalt": "lets_go_out_now"
             }
           }
+        },
+        {
+          "id": "sofa",
+          "kind": "sofa",
+          "reaction": "wobble",
+          "x": 0.4,
+          "y": 0.24,
+          "size": 0.46,
+          "gestalt": "sofa_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "sit_down"
+            },
+            "4": {
+              "gestalt": "sofa_sentence"
+            }
+          }
+        },
+        {
+          "id": "shelf",
+          "kind": "shelf",
+          "reaction": "wobble",
+          "x": 0.82,
+          "y": 0.1,
+          "size": 0.23,
+          "gestalt": "shelf_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "shelf_short"
+            },
+            "4": {
+              "gestalt": "shelf_sentence"
+            }
+          }
+        },
+        {
+          "id": "book",
+          "kind": "book",
+          "reaction": "wobble",
+          "x": 0.31,
+          "y": 0.64,
+          "size": 0.16,
+          "gestalt": "book_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "book_short"
+            },
+            "4": {
+              "gestalt": "book_sentence"
+            }
+          },
+          "height": 0.007692307692307692
         }
       ]
     }

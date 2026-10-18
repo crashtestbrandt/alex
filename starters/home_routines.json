@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "home_routines",
   "title": "Home",
-  "description": "A bedroom to explore: a door, a lamp, a bed, a ball, a cup on the table. Everyday phrases, each one in chunks an adult can recombine, with a pair written for every stage. Replace the words with the ones your child already uses.",
+  "description": "A bedroom with a reading shelf, an open book, a bedside drink and a clear path from the door to the rug.",
   "gestalts": [
     {
       "id": "lets_go_outside",
@@ -231,6 +231,42 @@
       "text": "Put | on | your | shoes",
       "function": "routine",
       "stage": 4
+    },
+    {
+      "id": "shelf_phrase",
+      "text": "Let's choose | a book",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "shelf_short",
+      "text": "book | please",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "shelf_sentence",
+      "text": "I | want | a | book",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "book_phrase",
+      "text": "Let's read | together",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "book_short",
+      "text": "read | book",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "book_sentence",
+      "text": "Read | with | me",
+      "function": "comment",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -265,9 +301,9 @@
           "kind": "window",
           "reaction": "glow",
           "wall": "back",
-          "x": 0.62,
-          "height": 0.4,
-          "size": 0.3,
+          "x": 0.58,
+          "height": 0.46,
+          "size": 0.28,
           "gestalt": "look_outside",
           "stages": {
             "3": {
@@ -282,9 +318,9 @@
           "id": "bed",
           "kind": "bed",
           "reaction": "grow",
-          "x": 0.62,
-          "y": 0.2,
-          "size": 0.5,
+          "x": 0.58,
+          "y": 0.23,
+          "size": 0.46,
           "gestalt": "time_for_bed",
           "stages": {
             "3": {
@@ -299,9 +335,9 @@
           "id": "light",
           "kind": "light",
           "reaction": "glow",
-          "x": 0.28,
-          "y": 0.15,
-          "size": 0.4,
+          "x": 0.29,
+          "y": 0.17,
+          "size": 0.35,
           "gestalt": "lights_on",
           "alt_gestalt": "lights_off",
           "stages": {
@@ -320,8 +356,8 @@
           "kind": "table",
           "reaction": "wobble",
           "x": 0.9,
-          "y": 0.2,
-          "size": 0.16,
+          "y": 0.24,
+          "size": 0.14,
           "gestalt": "time_for_a_snack",
           "stages": {
             "3": {
@@ -337,9 +373,9 @@
           "kind": "cup",
           "reaction": "wobble",
           "x": 0.9,
-          "y": 0.2,
-          "height": 0.2215384615,
-          "size": 0.09,
+          "y": 0.24,
+          "height": 0.1938461538461539,
+          "size": 0.065,
           "gestalt": "want_more",
           "stages": {
             "3": {
@@ -371,9 +407,9 @@
           "id": "ball",
           "kind": "ball",
           "reaction": "bounce",
-          "x": 0.58,
-          "y": 0.72,
-          "size": 0.12,
+          "x": 0.6,
+          "y": 0.74,
+          "size": 0.105,
           "gestalt": "lets_play_ball",
           "stages": {
             "3": {
@@ -382,15 +418,16 @@
             "4": {
               "gestalt": "throw_the_ball"
             }
-          }
+          },
+          "height": 0.007692307692307692
         },
         {
           "id": "shoes",
           "kind": "shoes",
           "reaction": "bounce",
           "x": 0.12,
-          "y": 0.6,
-          "size": 0.16,
+          "y": 0.7,
+          "size": 0.13,
           "gestalt": "lets_get_shoes",
           "stages": {
             "3": {
@@ -400,6 +437,41 @@
               "gestalt": "put_on_your_shoes"
             }
           }
+        },
+        {
+          "id": "shelf",
+          "kind": "shelf",
+          "reaction": "wobble",
+          "x": 0.13,
+          "y": 0.1,
+          "size": 0.19,
+          "gestalt": "shelf_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "shelf_short"
+            },
+            "4": {
+              "gestalt": "shelf_sentence"
+            }
+          }
+        },
+        {
+          "id": "book",
+          "kind": "book",
+          "reaction": "wobble",
+          "x": 0.39,
+          "y": 0.63,
+          "size": 0.16,
+          "gestalt": "book_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "book_short"
+            },
+            "4": {
+              "gestalt": "book_sentence"
+            }
+          },
+          "height": 0.007692307692307692
         }
       ]
     }

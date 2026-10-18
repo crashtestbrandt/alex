@@ -26,6 +26,15 @@ enum Kind {
 	TUB = 8,
 	STAR = 9,
 	TABLE = 10,
+	SINK = 11,
+	TOWEL = 12,
+	SHELF = 13,
+	BOOK = 14,
+	SOFA = 15,
+	BOWL = 16,
+	CHAIR = 17,
+	PLANT = 18,
+	WALL_LIGHT = 19,
 }
 
 ## How the spot moves when tapped. Every reaction multiplies by `Style.motion_scale()`.
@@ -50,6 +59,15 @@ const _KIND_NAMES: Dictionary[String, int] = {
 	"circle": Kind.CIRCLE, "door": Kind.DOOR, "light": Kind.LIGHT, "window": Kind.WINDOW,
 	"ball": Kind.BALL, "bed": Kind.BED, "cup": Kind.CUP, "shoes": Kind.SHOES, "tub": Kind.TUB,
 	"star": Kind.STAR, "table": Kind.TABLE,
+	"sink": Kind.SINK,
+	"towel": Kind.TOWEL,
+	"shelf": Kind.SHELF,
+	"book": Kind.BOOK,
+	"sofa": Kind.SOFA,
+	"bowl": Kind.BOWL,
+	"chair": Kind.CHAIR,
+	"plant": Kind.PLANT,
+	"wall_light": Kind.WALL_LIGHT,
 }
 const _REACTION_NAMES: Dictionary[String, int] = {
 	"bounce": Reaction.BOUNCE, "open": Reaction.OPEN, "glow": Reaction.GLOW, "spin": Reaction.SPIN,

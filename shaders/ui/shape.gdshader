@@ -25,6 +25,7 @@ uniform vec2 shadow_offset_px = vec2(0.0, 5.0);
 uniform float relief = 0.6;
 // 0 at rest, 1 fully pressed: the shape pulls in by PRESS_INSET_PX.
 uniform float press = 0.0;
+uniform float sheen = 0.0;
 
 const float EPS = 0.0001;
 const float PRESS_INSET_PX = 3.0;
@@ -76,7 +77,11 @@ void fragment() {
 	vec2 n = box_normal(p, b, r);
 	float lit = max(0.0, -n.y) * band * RIM_LIGHT * relief;
 	float shaded = max(0.0, n.y) * band * RIM_SHADE * relief;
-	vec3 rgb = mix(fill.rgb, vec3(1.0), lit);
+	// A broad top highlight and a narrow inner edge keep sheet depth quiet.
+	float wash = (1.0 - smoothstep(0.0, 0.75, UV.y)) * sheen * relief * 0.16;
+	vec3 rgb = mix(fill.rgb, vec3(1.0), max(lit, wash));
+	float inner_edge = cover(abs(sd + 1.5) - 0.5, fw) * sheen * relief;
+	rgb = mix(rgb, vec3(1.0), inner_edge * 0.45);
 	rgb = mix(rgb, vec3(0.0), shaded);
 	rgb = mix(rgb, border.rgb, a_border);
 	float alpha = max(a_fill, a_border);

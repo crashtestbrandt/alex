@@ -11,6 +11,8 @@ const _MAIN: PackedScene = preload("res://scenes/main.tscn")
 const _OUT: String = "res://docs/img/room.png"
 const _OUT_RECORD: String = "res://docs/img/record.png"
 const _OUT_PICKER: String = "res://docs/img/picker.png"
+const _OUT_GUIDE: String = "res://docs/img/guide.png"
+const _OUT_GLOSSARY: String = "res://docs/img/glossary.png"
 const _STYLE: String = "bold"
 const _TAPPED: PackedStringArray = ["door"]
 
@@ -55,6 +57,18 @@ func _run() -> void:
 		await get_tree().create_timer(0.3).timeout
 		RenderingServer.force_draw()
 		err = _save(_OUT_PICKER)
+	if err == OK:
+		get_window().size = Vector2i(390, 844)
+		var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
+		picker._on_guide_pressed()
+		await get_tree().create_timer(0.3).timeout
+		RenderingServer.force_draw()
+		err = _save(_OUT_GUIDE)
+		if err == OK:
+			picker._on_glossary_pressed()
+			await get_tree().create_timer(0.3).timeout
+			RenderingServer.force_draw()
+			err = _save(_OUT_GLOSSARY)
 	repo.delete_profile(p.id)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(repo.root))
 	if err == OK:

@@ -160,3 +160,18 @@ to the front, and switches to the board. `just screenshot` renders `docs/img/roo
 
 Fingerprints are compared within one run, not pinned across platforms: the builders use float trigonometry,
 and a pinned hash would fail on a different libm rather than on a real change.
+
+## Furnished starter rooms
+
+- Home keeps the bed and bedside table separate, with a bookcase against the back wall and a book on the rug.
+- Bath time uses a handwashing vanity, a wall light, and a towel rail beside the tub.
+- Playroom uses a sofa, bookcase, and reading rug, with the door on the right.
+- Snack time uses a dining table, chair, bowl, cup, sink, towel, and plant.
+- New recipes are `sink`, `towel`, `shelf`, `book`, `sofa`, `bowl`, `chair`, `plant`, and `wall_light`.
+  They share the existing primitive meshes, picking fields, palette, and reaction system.
+- Existing recipes gain a folded blanket edge, a footboard, shoe straps, table aprons, and rug edging.
+  Baseboards follow solid wall sections and stop at door openings.
+- Revised layouts and added phrases apply when a pack is seeded or added. Existing saved layouts are not
+  rewritten. Existing objects use the improved recipes immediately.
+- `starter_test.gd` checks furniture bounds and intersections. `just content-probe` checks a tappable surface
+  on every object from Front and Top in every style. Its optional `--capture=<directory>` saves room images.
