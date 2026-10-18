@@ -274,3 +274,29 @@ func test_layout_update_after_readding_original_starter() -> void:
 	assert_true(pack.update_layout(p), "re-added starter updates in place")
 	assert_eq(p.rooms.size(), 1, "no duplicate unscoped room")
 	assert_true(pack.layout_matches(p), "updated scoped room matches")
+
+func test_all_starter_rooms_offer_tilt_on_create_add_and_refresh() -> void:
+	for pack: Starter in Starter.list_all():
+		if not pack.is_scene():
+			continue
+		for seeded: bool in [true, false]:
+			var p: Profile = Profile.make("camera", "Sam")
+			if seeded:
+				pack.seed(p)
+			else:
+				pack.add_to(p)
+			for room: Room in p.rooms:
+				assert_eq(room.camera, Room.Camera.TILT, pack.id + " offers Tilt on creation and addition")
+				room.camera = Room.Camera.VIEWS
+			var before: Dictionary = p.to_dict()
+			assert_false(pack.layout_matches(p), "old camera setting updates even when geometry matches")
+			assert_true(pack.update_layout(p), "saved starter gains Tilt")
+			assert_true(pack.layout_matches(p), "camera refresh completes")
+			assert_false(pack.update_layout(p), "camera refresh is idempotent")
+			for room: Room in p.rooms:
+				assert_eq(room.camera, Room.Camera.TILT, "Tilt is restored without recreating the profile")
+				room.camera = Room.Camera.VIEWS
+			assert_eq(p.to_dict(), before, "camera refresh preserves all other profile data")
+			for room: Room in p.rooms:
+				room.camera = Room.Camera.FIXED
+			assert_false(pack.update_layout(p), "explicitly fixed cameras stay fixed")

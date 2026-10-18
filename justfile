@@ -69,6 +69,10 @@ caregiver-probe:
 room-switch-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_switch_probe.tscn
 
+# Continuous walls, floor, trim and shadows across phone camera views.
+room-shell-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/room_shell_probe.tscn
+
 # Tap visibility in every shipped room, from Front and Top in every style.
 content-probe:
     "{{godot}}" {{headless}} --path . tools/instr/content_probe.tscn

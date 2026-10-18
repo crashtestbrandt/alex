@@ -1,6 +1,6 @@
 extends Control
 class_name RoomView
-## One [Room] in 3D: a three-walled box, its spots built from recipes, a camera the learner can move between
+## One [Room] in 3D: an enclosed room, its spots built from recipes, a camera the learner can move between
 ## a few views, and captions that float over a spot while its gestalt plays (docs/geometry.md).
 ##
 ## Input rules, in the learner's favor: a tap on an object reacts and speaks; a two-second hold on an object
@@ -64,9 +64,16 @@ var _room: Room = null
 var _bodies: Dictionary[String, SpotBody] = {}
 var _spoken_gestalts: Dictionary[String, Gestalt] = {}
 var _walls: Dictionary[int, Node3D] = {}
-## The front wall and the ceiling, shown only from inside the box.
+## The front wall and ceiling stay beyond the camera in orbit views.
 var _enclosure: Node3D = null
 var _shell: Node3D = null
+var _floor: MeshInstance3D = null
+var _front: MeshInstance3D = null
+var _ceiling: MeshInstance3D = null
+var _front_trim: MeshInstance3D = null
+var _upper_walls: Dictionary[int, MeshInstance3D] = {}
+var _wall_extensions: Dictionary[int, MeshInstance3D] = {}
+var _trim_extensions: Dictionary[int, MeshInstance3D] = {}
 var _material: StandardMaterial3D = RecipeBuilder.make_material()
 
 var _view: CameraFraming.View = CameraFraming.View.FRONT
@@ -122,7 +129,7 @@ func _ready() -> void:
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if preview else SubViewport.UPDATE_WHEN_VISIBLE
 	_viewport.gui_disable_input = true
 	_build_shell()
-	# From the front and high, so the raised side walls throw their shadow onto the apron, not the back wall.
+	# Furniture casts shadows; the enclosing shell receives light without cutaway-wall shadows.
 	_sun.look_at_from_position(Vector3(0.8, 6.0, 5.0), Vector3.ZERO, Vector3.UP)
 	_sun.shadow_enabled = true
 	_sun.light_energy = 0.75
@@ -698,16 +705,41 @@ func _apply_tilt_camera() -> void:
 	_camera.h_offset = 0.0
 	_camera.v_offset = 0.0
 
-## A wall hides only when the camera stands outside it, so every wall stays in place from inside the room,
-## and the front wall and the ceiling show there too.
+## Keep a closed backdrop around the effective camera, including its framing offsets and animated path.
 func _update_walls() -> void:
-	for w: int in _walls.keys():
-		var wall: Spot.Wall = w as Spot.Wall
-		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position, _room)
-	if _enclosure != null:
-		_enclosure.visible = RoomSpace.inside(_camera.global_position, _room)
+	if _floor == null:
+		return
+	var box: Vector3 = RoomSpace.dims(_room)
+	var eye: Vector3 = _camera.get_camera_transform().origin
+	var end: Vector3 = RoomSpace.shell_end(eye, _room)
+	var t: float = RoomSpace.WALL
+	var depth: float = end.z + box.z / 2.0
+	var center_z: float = (end.z - box.z / 2.0) / 2.0
+	_fit_slab(_floor, Vector3(box.x + 2.0 * t, t, depth + 2.0 * t), Vector3(0, -t / 2.0, center_z))
+	_fit_slab(_front, Vector3(box.x + 2.0 * t, end.y, t), Vector3(0, end.y / 2.0, end.z + t / 2.0))
+	_fit_slab(_ceiling, Vector3(box.x + 2.0 * t, t, depth + 2.0 * t), Vector3(0, end.y + t / 2.0, center_z))
+	_fit_slab(_front_trim, Vector3(box.x, 0.09, 0.025), Vector3(0, 0.045, end.z - 0.0125))
+	var rise: float = end.y - box.y
+	var extension: float = end.z - box.z / 2.0
+	for wall: int in _walls:
+		var upper: MeshInstance3D = _upper_walls[wall]
+		upper.visible = rise > 0.0
+		if wall == Spot.Wall.BACK:
+			_fit_slab(upper, Vector3(box.x, maxf(rise, 0.001), t), Vector3(0, box.y + rise / 2.0, -(box.z + t) / 2.0))
+		else:
+			var side: float = -1.0 if wall == Spot.Wall.LEFT else 1.0
+			_fit_slab(upper, Vector3(t, maxf(rise, 0.001), depth), Vector3(side * (box.x + t) / 2.0, box.y + rise / 2.0, center_z))
+			_wall_extensions[wall].visible = extension > 0.0
+			_trim_extensions[wall].visible = extension > 0.0
+			var extension_z: float = (end.z + box.z / 2.0) / 2.0
+			_fit_slab(_wall_extensions[wall], Vector3(t, box.y, maxf(extension, 0.001)), Vector3(side * (box.x + t) / 2.0, box.y / 2.0, extension_z))
+			_fit_slab(_trim_extensions[wall], Vector3(0.025, 0.09, maxf(extension, 0.001)), Vector3(side * (box.x / 2.0 - 0.0125), 0.045, extension_z))
 
-## Whether the front wall and the ceiling show, which they do from inside the box.
+func _fit_slab(slab: MeshInstance3D, dimensions: Vector3, at: Vector3) -> void:
+	slab.scale = dimensions
+	slab.position = at
+
+## The front wall and ceiling remain present in every view.
 func enclosure_visible() -> bool:
 	return _enclosure != null and _enclosure.visible
 
@@ -736,13 +768,15 @@ func _layout() -> void:
 
 # --- the room box -----------------------------------------------------------------------------------------
 
-## The floor and the side walls run an apron past the open front, and every wall rises past the room's height,
-## so the world fills the screen from the camera's side of the room (docs/geometry.md "The room").
+## Build the authored walls once, with adjustable extensions that enclose every camera view.
 func _build_shell() -> void:
 	if _shell != null:
 		_world.remove_child(_shell)
 		_shell.queue_free()
 	_walls.clear()
+	_upper_walls.clear()
+	_wall_extensions.clear()
+	_trim_extensions.clear()
 	_shell = Node3D.new()
 	_shell.name = "Shell"
 	_world.add_child(_shell)
@@ -753,9 +787,9 @@ func _build_shell() -> void:
 	for body: SpotBody in _bodies.values():
 		shell_room.spots.push_back(body.spot)
 	var w: float = RoomSpace.dims(_room).x
-	var d: float = RoomSpace.dims(_room).z + RoomSpace.APRON
 	var t: float = RoomSpace.WALL
-	_slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, RoomSpace.APRON / 2.0 - t / 2.0), Style.current.floor_color, _shell)
+	_floor = _slab(Vector3.ONE, Vector3.ZERO, Style.current.floor_color, _shell)
+	_floor.name = "Floor"
 	for wall: Spot.Wall in [Spot.Wall.BACK, Spot.Wall.LEFT, Spot.Wall.RIGHT]:
 		var group: Node3D = Node3D.new()
 		_shell.add_child(group)
@@ -775,26 +809,24 @@ func _build_shell() -> void:
 				else:
 					var side_x: float = (w / 2.0 - 0.0125) * (-1.0 if wall == Spot.Wall.LEFT else 1.0)
 					_slab(Vector3(0.025, 0.09, section.size.x), Vector3(side_x, 0.045, mid.x - RoomSpace.dims(_room).z / 2.0), trim, group)
-		var upper_size: Vector3 = Vector3(w, 30.0, t) if wall == Spot.Wall.BACK else Vector3(t, 30.0, d)
-		var upper_at: Vector3 = Vector3(0.0, RoomSpace.dims(_room).y + RoomSpace.WALL_RISE + 15.0, -RoomSpace.dims(_room).z / 2.0 - t / 2.0)
+		_upper_walls[wall] = _slab(Vector3.ONE, Vector3.ZERO, color, group)
 		if wall != Spot.Wall.BACK:
-			upper_at = Vector3((w + t) / 2.0 * (-1.0 if wall == Spot.Wall.LEFT else 1.0), upper_at.y, RoomSpace.APRON / 2.0)
-		var backing: MeshInstance3D = _slab(upper_size, upper_at, color, group)
-		backing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_build_enclosure(w, t)
+			_wall_extensions[wall] = _slab(Vector3.ONE, Vector3.ZERO, color, group)
+			_trim_extensions[wall] = _slab(Vector3.ONE, Vector3.ZERO, Style.current.wood.lightened(0.30), group)
+	_build_enclosure()
 	_build_exterior()
+	_update_walls()
 
-## The front wall and the ceiling close the box for a camera inside it. Neither casts a shadow, so the sun
-## still reaches the floor through them.
-func _build_enclosure(w: float, t: float) -> void:
+func _build_enclosure() -> void:
 	_enclosure = Node3D.new()
 	_enclosure.name = "Enclosure"
-	_enclosure.visible = false
 	_shell.add_child(_enclosure)
-	var front: MeshInstance3D = _slab(Vector3(w + 2.0 * t, RoomSpace.dims(_room).y + t, t), Vector3(0.0, RoomSpace.dims(_room).y / 2.0, RoomSpace.dims(_room).z / 2.0 + t / 2.0), Style.current.wall_color, _enclosure)
-	front.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var ceiling: MeshInstance3D = _slab(Vector3(w + 2.0 * t, t, RoomSpace.dims(_room).z + 2.0 * t), Vector3(0.0, RoomSpace.dims(_room).y + t / 2.0, 0.0), Style.current.wall_color.lightened(0.12), _enclosure)
-	ceiling.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_front = _slab(Vector3.ONE, Vector3.ZERO, Style.current.wall_color, _enclosure)
+	_front.name = "Front"
+	_ceiling = _slab(Vector3.ONE, Vector3.ZERO, Style.current.wall_color.lightened(0.12), _enclosure)
+	_ceiling.name = "Ceiling"
+	_front_trim = _slab(Vector3.ONE, Vector3.ZERO, Style.current.wood.lightened(0.30), _enclosure)
+	_front_trim.name = "Baseboard"
 
 ## A quiet, deterministic garden gives every aperture real depth from every camera angle.
 func _build_exterior() -> void:
@@ -817,6 +849,7 @@ func _slab(size_m: Vector3, at: Vector3, color: Color, parent: Node3D) -> MeshIn
 	var instance: MeshInstance3D = MeshInstance3D.new()
 	instance.mesh = mesh
 	instance.material_override = _material
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	instance.position = at
 	parent.add_child(instance)
 	return instance

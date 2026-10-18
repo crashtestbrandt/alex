@@ -1,5 +1,5 @@
 extends UnitTest
-## [RoomSpace]: where a spot stands for each wall, which way it faces, and when a wall hides.
+## [RoomSpace]: where a spot stands for each wall, which way it faces, and how the camera stays enclosed.
 
 func _spot(wall: String, x: float, y: float, height: float) -> Spot:
 	return Spot.from_dict({"id": "s", "gestalt": "g", "wall": wall, "x": x, "y": y, "height": height, "size": 0.2})
@@ -26,12 +26,17 @@ func test_side_walls_face_in() -> void:
 	assert_almost_eq((right.basis * Vector3.BACK).x, -1.0, 0.0001, "a right-wall object faces -X")
 	assert_almost_eq(right.origin.x, RoomSpace.WIDTH / 2.0 - RoomSpace.WALL / 2.0, 0.0001, "on the right wall")
 
-func test_wall_hides_when_the_camera_is_outside_it() -> void:
-	var from_the_right: Vector3 = Vector3(6.0, 1.0, 0.0)
-	assert_true(RoomSpace.wall_hidden(Spot.Wall.RIGHT, from_the_right), "the right wall hides")
-	assert_false(RoomSpace.wall_hidden(Spot.Wall.LEFT, from_the_right), "the left wall shows")
-	assert_false(RoomSpace.wall_hidden(Spot.Wall.BACK, Vector3(0.0, 1.0, 5.0)), "the back wall shows from the front")
-	assert_false(RoomSpace.wall_hidden(Spot.Wall.RIGHT, Vector3(1.0, 1.0, 5.0)), "a wall shows while the camera is inside its plane")
+func test_shell_encloses_orbit_and_tilt_without_moving_authored_walls() -> void:
+	var room: Room = Room.new()
+	room.width = 6.0
+	room.depth = 4.0
+	room.height = 3.0
+	assert_eq(RoomSpace.shell_end(Vector3(0, 1.4, 0), room), Vector3(3, 3, 2), "Tilt keeps the authored enclosure")
+	for eye: Vector3 in [Vector3(0, 8, 20), Vector3(0, 30, 2), Vector3(2.8, 2.9, 1.9)]:
+		var end: Vector3 = RoomSpace.shell_end(eye, room)
+		assert_almost_eq(end.x, room.width / 2.0, 0.0001, "side walls stay aligned with objects")
+		assert_true(end.y >= room.height and end.y >= eye.y + RoomSpace.CAMERA_CLEARANCE, "ceiling encloses the camera")
+		assert_true(end.z >= room.depth / 2.0 and end.z >= eye.z + RoomSpace.CAMERA_CLEARANCE, "front wall encloses the camera")
 
 func test_smallest_spot() -> void:
 	var r: Room = Room.from_dict({"id": "r", "spots": [
@@ -98,7 +103,7 @@ func test_wall_openings_are_empty_and_remaining_slabs_do_not_overlap() -> void:
 				var hole: Rect2 = ObjectRecipes.opening(spot.kind, RoomSpace.spot_size_m(spot))
 				hole.position += Vector2(spot.x * length, spot.height * RoomSpace.HEIGHT)
 				assert_false(section.intersection(hole).has_area(), "aperture contains no wall")
-		var expected: float = (length + (0.0 if side == Spot.Wall.BACK else RoomSpace.APRON)) * (RoomSpace.HEIGHT + RoomSpace.WALL_RISE)
+		var expected: float = length * RoomSpace.HEIGHT
 		for spot: Spot in room.spots:
 			expected -= ObjectRecipes.opening(spot.kind, RoomSpace.spot_size_m(spot)).get_area()
 		assert_almost_eq(area, expected, 0.0001, "wall area minus openings")
@@ -113,7 +118,7 @@ func test_overlapping_and_edge_openings_remain_valid() -> void:
 		assert_true(section.position.x >= 0.0, "edge cut is clipped")
 		area += section.get_area()
 	var hole: Rect2 = ObjectRecipes.opening(Spot.Kind.DOOR, 2.0)
-	assert_almost_eq(area, RoomSpace.WIDTH * (RoomSpace.HEIGHT + RoomSpace.WALL_RISE) - hole.get_area() / 2.0, 0.0001, "overlapping holes are removed once")
+	assert_almost_eq(area, RoomSpace.WIDTH * RoomSpace.HEIGHT - hole.get_area() / 2.0, 0.0001, "overlapping holes are removed once")
 
 func test_room_dimensions_and_floor_rotation_drive_geometry() -> void:
 	var room: Room = Room.from_dict({"id": "wide", "width": 6.0, "depth": 4.0, "height": 3.0, "spots": [
@@ -125,7 +130,6 @@ func test_room_dimensions_and_floor_rotation_drive_geometry() -> void:
 	assert_true((xf.basis * Vector3.BACK).is_equal_approx(Vector3.RIGHT), "floor furniture turns toward the activity")
 	assert_almost_eq(RoomSpace.spot_size_m(spot, room), 1.8, 0.0001, "size follows the authored width")
 	assert_true(RoomSpace.inside(Vector3(2.5, 2.8, 1.8), room), "inside uses all three dimensions")
-	assert_false(RoomSpace.wall_hidden(Spot.Wall.RIGHT, Vector3(2.5, 1, 0), room), "wall visibility uses authored width")
 	assert_eq(Room.from_dict(room.to_dict()).to_dict(), room.to_dict(), "geometry round-trips")
 
 func test_invalid_dimensions_are_bounded() -> void:

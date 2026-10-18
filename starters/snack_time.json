@@ -321,7 +321,7 @@
     {
       "id": "kitchen",
       "title": "Kitchen",
-      "camera": "views",
+      "camera": "tilt",
       "spots": [
         {
           "id": "door",

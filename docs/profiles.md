@@ -137,6 +137,8 @@ profile and records its id in `scenes`:
 ### Updating a room
 
 - Opening a profile refreshes every held scene to its shipped geometry, including when launch reopens the last profile.
+- All starter rooms offer Front, Top and Tilt. Opening an existing profile upgrades starter rooms saved with
+  the old Front/Top setting. Fixed cameras and custom rooms keep their settings.
 - `Starter.update_layout` replaces room dimensions and existing object placement, size and kind.
 - Missing objects are added. Their phrases reuse the bank when available.
 - Existing phrase assignments, recordings, scene stages and custom objects remain unchanged.

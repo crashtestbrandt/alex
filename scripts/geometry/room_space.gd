@@ -1,6 +1,6 @@
 extends RefCounted
 class_name RoomSpace
-## The room's box and where a [Spot] stands in it, pure (docs/geometry.md "The room"). The open front faces
+## The room's box and where a [Spot] stands in it, pure (docs/geometry.md "The room"). The front faces
 ## +Z, the back wall is at -Z, the floor is y = 0. Every spot's `x`, `y` and `height` are fractions of this
 ## box, so one starter pack fits every screen.
 
@@ -8,11 +8,8 @@ const WIDTH: float = 4.0
 const HEIGHT: float = 2.6
 const DEPTH: float = 3.0
 const WALL: float = 0.06
-## How far the floor and the side walls run past the open front, toward the camera, so the world reaches the
-## screen's edges and bottom instead of stopping at the room's box.
-const APRON: float = 4.0
-## How far the walls rise past the room's height, so their top edge runs off the top of the screen.
-const WALL_RISE: float = 1.5
+## Keep the front wall and ceiling beyond the camera, including during view transitions.
+const CAMERA_CLEARANCE: float = 0.5
 
 static func dims(room: Room = null) -> Vector3:
 	return Vector3(room.width, room.height, room.depth) if room != null else Vector3(WIDTH, HEIGHT, DEPTH)
@@ -38,33 +35,13 @@ static func place(s: Spot, room: Room = null) -> Transform3D:
 		_:
 			return Transform3D(Basis(Vector3.UP, deg_to_rad(s.rotation_degrees)), Vector3(s.x * box.x - box.x / 2.0, s.height * box.y, -box.z / 2.0 + s.y * box.z))
 
-## The center of a wall's inner face.
-static func wall_center(w: Spot.Wall, room: Room = null) -> Vector3:
+## The enclosure's far corner. The authored back and side walls stay fixed.
+## Front and Top extend the front and ceiling beyond the camera; Tilt uses the authored room.
+static func shell_end(camera_position: Vector3, room: Room = null) -> Vector3:
 	var box: Vector3 = dims(room)
-	match w:
-		Spot.Wall.LEFT:
-			return Vector3(-box.x / 2.0, box.y / 2.0, 0.0)
-		Spot.Wall.RIGHT:
-			return Vector3(box.x / 2.0, box.y / 2.0, 0.0)
-		_:
-			return Vector3(0.0, box.y / 2.0, -box.z / 2.0)
+	return Vector3(box.x / 2.0, maxf(box.y, camera_position.y + CAMERA_CLEARANCE), maxf(box.z / 2.0, camera_position.z + CAMERA_CLEARANCE))
 
-## The direction out of the room through a wall.
-static func wall_outward(w: Spot.Wall) -> Vector3:
-	match w:
-		Spot.Wall.LEFT:
-			return Vector3.LEFT
-		Spot.Wall.RIGHT:
-			return Vector3.RIGHT
-		_:
-			return Vector3.FORWARD
-
-## A wall is hidden when the camera stands outside it, so a side view looks into the room.
-static func wall_hidden(w: Spot.Wall, camera_position: Vector3, room: Room = null) -> bool:
-	return (camera_position - wall_center(w, room)).dot(wall_outward(w)) > 0.05
-
-## Whether a point is inside the room's box. The front wall and the ceiling show only from inside, since the
-## orbit views look in through them.
+## Whether a point is inside the authored room box.
 static func inside(p: Vector3, room: Room = null) -> bool:
 	var box: Vector3 = dims(room)
 	return absf(p.x) < box.x / 2.0 and absf(p.z) < box.z / 2.0 and p.y > 0.0 and p.y < box.y
@@ -115,8 +92,7 @@ static func smallest_spot_m(r: Room) -> float:
 static func wall_sections(wall: Spot.Wall, room: Room) -> Array[Rect2]:
 	var box: Vector3 = dims(room)
 	var length: float = box.x if wall == Spot.Wall.BACK else box.z
-	var drawn_length: float = length if wall == Spot.Wall.BACK else length + APRON
-	var sections: Array[Rect2] = [Rect2(0.0, 0.0, drawn_length, box.y + WALL_RISE)]
+	var sections: Array[Rect2] = [Rect2(0.0, 0.0, length, box.y)]
 	if room == null:
 		return sections
 	for spot: Spot in room.spots:

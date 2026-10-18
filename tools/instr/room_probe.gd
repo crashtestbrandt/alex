@@ -166,7 +166,7 @@ func _run() -> void:
 	var clamped: Vector2 = CameraFraming.clamp_pan(room_view.pan(), visible, silhouette)
 	_check(room_view.pan().is_equal_approx(clamped) and room_view.pan() != Vector2.ZERO, "a pan stops inside the room (%s)" % room_view.pan())
 	_check(room_view.pan().x + visible.x / 2.0 <= silhouette.end.x + 0.0001, "the frame's edge stops at the wall")
-	_check(not room_view.enclosure_visible(), "the front wall and ceiling are out of the way from the front")
+	_check(room_view.enclosure_visible(), "the front wall and ceiling enclose the front camera")
 	for b: SpotBody in bodies:
 		_check(room_view.pick_at(room_view.screen_point(b)) == b or room_view.camera_position().distance_to(b.center_point()) > 0.0, "%s is still picked where it shows" % b.spot.id)
 

@@ -405,7 +405,7 @@
     {
       "id": "play",
       "title": "Playroom",
-      "camera": "views",
+      "camera": "tilt",
       "spots": [
         {
           "id": "door",
