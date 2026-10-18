@@ -2,53 +2,53 @@
   "schema": 1,
   "id": "play_room",
   "title": "Playroom",
-  "description": "A playroom for single words and pairs: a ball, a star, a cup, a door, a lamp. Every phrase is one word or two. Replace the words with the ones your child says on their own.",
+  "description": "A playroom for single words and pairs: a ball, a star, a cup, a door, a lamp. Every object says two words, and every word is a chunk on its own. Replace the words with the ones your child says on their own.",
   "gestalts": [
     {
-      "id": "up",
-      "text": "Up",
+      "id": "door_open",
+      "text": "Door | open",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "down",
-      "text": "Down",
+      "id": "door_shut",
+      "text": "Door | shut",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "open",
-      "text": "Open",
+      "id": "light_on",
+      "text": "Light | on",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "shut",
-      "text": "Shut",
+      "id": "light_off",
+      "text": "Light | off",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "on",
-      "text": "On",
-      "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "off",
-      "text": "Off",
-      "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "look",
-      "text": "Look",
+      "id": "ball_up",
+      "text": "Ball | up",
       "function": "comment",
       "stage": 3
     },
     {
-      "id": "star",
-      "text": "Star",
+      "id": "ball_down",
+      "text": "Ball | down",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "look_out",
+      "text": "Look | out",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "big_star",
+      "text": "Big | star",
       "function": "comment",
       "stage": 3
     },
@@ -56,12 +56,6 @@
       "id": "wow",
       "text": "Wow",
       "function": "comment",
-      "stage": 3
-    },
-    {
-      "id": "juice",
-      "text": "Juice",
-      "function": "request",
       "stage": 3
     },
     {
@@ -77,44 +71,32 @@
       "stage": 3
     },
     {
-      "id": "jump",
-      "text": "Jump",
+      "id": "snack_time",
+      "text": "Snack | time",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "jump_up",
+      "text": "Jump | up",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "sit",
-      "text": "Sit",
+      "id": "sit_down",
+      "text": "Sit | down",
       "function": "request",
       "stage": 3
     },
     {
-      "id": "shoes",
-      "text": "Shoes",
-      "function": "comment",
+      "id": "shoes_on",
+      "text": "Shoes | on",
+      "function": "routine",
       "stage": 3
     },
     {
-      "id": "go",
-      "text": "Go",
-      "function": "request",
-      "stage": 3
-    },
-    {
-      "id": "ball",
-      "text": "Ball",
-      "function": "comment",
-      "stage": 3
-    },
-    {
-      "id": "big_ball",
-      "text": "Big | ball",
-      "function": "comment",
-      "stage": 3
-    },
-    {
-      "id": "go_up",
-      "text": "Go | up",
+      "id": "go_out",
+      "text": "Go | out",
       "function": "request",
       "stage": 3
     },
@@ -125,8 +107,74 @@
       "stage": 3
     },
     {
+      "id": "big_ball",
+      "text": "Big | ball",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "up",
+      "text": "Up",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "down",
+      "text": "Down",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "more",
+      "text": "More",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "done",
+      "text": "Done",
+      "function": "comment",
+      "stage": 3
+    },
+    {
       "id": "help",
       "text": "Help",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "go",
+      "text": "Go",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "open",
+      "text": "Open",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "juice",
+      "text": "Juice",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "ball",
+      "text": "Ball",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "look",
+      "text": "Look",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "jump",
+      "text": "Jump",
       "function": "request",
       "stage": 3
     }
@@ -145,8 +193,8 @@
           "x": 0.25,
           "height": 0.0,
           "size": 0.5,
-          "gestalt": "open",
-          "alt_gestalt": "shut"
+          "gestalt": "door_open",
+          "alt_gestalt": "door_shut"
         },
         {
           "id": "window",
@@ -156,7 +204,7 @@
           "x": 0.62,
           "height": 0.4,
           "size": 0.3,
-          "gestalt": "look"
+          "gestalt": "look_out"
         },
         {
           "id": "star",
@@ -166,7 +214,7 @@
           "x": 0.3,
           "height": 0.65,
           "size": 0.12,
-          "gestalt": "star",
+          "gestalt": "big_star",
           "alt_gestalt": "wow"
         },
         {
@@ -176,8 +224,8 @@
           "x": 0.28,
           "y": 0.15,
           "size": 0.4,
-          "gestalt": "on",
-          "alt_gestalt": "off"
+          "gestalt": "light_on",
+          "alt_gestalt": "light_off"
         },
         {
           "id": "table",
@@ -186,7 +234,7 @@
           "x": 0.9,
           "y": 0.2,
           "size": 0.16,
-          "gestalt": "all_done"
+          "gestalt": "snack_time"
         },
         {
           "id": "cup",
@@ -196,8 +244,8 @@
           "y": 0.2,
           "height": 0.2215384615,
           "size": 0.09,
-          "gestalt": "juice",
-          "alt_gestalt": "more_juice"
+          "gestalt": "more_juice",
+          "alt_gestalt": "all_done"
         },
         {
           "id": "rug",
@@ -206,8 +254,8 @@
           "x": 0.5,
           "y": 0.62,
           "size": 0.35,
-          "gestalt": "jump",
-          "alt_gestalt": "sit"
+          "gestalt": "jump_up",
+          "alt_gestalt": "sit_down"
         },
         {
           "id": "ball",
@@ -216,8 +264,8 @@
           "x": 0.58,
           "y": 0.72,
           "size": 0.12,
-          "gestalt": "up",
-          "alt_gestalt": "down"
+          "gestalt": "ball_up",
+          "alt_gestalt": "ball_down"
         },
         {
           "id": "shoes",
@@ -226,8 +274,8 @@
           "x": 0.12,
           "y": 0.6,
           "size": 0.16,
-          "gestalt": "shoes",
-          "alt_gestalt": "go"
+          "gestalt": "shoes_on",
+          "alt_gestalt": "go_out"
         }
       ]
     }
@@ -237,13 +285,13 @@
       "id": "play",
       "title": "Play",
       "gestalts": [
-        "ball",
-        "big_ball",
-        "go_up",
-        "my_turn",
         "help",
-        "more_juice",
-        "all_done"
+        "more",
+        "done",
+        "up",
+        "go",
+        "my_turn",
+        "big_ball"
       ]
     }
   ]

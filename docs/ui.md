@@ -97,7 +97,7 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 | --- | --- | --- | --- |
 | `home_routines` alone | 11 | 13 | 2 screens |
 | `snack_time` alone | 10 | 28 | 5 screens |
-| Every shipped scene | 39 | 46 | 8 screens |
+| Every shipped scene | 40 | 49 | 9 screens |
 
 - **Build and the layout editor share the composition model and nothing else.** An object is a union of
   primitives with authored seams, a room is a layout of objects, and a sentence is a union of chunks with
