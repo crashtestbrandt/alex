@@ -107,11 +107,16 @@ three seconds (`CaregiverChord`):
 
 | Input | Chord |
 | --- | --- |
-| Touch | Exactly three fingers, each within 48 px of where the chord formed. |
+| Touch | Exactly three fingers. |
 | Mouse | The left and right buttons together. |
 | Keyboard | Escape. |
 
-- A fourth finger, a lifted finger or a wandering finger breaks the chord and restarts the count.
+- A fourth finger or a lifted finger breaks the chord.
+- A hand whose center moves more than 120 px starts the count again from where it stopped. The center
+  averages the three fingers, so one rolling finger counts a third as much.
+- A chord held for half a second shows a pill bar above the hand, or below it near the top edge
+  (`ChordProgress`). The bar fills until the picker opens.
+- The bar hides when the chord breaks or the count starts again.
 - A forming chord cancels every hold in progress (`CaregiverGate.HOLD_GROUP`), so a record hold under the
   first finger never fires first.
 - The chord stops speech and closes the recording overlay without keeping its take.

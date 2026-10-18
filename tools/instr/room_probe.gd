@@ -250,7 +250,8 @@ func _motion(at: Vector2, relative: Vector2) -> InputEventMouseMotion:
 	return event
 
 ## Each caregiver chord opens the picker after its hold, and cancels a record hold under the pointer. Two
-## fingers, or three with one wandering, do nothing. Opening a profile remembers it for the next launch.
+## fingers do nothing. The bar shows after a moment and clears the fingers. A hand that moves hides it and
+## starts the count again. Opening a profile remembers it for the next launch.
 func _check_caregiver_chord(main: Main, p: Profile) -> void:
 	var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
 	var wait: float = CaregiverChord.HOLD_SECONDS + 0.4
@@ -294,17 +295,36 @@ func _check_caregiver_chord(main: Main, p: Profile) -> void:
 
 	main.open_profile(p.id)
 	await get_tree().process_frame
+	var bar: ChordProgress = (main.get_node("CaregiverGate") as CaregiverGate).bar()
+	var fingers_at: Array[Vector2] = []
 	for i: int in 3:
-		get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), true))
-	var drag: InputEventScreenDrag = InputEventScreenDrag.new()
-	drag.index = 2
-	drag.position = door + Vector2(120.0, CaregiverChord.STILL_PX * 2.0)
-	get_viewport().push_input(drag)
-	await get_tree().create_timer(wait).timeout
+		fingers_at.push_back(door + Vector2(60.0 * i, 0.0))
+		get_viewport().push_input(_touch(i, fingers_at[i], true))
 	await get_tree().process_frame
-	_check(home.visible, "three fingers with one wandering stay on the learner's screen")
+	_check(not bar.visible, "a brief three-finger touch shows no bar")
+	await get_tree().create_timer(CaregiverChord.SHOW_AFTER + 0.3).timeout
+	var hand: Rect2 = Rect2(door, Vector2(120.0, 0.0)).grow(40.0)
+	_check(bar.visible and bar.fraction() > 0.0, "a held chord shows its bar filling (%.2f)" % bar.fraction())
+	_check(not Rect2(bar.global_position, ChordProgress.BAR_SIZE).intersects(hand), "the bar clears the fingers")
+	var shift: Vector2 = Vector2(0.0, CaregiverChord.STILL_PX * 1.5)
 	for i: int in 3:
-		get_viewport().push_input(_touch(i, door, false))
+		var drag: InputEventScreenDrag = InputEventScreenDrag.new()
+		drag.index = i
+		drag.position = fingers_at[i] + shift
+		get_viewport().push_input(drag)
+	# process_frame fires before the gate's _process, so the second one follows a pass that read the drag.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(not bar.visible, "a hand that moves hides the bar")
+	await get_tree().create_timer(CaregiverChord.HOLD_SECONDS - 0.4).timeout
+	_check(home.visible, "a hand that moves starts the count again")
+	await get_tree().create_timer(0.8).timeout
+	await get_tree().process_frame
+	_check(picker.visible and not home.visible and not bar.visible, "and opens the picker once still for the hold")
+	for i: int in 3:
+		get_viewport().push_input(_touch(i, fingers_at[i] + shift, false))
+	main.open_profile(p.id)
+	await get_tree().process_frame
 
 	var escape: InputEventKey = InputEventKey.new()
 	escape.keycode = KEY_ESCAPE

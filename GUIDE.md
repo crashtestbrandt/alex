@@ -2,9 +2,11 @@
 
 ## Open caregiver mode
 
-- On a phone or tablet, hold three fingers still on the screen for three seconds.
+- On a phone or tablet, hold three fingers on the screen for three seconds.
 - With a mouse, hold the left and right buttons together for three seconds.
 - With a keyboard, hold Escape for three seconds.
+- A bar fills while you hold. The picker opens when it is full.
+- The bar starts over if your hand slides. Hold the hand in place and wait for it to fill.
 - Nothing on the learner's screen leads here, so a tap or a swipe never leaves it.
 
 ## Starting the app
