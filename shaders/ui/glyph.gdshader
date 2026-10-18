@@ -9,7 +9,7 @@ uniform vec2 rect_px = vec2(1.0);
 // The glyph's radius: half of the figure's longer side, in control units.
 uniform float radius_px = 20.0;
 uniform float width_px = 3.0;
-// 0 front, 1 side, 2 top, 3 tilt (a circular arrow), 4 dots, 5 microphone, 6 palette, 7 build.
+// 0 front, 1 side, 2 top, 3 tilt (a circular arrow), 4 dots, 5 microphone, 6 palette, 7 build, 8 rooms, 9 back.
 uniform int figure = 0;
 uniform vec4 tint : source_color = vec4(1.0);
 
@@ -120,6 +120,23 @@ float build_view(vec2 p, float r, float w, float fw) {
 	return max(placed, slot);
 }
 
+float rooms_view(vec2 p, float r, float w, float fw) {
+	float d = 10000.0;
+	for (int x = -1; x <= 1; x += 2) {
+		for (int y = -1; y <= 1; y += 2) {
+			d = min(d, abs(box_edge(p, vec2(float(x), float(y)) * r * 0.52, vec2(r * 0.39), r * 0.06)));
+		}
+	}
+	return stroke(d, w, fw);
+}
+
+float back_view(vec2 p, float r, float w, float fw) {
+	float d = segment_distance(p, vec2(-0.85 * r, 0.0), vec2(0.85 * r, 0.0));
+	d = min(d, segment_distance(p, vec2(-0.85 * r, 0.0), vec2(-0.1 * r, -0.7 * r)));
+	d = min(d, segment_distance(p, vec2(-0.85 * r, 0.0), vec2(-0.1 * r, 0.7 * r)));
+	return stroke(d, w, fw);
+}
+
 void vertex() {
 	v_modulate = COLOR;
 }
@@ -142,6 +159,10 @@ void fragment() {
 		a = palette_view(p, radius_px, width_px, fw);
 	} else if (figure == 7) {
 		a = build_view(p, radius_px, width_px, fw);
+	} else if (figure == 8) {
+		a = rooms_view(p, radius_px, width_px, fw);
+	} else if (figure == 9) {
+		a = back_view(p, radius_px, width_px, fw);
 	} else {
 		a = front_view(p, radius_px, width_px, fw);
 	}

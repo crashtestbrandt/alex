@@ -5,7 +5,7 @@ class_name ChildHome
 ## answers (docs/design.md).
 ##
 ## The strip reads Explore and Words, never a room's or a board's title. Explore is the entry scene's room
-## (`Profile.explore_room`); room choice inside it waits. Words is the whole bank
+## (`Profile.explore_room`) at launch, then the room chosen this session. Words is the whole bank
 ## (`Profile.words_gestalts`) in two modes on a floating widget: Palette, a column of tiles, and Build, a
 ## strip the learner fills from the bank's chunks ([BuildView]). Holding a spot or a tile opens the
 ## caregiver's recording overlay for that gestalt.
@@ -40,6 +40,10 @@ var _profile: Profile = null
 var _mode: Mode = Mode.EXPLORE
 var _words_mode: WordsWidget.Mode = WordsWidget.Mode.PALETTE
 var _room: Room = null
+var _last_room: Room = null
+var _room_states: Dictionary[String, RoomView.State] = {}
+var _room_nav: GlyphBar = null
+var _room_chooser: RoomChooser = null
 var _tiles: Dictionary[String, GestaltTile] = {}
 var _modes: Dictionary[int, SdfButton] = {}
 var _speaking_spot: Spot = null
@@ -48,6 +52,23 @@ var _speaking_build: bool = false
 var _build_index: int = -1
 
 func _ready() -> void:
+	_room_nav = GlyphBar.new()
+	_room_nav.name = "RoomNavigation"
+	add_child(_room_nav)
+	var rooms_button: GlyphBar.GlyphButton = _room_nav.add_glyph(SdfGlyph.Figure.ROOMS, "Choose a room")
+	rooms_button.toggle_mode = false
+	rooms_button.button_group = null
+	rooms_button.accessibility_name = "Choose a room"
+	rooms_button.pressed.connect(show_room_chooser)
+	_room_nav.resized.connect(_layout_room_navigation)
+	_room_chooser = RoomChooser.new()
+	_room_chooser.name = "RoomChooser"
+	_room_chooser.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_room_chooser.hide()
+	add_child(_room_chooser)
+	_room_chooser.room_chosen.connect(show_room)
+	_room_chooser.closed.connect(show_explore)
+	move_child(_record_overlay, -1)
 	var name_padding: StyleBoxEmpty = StyleBoxEmpty.new()
 	name_padding.set_content_margin_all(4.0)
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
@@ -73,6 +94,10 @@ func _ready() -> void:
 	_layout_home()
 
 func show_profile(p: Profile) -> void:
+	_room = null
+	_last_room = null
+	_room_states.clear()
+	_close_room_chooser()
 	_profile = p
 	_title.text = p.display_name
 	_title.disabled = p.display_name.is_empty()
@@ -87,16 +112,22 @@ func set_safe_area(rect: Rect2) -> void:
 	SafeArea.fit_control(_margin, rect)
 	_room_view.set_safe_area(rect)
 	_record_overlay.set_safe_area(rect)
+	_room_chooser.set_safe_area(rect)
 	_layout_home.call_deferred()
 
-## Explore: the entry scene's room (`Profile.explore_room`).
+## Explore returns to this session's room; a newly opened profile starts at its entry scene.
 func show_explore() -> void:
-	var r: Room = _profile.explore_room()
+	var r: Room = _last_room if _last_room != null else _profile.explore_room()
 	if r != null:
 		show_room(r)
 
 func show_room(r: Room) -> void:
+	_remember_room()
+	_close_room_chooser()
 	_speaker.stop()
+	_speaking_spot = null
+	_speaking_build = false
+	_last_room = r
 	_mode = Mode.EXPLORE
 	_room = r
 	_grid.visible = false
@@ -105,6 +136,8 @@ func show_room(r: Room) -> void:
 	_words_widget.visible = false
 	_room_view.visible = true
 	_room_view.show_room(_profile, r)
+	if _room_states.has(r.id):
+		_room_view.restore_state(_room_states[r.id])
 	_show_mode(Mode.EXPLORE)
 	_layout_home()
 
@@ -152,6 +185,9 @@ func words_mode() -> WordsWidget.Mode:
 	return _words_mode
 
 func _enter_words(words: WordsWidget.Mode) -> void:
+	_remember_room()
+	_close_room_chooser()
+	_room_nav.hide()
 	_speaker.stop()
 	_mode = Mode.WORDS
 	_words_mode = words
@@ -216,6 +252,7 @@ func _layout_home() -> void:
 	_layout_name.call_deferred()
 	_layout_board()
 	_layout_words_widget()
+	_layout_room_navigation()
 	_sync_room_inset.call_deferred()
 
 ## The Words widget floats over the bottom right corner, like the room's view widget, and the columns under
@@ -322,6 +359,8 @@ func _open_recorder(g: Gestalt) -> void:
 
 ## Stop speaking and close the recording overlay without keeping its take, before the adults' picker shows.
 func leave() -> void:
+	_remember_room()
+	_close_room_chooser()
 	_speaker.stop()
 	if _record_overlay.visible:
 		_record_overlay.close()
@@ -329,7 +368,9 @@ func leave() -> void:
 func _on_style_changed(_preset: StylePreset) -> void:
 	if _profile == null:
 		return
-	if _mode == Mode.EXPLORE and _room != null:
+	if _room_chooser.visible:
+		_room_chooser.open(_profile, _last_room)
+	elif _mode == Mode.EXPLORE and _room != null:
 		show_room(_room)
 	else:
 		show_words()
@@ -348,3 +389,39 @@ func _on_name_held() -> void:
 	_speaking_spot = null
 	_speaker.stop()
 	_record_overlay.open(_profile.name_gestalt(), _profile, true)
+
+func show_room_chooser() -> void:
+	if _profile == null or _profile.rooms.size() < 2:
+		return
+	_remember_room()
+	_speaker.stop()
+	_speaking_spot = null
+	_room_view.hide()
+	_margin.hide()
+	_room_nav.hide()
+	_room_chooser.open(_profile, _last_room)
+
+func room_chooser() -> RoomChooser:
+	return _room_chooser
+
+func room_navigation() -> GlyphBar:
+	return _room_nav
+
+func _close_room_chooser() -> void:
+	_room_chooser.hide()
+	_room_chooser.clear()
+	_margin.show()
+
+func _remember_room() -> void:
+	if _room != null and _mode == Mode.EXPLORE and _room_view.visible:
+		_room_states[_room.id] = _room_view.capture_state()
+
+func _layout_room_navigation() -> void:
+	if _room_nav == null:
+		return
+	var safe: Rect2 = _safe_rect if _safe_rect.has_area() else Rect2(Vector2.ZERO, size)
+	_room_nav.visible = _profile != null and _profile.rooms.size() > 1 and _mode == Mode.EXPLORE and not _room_chooser.visible
+	_room_nav.fit_width(safe.size.x)
+	_room_nav.reset_size()
+	_room_nav.position = Vector2(safe.position.x + WIDGET_MARGIN, safe.end.y - WIDGET_MARGIN - _room_nav.size.y)
+	_room_view.navigation_size = _room_nav.size if _room_nav.visible else Vector2.ZERO

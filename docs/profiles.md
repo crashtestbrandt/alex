@@ -30,7 +30,7 @@ this repository.
 | `scenes` | Every pack the profile holds, the starter first, in the order added. Added in schema 3. |
 | `entry` | The scene Explore opens on, or empty for the first room. Added in schema 4. |
 | `gestalts` | The bank. See below. |
-| `rooms` | Explorable screens of spots. The first is the learner's Explore. See below. |
+| `rooms` | Explorable screens of spots. The entry scene chooses the starting room; learners can switch between rooms in Explore. See below. |
 | `boards` | Lists of gestalt ids. Together they are the learner's Words tiles (docs/ui.md "The mode strip"). |
 | `chunk_takes` | A take per chunk, keyed by the chunk's text (`ChunkTakes.key`), as a path under `media/chunks/`. Added in schema 5. |
 
@@ -156,7 +156,8 @@ Edit shows Remove beside every scene the profile holds. `Profile.remove_scene` t
 
 ### The entry scene
 
-Explore opens on the entry scene's first room (`Profile.explore_room`).
+Opening a profile starts Explore on the entry scene's first room (`Profile.explore_room`).
+Learners can then choose another room. Returning from Words keeps that session's choice.
 
 - Edit shows Start here beside every held scene with a room. The entry reads Starts here.
 - With no entry, Explore opens on the profile's first room.

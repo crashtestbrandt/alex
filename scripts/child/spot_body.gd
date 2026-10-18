@@ -130,6 +130,16 @@ func react() -> void:
 				.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 			_tween.tween_property(self, "scale", Vector3.ONE, 0.3 * scale_factor)
 
+## Restore the resting state without speech or replaying a reaction.
+func restore_state(on: bool) -> void:
+	if _tween != null:
+		_tween.kill()
+		_tween = null
+	transform = _rest
+	is_on = on
+	_apply_state()
+	_snap_state()
+
 ## Parts that show only while on, and the glow, follow the state.
 func _apply_state() -> void:
 	for part: String in recipe.shown_when_on:
@@ -143,6 +153,8 @@ func _snap_state() -> void:
 			var leaf: MeshInstance3D = _moving_part()
 			if leaf != null:
 				leaf.rotation.y = OPEN_RAD if is_on else 0.0
+			else:
+				scale.x = 0.4 if is_on else 1.0
 		Spot.Reaction.GLOW:
 			for glow: StandardMaterial3D in _glow:
 				glow.emission_energy_multiplier = GLOW_ENERGY if is_on else 0.0

@@ -152,7 +152,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   prefixed with the pack id, a phrase the bank already says is reused rather than copied, and a pack is
   added once. Opening a profile refreshes its room geometry; phrase assignments and recordings stay.
 - **Removing a scene keeps every recorded phrase** (`Profile.remove_scene`, docs/profiles.md "Removing a
-  scene"). Explore opens on the profile's `entry` scene.
+  scene"). Opening a profile starts Explore on its `entry` scene. A visual chooser offers its other rooms;
+  room state and the selected room persist across Words during the session.
 - **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
   preset also carries the room's materials (`wood`, `cloth`, `metal`, `glass`, `water`, `floor_color`,
   `wall_color`) and the `chunk_palette`. A palette color carries `text` at 4.5:1 (`style_preset_test.gd`).

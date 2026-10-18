@@ -94,6 +94,14 @@ The field is used for:
 Raymarching every object on the learner's screen was weighed and set aside: it costs per pixel, a cheap
 tablet in a lap for an hour needs to run cool, and meshes get lighting, shadows and picking for free.
 
+## Session state and chooser previews
+
+- `RoomView.State` captures object toggles, last-spoken phrases and orbit/Tilt camera state in memory.
+- `ChildHome` keeps one snapshot per visited room. `SpotBody.restore_state` restores the final pose without reactions or speech.
+- Profile selection clears these snapshots and opens the caregiver's entry room.
+- `RoomPreview` uses the same procedural room renderer with a higher viewing angle. It takes no input and has no view controls or idle motion.
+- Preview viewports render once after layout. Closing the chooser frees them; hidden learner rooms do not render continuously.
+
 ## Views
 
 The learner's camera is always perspective. A room seen in perspective reads as a room; an orthographic front

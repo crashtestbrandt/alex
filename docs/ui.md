@@ -38,12 +38,20 @@ is `PASS`, so a tap on its padding does not.
 ## The mode strip
 
 - The learner's strip has two pills, Explore and Words, in that order.
-- Explore shows the entry scene's room (docs/profiles.md "The entry scene").
+- Explore starts in the entry scene's room (docs/profiles.md "The entry scene"). Returning from Words restores the room chosen during this session.
 - Words shows the whole bank: the boards' phrases first, in board order, then the rest in bank order
   (`Profile.words_gestalts`). A room's phrases are in the bank, so they are in Words.
 - A mode with nothing to show has no pill. With one pill, the strip hides.
 - Room and board titles stay in profile data and never reach the learner's screen.
-- Room choice inside Explore and a caregiver label for Explore wait until a profile has a second room.
+- A profile with multiple rooms shows a rooms glyph opposite the camera controls. A single-room profile hides it.
+- The glyph opens a full-screen chooser with large procedural room previews in saved order. The current room has an accent border. Back returns without changing rooms.
+- Preview taps enter the room; preview drags scroll the chooser. Room names are available to assistive technology without visible labels.
+- Each room retains its object toggles, last-spoken phrases for recording, and camera position across switching and Words. Returning does not replay speech or reactions.
+- Room state lasts until the profile is opened again. No schema change or disk writes are needed.
+- Previews render once after layout and are freed when the chooser closes. Only the active room keeps rendering.
+- `just room-switch-probe` checks native taps and drags, state restoration, scene stages, and safe areas in every style at phone and tablet sizes.
+
+![Visual room chooser on a phone](img/rooms.png)
 
 ## Words
 
