@@ -23,15 +23,17 @@ defined by door and window recipes. Each `Room` supplies its interior `width`, `
 - The bathroom's `privacy_window` has an opaque, fluted pane. Ordinary windows remain transparent.
 - `dining_table` has a lower top than the bedside `table`, with chairs placed facing it.
 
-The floor is `y = 0`, the back wall is at `-Z`, the open front faces `+Z`. The drawn shell is bigger than the
-box: the floor and the side walls run `APRON` past the open front toward the camera, and every wall rises
-`WALL_RISE` past the room's height, so the world reaches every edge of the screen instead of stopping at the
-box. Spots and the camera's framing use the box; only the shell uses the apron and the rise. A spot's `x`, `y` and `height`
-are fractions of this box. `RoomSpace.place` turns a spot into a
-transform: a floor spot stands at `x` across and `y` back to front; a wall spot hangs on its wall at `x` along
-it with its base at `height`, turned to face into the room. A wall hides while the camera stands outside it
-(`RoomSpace.wall_hidden`). A front wall and a ceiling show only while the camera is inside the box
-(`RoomSpace.inside`), which is Tilt's case; neither casts a shadow, so the sun still reaches the floor.
+The floor is `y = 0`, the back wall is at `-Z`, and the front faces `+Z`.
+
+- The back and side walls stay in place in every view.
+- The front wall and ceiling extend beyond the effective camera position in Front and Top
+  (`RoomSpace.shell_end`). The floor, side walls and baseboards extend with them.
+- Tilt uses the authored enclosure. All four walls have baseboards.
+- Shell surfaces receive furniture shadows but do not cast shadows. View changes cannot create shadows
+  from an exposed wall edge.
+- Openings remain cut through the authored walls; the exterior is visible only through doors and windows.
+- Spots and camera framing use the authored dimensions. A spot's `x`, `y` and `height` are fractions of
+  this box. `RoomSpace.place` turns them into a transform, with wall objects facing inward.
 
 Colors come from the style preset: `floor_color`, `wall_color`, and for the objects `wood`, `cloth`, `metal`,
 `glass`, `water` beside the existing `accent`, `surface` and `text`.
@@ -125,10 +127,8 @@ range always includes rest, so a zoom never jumps the frame. A pinch zooms about
 (`zoom_about`). Tilt stands at `RoomSpace.tilt_origin`, the room's center at eye height, raised over any
 floor object under it. Its yaw is free, its pitch is clamped (`clamp_tilt`), and its zoom is a field-of-view
 change (`tilt_fov`). Its resting view spans `TILT_DIAGONAL_DEG` corner to corner on any screen shape, and is
-the widest it goes. The camera is inside the box, so `RoomSpace.wall_hidden` keeps every wall in place, and
-a front wall and a ceiling show whenever the camera is inside (`RoomSpace.inside`). Neither casts a shadow. A
-moved view returns to Front after `RoomView.IDLE_RESET_SECONDS` with nothing touched. At motion NONE a view
-change is a cut.
+the widest it goes. The shell encloses the camera throughout view transitions. A moved view returns to
+Front after `RoomView.IDLE_RESET_SECONDS` with nothing touched. At motion NONE a view change is a cut.
 
 Input rules (`RoomView._gui_input`):
 

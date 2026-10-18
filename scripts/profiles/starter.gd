@@ -156,6 +156,8 @@ func layout_matches(p: Profile) -> bool:
 		var own: Room = p.room(_layout_room_id(p, source.id))
 		if own == null or not RoomSpace.dims(own).is_equal_approx(RoomSpace.dims(source)):
 			return false
+		if own.camera == Room.Camera.VIEWS and source.camera == Room.Camera.TILT:
+			return false
 		for spot: Spot in source.spots:
 			var found: Spot = _spot_in(own, spot.id)
 			if found == null or found.kind != spot.kind or found.wall != spot.wall:
@@ -178,6 +180,9 @@ func update_layout(p: Profile) -> bool:
 			own.title = source.title
 			own.camera = source.camera
 			p.rooms.push_back(own)
+		# Upgrade the old starter default without unlocking an explicitly fixed camera.
+		if own.camera == Room.Camera.VIEWS and source.camera == Room.Camera.TILT:
+			own.camera = Room.Camera.TILT
 		own.width = source.width
 		own.depth = source.depth
 		own.height = source.height

@@ -126,3 +126,30 @@ func test_delete_does_not_follow_directory_links() -> void:
 	assert_eq(root_dir.create_link(other_path, "alias"), OK, "root link fixture")
 	assert_eq(_repo.delete_profile("alias"), ERR_INVALID_PARAMETER, "root links are not traversed")
 	assert_eq(root_dir.remove("alias"), OK, "remove test alias")
+
+func test_creation_includes_all_scenes_at_the_chosen_stage() -> void:
+	for selected: Starter in Starter.list_all():
+		if not selected.is_scene():
+			continue
+		for value: int in range(1, 7):
+			var stage: NlaStage.Stage = NlaStage.from_value(value)
+			var created: Profile = _repo.create_profile("Sam", selected, "calm", stage, true)
+			var saved: Profile = _repo.load_profile(created.id)
+			assert_eq(saved.entry, selected.id, "chosen starter remains the entry scene")
+			assert_eq(saved.scenes[0], selected.id, "chosen starter remains first")
+			var count: int = 0
+			for pack: Starter in Starter.list_all():
+				if pack.is_scene():
+					count += 1
+					assert_true(saved.has_scene(pack.id), "every starter scene is saved")
+					assert_eq(saved.stage_for_scene(pack.id), stage, "every scene starts at the chosen stage")
+			assert_eq(saved.scenes.size(), count, "starter is not duplicated")
+			assert_eq(saved.rooms.size(), count, "every starter room is included")
+			assert_eq(saved.scene_stages, created.scene_stages, "all stages are saved before returning")
+			assert_eq(saved.gestalts.size(), created.gestalts.size(), "the complete phrase bank is saved")
+			assert_eq(saved.boards.size(), created.boards.size(), "every board is saved")
+
+func test_all_scenes_creation_preserves_an_explicit_blank_start() -> void:
+	for starter: Starter in [null, Starter.find("blank")]:
+		var created: Profile = _repo.create_profile("Blank", starter, "calm", NlaStage.Stage.SINGLE_WORDS, true)
+		assert_true(created.gestalts.is_empty() and created.rooms.is_empty(), "explicit blank stays empty")

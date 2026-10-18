@@ -161,17 +161,22 @@ func _fill_starters() -> void:
 		if _starters[i].id == "home_routines":
 			preferred = i
 	_starter_bar.set_active(preferred)
-	_starter_hint.text = _starters[preferred].description if not _starters.is_empty() else "No scenes are available."
+	_starter_hint.text = _starter_description(_starters[preferred]) if not _starters.is_empty() else "No scenes are available."
+
+func _starter_description(starter: Starter) -> String:
+	if starter.is_scene():
+		return "All rooms are included at the selected stage."
+	return starter.description
 
 ## Whether the starter picked on the New profile form is a scene, and so takes a stage.
 func _starter_is_scene() -> bool:
 	var index: int = _starter_bar.active_index()
 	return index >= 0 and index < _starters.size() and _starters[index].is_scene()
 
-## The stage row belongs to the starter scene. A blank start has none.
+## The initial stage applies to every starter scene. A blank start has none.
 func _on_starter_pressed(index: int) -> void:
 	_starter_bar.set_active(index)
-	_starter_hint.text = _starters[index].description
+	_starter_hint.text = _starter_description(_starters[index])
 	_stage_section.visible = _mode == Mode.CREATE and _starter_is_scene()
 	_layout_choices.call_deferred()
 
@@ -185,7 +190,7 @@ func _fill_styles() -> void:
 		_style_bar.add_item(button)
 	_style_bar.set_active(_current_style_index())
 
-## The starter scene's stage on the New profile form: one numbered pill per stage, 1 to 6, so six fit one
+## The initial stage on the New profile form: one numbered pill per stage, 1 to 6, so six fit one
 ## row on a phone. The lines under the bar carry the picked stage's name and what the adults model there.
 func _fill_stages() -> void:
 	_stage_bar.clear()
@@ -540,15 +545,10 @@ func _on_create() -> void:
 	var starter_index: int = _starter_bar.active_index()
 	if starter_index >= 0 and starter_index < _starters.size():
 		starter = _starters[starter_index]
-	var p: Profile = ProfileStore.create_profile(name, starter, style_id)
+	var p: Profile = ProfileStore.create_profile(name, starter, style_id, _picked_stage())
 	if p == null:
 		_status.text = "Could not save the profile. Check the log."
 		return
-	# The starter scene's stage, picked on the form. A blank start has no scene to stage.
-	if starter != null and starter.is_scene() and p.set_scene_stage(starter.id, _picked_stage()):
-		if ProfileStore.save_profile(p) != OK:
-			_status.text = "Could not save the stage. Try again."
-			return
 	_name_edit.text = ""
 	refresh()
 	profile_chosen.emit(p.id)
