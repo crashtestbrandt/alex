@@ -103,6 +103,10 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   moves the view from wherever the press began, an object included. Release inside the threshold before the
   hold elapses is a tap.
 - **The recording overlay writes nothing until Keep**, keeps the previous take, and closes itself when idle.
+  It opens from a hold on any object, tile, Build chunk or the strip, on the phrase's pills plus one for the
+  whole. Keep saves the picked pill and stays open. Removing a take is a hold.
+- **A chunk take is keyed by the chunk's text** (`ChunkTakes`, `Profile.chunk_takes`), the same key as its
+  color, under `media/chunks/`. `Speaker` plays the whole take, else chunk takes in order, else the OS voice.
 - **A familiar voice beats a synthetic one.** The OS text-to-speech voice is a placeholder until a
   recording exists. Never make the synthetic voice the better experience.
 - **Gestalts are authored with `|` chunk marks** (`Gestalt.from_text`). The chunks are the mitigation

@@ -181,8 +181,8 @@ func _run() -> void:
 			overlay.open(Gestalt.from_text("long", "Let's go outside together and look at the trees in the garden"), profile)
 			await _settle()
 			_square(overlay.get_node("%RecordButton") as Control, "record button")
-			_inside(overlay.get_node("%Phrase") as Control, screen, "recording phrase")
-			var record_column: Control = (overlay.get_node("%Phrase") as Control).get_parent() as Control
+			_inside(overlay.get_node("%Pills") as Control, screen, "recording pills")
+			var record_column: Control = (overlay.get_node("%Pills") as Control).get_parent() as Control
 			_inside(record_column, (record_column.get_parent() as Control).get_global_rect(), "record content fits panel")
 			var record_sheet: ScrollContainer = overlay.get_node("Center") as ScrollContainer
 			record_sheet.ensure_control_visible(overlay.get_node("%CancelButton") as Control)

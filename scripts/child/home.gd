@@ -62,11 +62,12 @@ func _ready() -> void:
 	_speaker.started.connect(_on_speech_started)
 	_room_view.spot_tapped.connect(_on_spot_tapped)
 	_room_view.spot_held.connect(_on_spot_held)
-	_record_overlay.kept.connect(_on_recording_kept)
 	_words_widget.mode_chosen.connect(_on_words_mode_chosen)
 	_words_widget.resized.connect(_layout_home)
 	_build.chunk_added.connect(_on_chunk_added)
 	_build.strip_tapped.connect(_on_strip_tapped)
+	_build.chunk_held.connect(_on_chunk_held)
+	_build.strip_held.connect(_on_strip_held)
 	_top_bar.item_rect_changed.connect(_sync_room_inset)
 	Style.changed.connect(_on_style_changed)
 	resized.connect(_layout_home)
@@ -249,7 +250,7 @@ func _layout_board() -> void:
 		tile.custom_minimum_size.x = width
 
 func _say(g: Gestalt) -> void:
-	_speaker.say(g, ProfileStore.media_dir(_profile.id))
+	_speaker.say(g, ProfileStore.media_dir(_profile.id), _profile.chunk_takes)
 
 func _on_spot_tapped(s: Spot, g: Gestalt) -> void:
 	_speaking_spot = s
@@ -261,12 +262,13 @@ func _on_tile_tapped(g: Gestalt) -> void:
 	_speaking_build = false
 	_say(g)
 
-## A chunk that landed on the strip is said on its own. Until per-chunk takes exist, that is the OS voice.
+## A chunk that landed on the strip is said on its own: from its take, from the bank's own one-chunk phrase
+## when it has a recording, or by the OS voice.
 func _on_chunk_added(chunk: String, index: int) -> void:
 	_speaking_spot = null
 	_speaking_build = true
 	_build_index = index
-	_say(ChunkBank.phrase(PackedStringArray([chunk])))
+	_say(ChunkBank.voice(_profile.gestalts, PackedStringArray([chunk])))
 
 ## The strip is said whole: in the caregiver's voice when the bank holds that phrase, as itself otherwise.
 func _on_strip_tapped(chunks: PackedStringArray) -> void:
@@ -301,13 +303,25 @@ func _on_tile_held(tile: GestaltTile) -> void:
 	if tile.gestalt != null:
 		_open_recorder(tile.gestalt)
 
+## A held chunk in Build records that one chunk.
+func _on_chunk_held(chunk: String) -> void:
+	_speaking_spot = null
+	_speaker.stop()
+	_record_overlay.open_chunks(PackedStringArray([chunk]), _profile)
+
+## A held strip records its chunks. A strip that is a bank phrase records that phrase, whole or by chunk.
+func _on_strip_held(chunks: PackedStringArray) -> void:
+	_speaking_spot = null
+	var own: Gestalt = ChunkBank.find(_profile.gestalts, chunks)
+	if own != null:
+		_open_recorder(own)
+		return
+	_speaker.stop()
+	_record_overlay.open_chunks(chunks, _profile)
+
 func _open_recorder(g: Gestalt) -> void:
 	_speaker.stop()
 	_record_overlay.open(g, _profile)
-
-func _on_recording_kept(g: Gestalt) -> void:
-	# Play the new take back where it lives, so the caregiver hears it in place.
-	_say(g)
 
 func _on_profiles_held() -> void:
 	_speaker.stop()
@@ -326,7 +340,8 @@ func _on_name_tapped() -> void:
 		return
 	_speaking_spot = null
 	_speaking_build = false
-	_say(_profile.name_gestalt())
+	# The name is its own utterance; a chunk take in the bank never voices it.
+	_speaker.say(_profile.name_gestalt(), ProfileStore.media_dir(_profile.id))
 
 func _on_name_held() -> void:
 	if _profile == null:

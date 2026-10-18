@@ -136,6 +136,40 @@ func test_scenes_round_trip_once_each() -> void:
 	d["scenes"] = ["home_routines", "home_routines", "", " "]
 	assert_eq(Profile.from_dict(d).scenes, PackedStringArray(["home_routines"]), "a repeat and a blank are dropped")
 
+func test_v4_migration_adds_an_empty_take_map() -> void:
+	var p: Profile = _sample()
+	p.gestalts[0].recording = "a.wav"
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 4
+	old.erase("chunk_takes")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 4 loads")
+	assert_true(back.chunk_takes.is_empty(), "no chunk takes yet")
+	assert_eq(back.gestalts[0].recording, "a.wav", "whole-phrase recordings preserved")
+	assert_eq(old["schema"], 4, "migration does not mutate its input")
+	assert_eq(back.to_dict()["schema"], Profile.SCHEMA_VERSION, "next save writes the current version")
+
+func test_chunk_takes_round_trip_by_key_and_skip_bad_rows() -> void:
+	var p: Profile = _sample()
+	p.chunk_takes["let's go"] = "chunks/let_s_go-1.wav"
+	var text: String = JSON.stringify(p.to_dict())
+	var parsed: Dictionary = JSON.parse_string(text)
+	var back: Profile = Profile.from_dict(parsed)
+	assert_eq(back.chunk_takes.get("let's go", ""), "chunks/let_s_go-1.wav", "a take survives JSON")
+	var d: Dictionary = JSON.parse_string(text)
+	var rows: Dictionary = d["chunk_takes"]
+	rows["Outside "] = " chunks/outside-2.wav "
+	rows[""] = "chunks/blank.wav"
+	rows["nothing"] = ""
+	rows["number"] = 3
+	rows["list"] = ["chunks/x.wav"]
+	rows["up"] = "chunks/../../other/profile.json"
+	rows["root"] = "/etc/passwd"
+	rows["user"] = "user://profiles/other/media/x.wav"
+	back = Profile.from_dict(d)
+	assert_eq(back.chunk_takes.size(), 2, "bad rows and paths that leave media/ dropped")
+	assert_eq(back.chunk_takes.get("outside", ""), "chunks/outside-2.wav", "a key is normalized and a path trimmed")
+
 func test_gestalt_by_text_ignores_marks_and_casing() -> void:
 	var p: Profile = _sample()
 	assert_eq(p.gestalt_by_text("Let's go | outside").id, "a", "the authored form")

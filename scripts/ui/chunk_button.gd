@@ -1,8 +1,9 @@
-extends SdfButton
+extends HoldButton
 class_name ChunkButton
 ## A chunk the learner can tap in Build: an [SdfButton] pill filled with the chunk's own color (ChunkColors),
-## its text in the style's text color, so it is the same chunk the tiles and captions show. While held it
-## brightens the way a spoken pill does at motion NONE, keeping its hue.
+## its text in the style's text color, so it is the same chunk the tiles and captions show. While pressed it
+## brightens the way a spoken pill does at motion NONE, keeping its hue. A hold fires `held` (from
+## [HoldButton]) for the recording flow, and `consumed_by_hold` keeps that press from counting as a tap.
 
 const FONT_BASE: int = 24
 
