@@ -3,6 +3,11 @@ class_name PageMarkdown
 ## The shipped pages' Markdown rendered as RichTextLabel BBCode. PageText remains the plain-text export
 ## reader. No HTML or images are evaluated, and literal BBCode in a page stays literal.
 
+static var _heading_pattern: RegEx = RegEx.create_from_string("^(#{1,6}) +(.+)$")
+static var _item_pattern: RegEx = RegEx.create_from_string("^(?:([-+*])|([0-9]+)[.)]) +(.+)$")
+static var _table_pattern: RegEx = RegEx.create_from_string("^:?-{3,}:?$")
+static var _unsafe_link_pattern: RegEx = RegEx.create_from_string("[\\s\\[\\]<>\"']")
+
 static func render(markdown: String, heading_size: int = 28) -> String:
 	var lines: PackedStringArray = markdown.replace("\r\n", "\n").split("\n")
 	var out: PackedStringArray = []
@@ -25,8 +30,8 @@ static func render(markdown: String, heading_size: int = 28) -> String:
 			out.push_back(escape(lines[i]) + "\n")
 			i += 1
 			continue
-		var heading: RegExMatch = RegEx.create_from_string("^(#{1,6}) +(.+)$").search(line)
-		var item: RegExMatch = RegEx.create_from_string("^(?:([-+*])|([0-9]+)[.)]) +(.+)$").search(line)
+		var heading: RegExMatch = _heading_pattern.search(line)
+		var item: RegExMatch = _item_pattern.search(line)
 		var table: bool = line.begins_with("|") and i + 1 < lines.size() and _table_rule(lines[i + 1])
 		if line.is_empty() or heading != null or item != null or table:
 			_flush(paragraph, out)
@@ -78,7 +83,7 @@ static func _table_rule(line: String) -> bool:
 	if row.is_empty():
 		return false
 	for cell: String in row:
-		if RegEx.create_from_string("^:?-{3,}:?$").search(cell) == null:
+		if _table_pattern.search(cell) == null:
 			return false
 	return true
 
@@ -117,7 +122,7 @@ static func escape(text: String) -> String:
 	return text.replace("[", "[lb]")
 
 static func safe_link(url: String) -> bool:
-	return (url.begins_with("https://") or url.begins_with("http://")) and not RegEx.create_from_string("[\\s\\[\\]<>\"']").search(url)
+	return (url.begins_with("https://") or url.begins_with("http://")) and not _unsafe_link_pattern.search(url)
 
 ## Parse inline syntax before escaping so Markdown cannot introduce arbitrary BBCode tags.
 static func inline_text(text: String) -> String:
