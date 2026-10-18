@@ -6,9 +6,20 @@ class_name SdfPanel
 const CONTENT_MARGIN_PX: float = 28.0
 const RADIUS_SCALE: float = 1.6
 
+## Caregiver sheets use a tonal surface; inset sections remain flat.
+@export var elevated: bool = false
+@export var inset: bool = false
+@export var content_margin: float = CONTENT_MARGIN_PX:
+	set(value):
+		content_margin = value
+		var empty: StyleBoxEmpty = StyleBoxEmpty.new()
+		empty.set_content_margin_all(value)
+		add_theme_stylebox_override("panel", empty)
+
 var _shape: SdfShape = null
 
 func _init() -> void:
+	mouse_filter = Control.MOUSE_FILTER_PASS
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	empty.set_content_margin_all(CONTENT_MARGIN_PX)
 	add_theme_stylebox_override("panel", empty)
@@ -35,10 +46,10 @@ func _notification(what: int) -> void:
 func _place_shape() -> void:
 	_shape.position = Vector2.ZERO
 	_shape.size = size
-	var inset: Vector2 = Vector2.ONE * CONTENT_MARGIN_PX
+	var content_inset: Vector2 = Vector2.ONE * content_margin
 	for child: Node in get_children():
 		if child is Control and child != _shape:
-			fit_child_in_rect(child as Control, Rect2(inset, size - inset * 2.0))
+			fit_child_in_rect(child as Control, Rect2(content_inset, size - content_inset * 2.0))
 
 func _schedule_layout() -> void:
 	_place_shape.call_deferred()
@@ -48,13 +59,18 @@ func radius() -> float:
 
 ## The radius a control sitting at the panel's content margin takes.
 func inner_radius() -> float:
-	return UiGeometry.concentric(radius(), CONTENT_MARGIN_PX)
+	return UiGeometry.concentric(radius(), content_margin)
 
 func _refresh() -> void:
 	if _shape == null:
 		return
 	_shape.radius_px = radius()
-	_shape.fill = Style.current.surface
+	var preset: StylePreset = Style.current
+	_shape.fill = preset.surface.lerp(preset.background, 0.45 if inset else 0.12)
+	_shape.sheen = 1.0 if elevated else 0.0
+	_shape.border_px = 1.0 if elevated else 0.0
+	_shape.border_color = preset.surface
+	_shape.relief = 0.0 if inset else -1.0
 	for child: Node in get_children():
 		if child is SdfButton:
 			var button: SdfButton = child

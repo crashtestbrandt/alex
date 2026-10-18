@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "bath_time",
   "title": "Bath time",
-  "description": "A bathroom to explore: a door, a tub, a lamp, a window, a star. The routine around a bath, in chunks, with a pair written for every stage. Replace the words with the ones your child already uses.",
+  "description": "A compact bathroom with a side-wall tub, a handwashing vanity opposite it, a bath mat and a high frosted window.",
   "gestalts": [
     {
       "id": "time_for_a_bath",
@@ -207,6 +207,24 @@
       "text": "Wash | your | hands | please",
       "function": "routine",
       "stage": 4
+    },
+    {
+      "id": "plant_phrase",
+      "text": "Look at | the leaves",
+      "function": "comment",
+      "stage": 2
+    },
+    {
+      "id": "plant_short",
+      "text": "green | leaves",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "plant_sentence",
+      "text": "I | see | the | leaves",
+      "function": "comment",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -219,10 +237,10 @@
           "id": "door",
           "kind": "door",
           "reaction": "open",
-          "wall": "left",
-          "x": 0.25,
+          "wall": "back",
+          "x": 0.21875,
           "height": 0.0,
-          "size": 0.5,
+          "size": 0.5937499999999999,
           "gestalt": "time_for_a_bath",
           "alt_gestalt": "all_clean",
           "stages": {
@@ -240,9 +258,9 @@
           "id": "tub",
           "kind": "tub",
           "reaction": "wobble",
-          "x": 0.65,
-          "y": 0.25,
-          "size": 0.5,
+          "x": 0.790625,
+          "y": 0.328947,
+          "size": 0.6,
           "gestalt": "water_on",
           "alt_gestalt": "water_off",
           "stages": {
@@ -254,15 +272,16 @@
               "gestalt": "turn_on_the_water",
               "alt_gestalt": "turn_off_the_water"
             }
-          }
+          },
+          "rotation": -90,
+          "height": 0.0
         },
         {
           "id": "light",
-          "kind": "light",
+          "kind": "wall_light",
           "reaction": "glow",
-          "x": 0.22,
-          "y": 0.15,
-          "size": 0.4,
+          "x": 0.592105,
+          "size": 0.1625,
           "gestalt": "lights_on",
           "alt_gestalt": "lights_off",
           "stages": {
@@ -274,16 +293,18 @@
               "gestalt": "turn_on_the_light",
               "alt_gestalt": "turn_off_the_light"
             }
-          }
+          },
+          "wall": "left",
+          "height": 0.6799999999999999
         },
         {
           "id": "window",
-          "kind": "window",
+          "kind": "privacy_window",
           "reaction": "glow",
           "wall": "back",
-          "x": 0.7,
-          "height": 0.45,
-          "size": 0.26,
+          "x": 0.71875,
+          "height": 0.62,
+          "size": 0.265625,
           "gestalt": "so_warm",
           "stages": {
             "3": {
@@ -299,9 +320,9 @@
           "kind": "star",
           "reaction": "spin",
           "wall": "back",
-          "x": 0.3,
-          "height": 0.65,
-          "size": 0.12,
+          "x": 0.484375,
+          "height": 0.64,
+          "size": 0.11249999999999999,
           "gestalt": "look_at_the_star",
           "stages": {
             "3": {
@@ -316,9 +337,9 @@
           "id": "rug",
           "kind": "circle",
           "reaction": "grow",
-          "x": 0.5,
-          "y": 0.7,
-          "size": 0.32,
+          "x": 0.703125,
+          "y": 0.697368,
+          "size": 0.36249999999999993,
           "gestalt": "lets_get_dry",
           "stages": {
             "3": {
@@ -327,15 +348,17 @@
             "4": {
               "gestalt": "dry_me_off_please"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "ball",
           "kind": "ball",
           "reaction": "bounce",
-          "x": 0.58,
-          "y": 0.78,
-          "size": 0.11,
+          "x": 0.875,
+          "y": 0.868421,
+          "size": 0.10625,
           "gestalt": "splash_splash",
           "stages": {
             "3": {
@@ -344,15 +367,17 @@
             "4": {
               "gestalt": "the_ball_goes_splash"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "cup",
-          "kind": "cup",
+          "kind": "sink",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.7,
-          "size": 0.09,
+          "x": 0.140625,
+          "y": 0.592105,
+          "size": 0.35000000000000003,
           "gestalt": "wash_your_hands",
           "stages": {
             "3": {
@@ -361,9 +386,51 @@
             "4": {
               "gestalt": "wash_your_hands_please"
             }
-          }
+          },
+          "height": 0.0,
+          "rotation": 90
+        },
+        {
+          "id": "towel",
+          "kind": "towel",
+          "reaction": "wobble",
+          "x": 0.8,
+          "size": 0.27499999999999997,
+          "gestalt": "lets_get_dry",
+          "stages": {
+            "3": {
+              "gestalt": "dry_off"
+            },
+            "4": {
+              "gestalt": "dry_me_off_please"
+            }
+          },
+          "wall": "right",
+          "height": 0.33999999999999997
+        },
+        {
+          "id": "plant",
+          "kind": "plant",
+          "reaction": "wobble",
+          "x": 0.46875,
+          "y": 0.065789,
+          "size": 0.22499999999999998,
+          "gestalt": "plant_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "plant_short"
+            },
+            "4": {
+              "gestalt": "plant_sentence"
+            }
+          },
+          "rotation": 0,
+          "height": 0.0
         }
-      ]
+      ],
+      "width": 3.2,
+      "depth": 3.8,
+      "height": 2.5
     }
   ],
   "boards": [

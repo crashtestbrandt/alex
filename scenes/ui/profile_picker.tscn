@@ -36,16 +36,23 @@ horizontal_scroll_mode = 0
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 script = ExtResource("2")
+elevated = true
 
 [node name="Column" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 24
 
 [node name="Heading" type="Label" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
 text = "Choose a profile"
+autowrap_mode = 3
+
+[node name="Subtitle" type="Label" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
 autowrap_mode = 3
 
 [node name="Page" type="VBoxContainer" parent="Center/Panel/Column"]
@@ -73,12 +80,13 @@ layout_mode = 2
 size_flags_horizontal = 8
 script = ExtResource("3")
 shape = 1
+primary = true
 text = "New profile"
 
 [node name="NameEdit" type="LineEdit" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
-placeholder_text = "Name"
+placeholder_text = "Profile name"
 script = ExtResource("4")
 
 [node name="StarterRow" type="BoxContainer" parent="Center/Panel/Column"]
@@ -95,6 +103,12 @@ text = "Start with"
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("5")
+
+[node name="StarterHint" type="Label" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+autowrap_mode = 3
 
 [node name="StageSection" type="VBoxContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true
@@ -153,6 +167,7 @@ theme_override_constants/separation = 8
 
 [node name="NotesLabel" type="Label" parent="Center/Panel/Column/NotesSection"]
 layout_mode = 2
+theme_type_variation = &"SectionLabel"
 text = "Notes"
 
 [node name="NotesEdit" type="TextEdit" parent="Center/Panel/Column/NotesSection"]
@@ -169,6 +184,7 @@ theme_override_constants/separation = 8
 
 [node name="SceneLabel" type="Label" parent="Center/Panel/Column/SceneSection"]
 layout_mode = 2
+theme_type_variation = &"SectionLabel"
 text = "Scenes"
 
 [node name="SceneHint" type="Label" parent="Center/Panel/Column/SceneSection"]
@@ -233,6 +249,7 @@ layout_mode = 2
 size_flags_horizontal = 0
 script = ExtResource("3")
 shape = 1
+quiet = true
 text = "Caregiver guide"
 
 [node name="GlossaryButton" type="Button" parent="Center/Panel/Column"]
@@ -241,6 +258,7 @@ layout_mode = 2
 size_flags_horizontal = 0
 script = ExtResource("3")
 shape = 1
+quiet = true
 text = "Glossary"
 
 [node name="PrivacyButton" type="Button" parent="Center/Panel/Column"]
@@ -249,6 +267,7 @@ layout_mode = 2
 size_flags_horizontal = 0
 script = ExtResource("3")
 shape = 1
+quiet = true
 text = "Privacy policy"
 
 [node name="BuildStamp" type="Label" parent="."]

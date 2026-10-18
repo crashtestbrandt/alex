@@ -232,14 +232,14 @@ func _run() -> void:
 			(picker.get_node("%GuideButton") as SdfButton).pressed.emit()
 			await _settle()
 			var page: Control = picker.get_node("%Page") as Control
-			_check(page.visible and page.get_child_count() > 10, "the guide opens with its sections")
+			_check(page.visible and (page.get_child(0) as RichTextLabel).text.contains("[ul]"), "the guide renders lists")
 			_inside(picker.get_node("%Heading") as Control, screen, "guide heading")
 			_shot("guide")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 			await _settle()
 			(picker.get_node("%GlossaryButton") as SdfButton).pressed.emit()
 			await _settle()
-			_check(page.visible and page.get_child_count() > 10, "the glossary opens with its terms")
+			_check(page.visible and (page.get_child(0) as RichTextLabel).text.contains("[table=2]"), "the glossary renders its table")
 			_inside(picker.get_node("%Heading") as Control, screen, "glossary heading")
 			_shot("glossary")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
@@ -266,9 +266,11 @@ func _run() -> void:
 			_shot("profile-stage")
 			var scene_rows: Control = picker.get_node("%SceneRows") as Control
 			_check(scene_rows.get_child_count() >= 2, "every shipped scene is listed (%d)" % scene_rows.get_child_count())
-			sheet.ensure_control_visible(scene_rows)
-			await _settle()
-			_inside(scene_rows, screen, "scene choices")
+			for entry: VBoxContainer in picker.scene_rows():
+				var scene_actions: Control = entry.get_child(0) as Control
+				sheet.ensure_control_visible(scene_actions)
+				await _settle()
+				_inside(scene_actions, screen, "scene choices reachable")
 			sheet.ensure_control_visible(create)
 			await _settle()
 			_inside(create, screen, "save look reachable")
@@ -349,7 +351,12 @@ func _long_bank(main: Main, profile: Profile) -> void:
 		i_button.pressed.emit()
 		await _settle()
 		var expected: PackedStringArray = ChunkBank.next(long_profile.gestalts, "I")
-		_check(build.lead_buttons().size() == expected.size() and expected.size() >= 3, "after 'I', what the bank says next is bordered (%d)" % expected.size())
+		var expected_keys: Dictionary[String, bool] = {}
+		for chunk: String in expected:
+			expected_keys[ChunkColors.key(chunk)] = true
+		# A chunk can occur in both columns; both buttons should carry its border.
+		for button: ChunkButton in beginnings + endings:
+			_check(button.lead == expected_keys.has(ChunkColors.key(button.chunk)), "after 'I', the border follows the bank for %s" % button.chunk)
 		_check(not i_button.lead, "and 'I' itself is not")
 		_shot("build-long")
 		build.clear()
@@ -558,7 +565,7 @@ func _scene_stage_line(picker: ProfilePicker) -> String:
 ## The stage bar of the one held scene on Edit, or null.
 func _scene_pins(picker: ProfilePicker) -> PillBar:
 	for entry: VBoxContainer in picker.scene_rows():
-		if entry.get_child_count() > 1:
+		if entry.get_child(1) is BoxContainer:
 			return (entry.get_child(1) as BoxContainer).get_child(1) as PillBar
 	return null
 

@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "snack_time",
   "title": "Snack time",
-  "description": "A kitchen to explore: a table, a cup, a door, a lamp, a window, a star. Mealtime phrases with a pair written for every stage, up to short sentences one word to a chunk. Replace the words with the ones your child is putting together.",
+  "description": "A kitchen with a central dining table and two chairs facing it, a sink under the window and a towel beside it.",
   "gestalts": [
     {
       "id": "lets_go_outside",
@@ -237,6 +237,84 @@
       "text": "Help | me | please",
       "function": "request",
       "stage": 4
+    },
+    {
+      "id": "chair_phrase",
+      "text": "Come and | sit down",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "chair_short",
+      "text": "sit | down",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "chair_sentence",
+      "text": "I | can | sit | here",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "bowl_sentence",
+      "text": "I | want | a | snack",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "sink_phrase",
+      "text": "Let's wash | our hands",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "sink_short",
+      "text": "wash | hands",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "sink_sentence",
+      "text": "I | can | wash | my | hands",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "towel_phrase",
+      "text": "Let's clean | up",
+      "function": "comment",
+      "stage": 1
+    },
+    {
+      "id": "towel_short",
+      "text": "clean | up",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "towel_sentence",
+      "text": "I | can | clean | up",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "plant_phrase",
+      "text": "Look at | the leaves",
+      "function": "comment",
+      "stage": 2
+    },
+    {
+      "id": "plant_short",
+      "text": "green | leaves",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "plant_sentence",
+      "text": "I | see | the | leaves",
+      "function": "comment",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -249,10 +327,10 @@
           "id": "door",
           "kind": "door",
           "reaction": "open",
-          "wall": "left",
-          "x": 0.25,
+          "wall": "right",
+          "x": 0.3,
           "height": 0.0,
-          "size": 0.5,
+          "size": 0.4347826086956522,
           "gestalt": "lets_go_outside",
           "alt_gestalt": "lets_go_inside",
           "stages": {
@@ -271,9 +349,9 @@
           "kind": "window",
           "reaction": "glow",
           "wall": "back",
-          "x": 0.62,
-          "height": 0.4,
-          "size": 0.3,
+          "x": 0.184783,
+          "height": 0.48,
+          "size": 0.24347826086956526,
           "gestalt": "look_outside",
           "stages": {
             "3": {
@@ -289,9 +367,9 @@
           "kind": "star",
           "reaction": "spin",
           "wall": "back",
-          "x": 0.3,
-          "height": 0.65,
-          "size": 0.12,
+          "x": 0.75,
+          "height": 0.6888888888888889,
+          "size": 0.08695652173913045,
           "gestalt": "look_at_the_star",
           "stages": {
             "3": {
@@ -304,11 +382,10 @@
         },
         {
           "id": "light",
-          "kind": "light",
+          "kind": "wall_light",
           "reaction": "glow",
-          "x": 0.28,
-          "y": 0.15,
-          "size": 0.4,
+          "x": 0.5,
+          "size": 0.11304347826086958,
           "gestalt": "lights_on",
           "alt_gestalt": "lights_off",
           "stages": {
@@ -320,15 +397,17 @@
               "gestalt": "turn_on_the_light",
               "alt_gestalt": "turn_off_the_light"
             }
-          }
+          },
+          "wall": "back",
+          "height": 0.6799999999999999
         },
         {
           "id": "table",
-          "kind": "table",
+          "kind": "dining_table",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.2,
-          "size": 0.16,
+          "x": 0.554348,
+          "y": 0.527778,
+          "size": 0.24347826086956526,
           "gestalt": "its_time_for_a_snack",
           "stages": {
             "3": {
@@ -337,16 +416,18 @@
             "4": {
               "gestalt": "its_time_to_eat"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "cup",
           "kind": "cup",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.2,
-          "height": 0.2215384615,
-          "size": 0.09,
+          "x": 0.619565,
+          "y": 0.527778,
+          "height": 0.2571851851851852,
+          "size": 0.060869565217391314,
           "gestalt": "i_want_more",
           "alt_gestalt": "all_done",
           "stages": {
@@ -358,15 +439,16 @@
               "gestalt": "i_want_juice",
               "alt_gestalt": "the_cup_is_empty"
             }
-          }
+          },
+          "rotation": 0
         },
         {
           "id": "ball",
           "kind": "ball",
           "reaction": "bounce",
-          "x": 0.58,
-          "y": 0.72,
-          "size": 0.12,
+          "x": 0.184783,
+          "y": 0.805556,
+          "size": 0.08695652173913045,
           "gestalt": "lets_play_ball",
           "stages": {
             "3": {
@@ -375,9 +457,127 @@
             "4": {
               "gestalt": "throw_the_ball"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
+        },
+        {
+          "id": "chair",
+          "kind": "chair",
+          "reaction": "wobble",
+          "x": 0.793478,
+          "y": 0.527778,
+          "size": 0.2,
+          "gestalt": "chair_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "chair_short"
+            },
+            "4": {
+              "gestalt": "chair_sentence"
+            }
+          },
+          "rotation": -90,
+          "height": 0.0
+        },
+        {
+          "id": "bowl",
+          "kind": "bowl",
+          "reaction": "wobble",
+          "x": 0.495652,
+          "y": 0.527778,
+          "size": 0.10434782608695653,
+          "gestalt": "its_time_for_a_snack",
+          "stages": {
+            "3": {
+              "gestalt": "snack_time"
+            },
+            "4": {
+              "gestalt": "bowl_sentence"
+            }
+          },
+          "height": 0.2571851851851852,
+          "rotation": 0
+        },
+        {
+          "id": "sink",
+          "kind": "sink",
+          "reaction": "wobble",
+          "x": 0.184783,
+          "y": 0.105556,
+          "size": 0.24347826086956526,
+          "gestalt": "sink_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "sink_short"
+            },
+            "4": {
+              "gestalt": "sink_sentence"
+            }
+          },
+          "rotation": 0,
+          "height": 0.0
+        },
+        {
+          "id": "towel",
+          "kind": "towel",
+          "reaction": "wobble",
+          "x": 0.35,
+          "size": 0.1739130434782609,
+          "gestalt": "towel_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "towel_short"
+            },
+            "4": {
+              "gestalt": "towel_sentence"
+            }
+          },
+          "wall": "left",
+          "height": 0.35
+        },
+        {
+          "id": "plant",
+          "kind": "plant",
+          "reaction": "wobble",
+          "x": 0.793478,
+          "y": 0.097222,
+          "size": 0.19130434782608696,
+          "gestalt": "plant_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "plant_short"
+            },
+            "4": {
+              "gestalt": "plant_sentence"
+            }
+          },
+          "rotation": 0,
+          "height": 0.0
+        },
+        {
+          "id": "chair_front",
+          "kind": "chair",
+          "reaction": "wobble",
+          "x": 0.554348,
+          "y": 0.819444,
+          "size": 0.2,
+          "gestalt": "chair_phrase",
+          "stages": {
+            "3": {
+              "gestalt": "chair_short"
+            },
+            "4": {
+              "gestalt": "chair_sentence"
+            }
+          },
+          "rotation": 180,
+          "height": 0.0
         }
-      ]
+      ],
+      "width": 4.6,
+      "depth": 3.6,
+      "height": 2.7
     }
   ],
   "boards": [

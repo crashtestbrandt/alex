@@ -170,6 +170,7 @@ three seconds (`CaregiverChord`):
 - New profile opens a separate form. An empty profile list opens that form directly.
 - The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
 - Edit also lists every shipped scene. Add copies the scene's room and phrases into the profile and saves it (docs/profiles.md "Adding a scene").
+- Opening a profile refreshes its scenes' room geometry and adds missing objects while preserving phrase assignments and recordings.
 - A scene the profile holds shows Remove (docs/profiles.md "Removing a scene").
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
@@ -238,3 +239,22 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Boot and native application artwork live in `assets/brand/`; see [branding.md](branding.md) for generation prompts.
 - The room uses 4× MSAA and a 4096 px directional shadow map with medium soft filtering on desktop and mobile.
 - Shadow filtering is configured separately from geometry anti-aliasing; see [Godot's project settings](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-rendering-lights-and-shadows-directional-shadow-soft-shadow-filter-quality).
+
+## Caregiver surfaces and Markdown
+
+- Caregiver sheets use a subtle top highlight, a fine inner edge, and a soft shadow. Text surfaces stay opaque.
+- Nested panels pass drag input to the sheet. Stage and scene changes retain the current scroll position.
+- Tapping outside a text entry or beginning a sheet scroll dismisses the keyboard. The sheet stays above the mobile keyboard.
+- Markdown text selection is disabled so text drags scroll the page. Each new page starts at the top.
+- `just caregiver-probe` exercises focus dismissal, nested-panel drags, scene updates and Markdown scrolling.
+- Scene entries sit in flat tonal panels. Their descriptions stay visible on touch screens.
+- The Calm page background is cool porcelain (`#ecf1f5`); room materials and chunk identities are unchanged.
+- Guide, glossary and privacy pages use `PageMarkdown` and `RichTextLabel`. Headings, emphasis, lists,
+  inline and fenced code, links, and pipe tables retain their formatting. The sheet supplies the page title.
+- Table headers remain visible as bold cells. Escaped bars and bars inside inline code stay in their cells.
+- Literal BBCode stays literal. Images and HTML are not evaluated. HTTP(S) links open only after an adult taps them.
+- The renderer covers the shipped pages' Markdown subset; it is not a full CommonMark implementation.
+- Godot's synthetic bold distorts the bundled MSDF font. Rich pages use the normal font with a one-pixel
+  text-colored outline for emphasis.
+
+![The glossary with a formatted table on a phone](img/glossary.png)

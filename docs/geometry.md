@@ -7,20 +7,27 @@ twin, tap picking, and the camera. Everything here is `scripts/geometry/` plus `
 ## The room
 
 A room is a three-walled box, open at the front (`RoomView._build_shell`). Wall slabs surround the openings
-defined by door and window recipes. The numbers live in `RoomSpace`:
+defined by door and window recipes. Each `Room` supplies its interior `width`, `depth` and `height` in metres.
+`RoomSpace` uses them for placement, wall openings, camera framing and clipping.
 
-| Constant | Value |
+| Scene | Width × depth × height |
 | --- | --- |
-| `WIDTH` | 4.0 m across |
-| `DEPTH` | 3.0 m front to back |
-| `HEIGHT` | 2.6 m |
-| `WALL` | 0.06 m thick |
+| Home routines | 4.2 × 4.4 × 2.6 m |
+| Bath time | 3.2 × 3.8 × 2.5 m |
+| Play room | 5.2 × 4.2 × 2.8 m |
+| Snack time | 4.6 × 3.6 × 2.7 m |
+
+- Legacy rooms default to 4 × 3 × 2.6 m. Migration preserves their existing placements.
+- Walls remain 0.06 m thick (`RoomSpace.WALL`).
+- Floor objects use `rotation` in degrees about the vertical axis. Wall objects face into the room.
+- The bathroom's `privacy_window` has an opaque, fluted pane. Ordinary windows remain transparent.
+- `dining_table` has a lower top than the bedside `table`, with chairs placed facing it.
 
 The floor is `y = 0`, the back wall is at `-Z`, the open front faces `+Z`. The drawn shell is bigger than the
 box: the floor and the side walls run `APRON` past the open front toward the camera, and every wall rises
 `WALL_RISE` past the room's height, so the world reaches every edge of the screen instead of stopping at the
 box. Spots and the camera's framing use the box; only the shell uses the apron and the rise. A spot's `x`, `y` and `height`
-are fractions of this box, so a starter pack never names a meter. `RoomSpace.place` turns a spot into a
+are fractions of this box. `RoomSpace.place` turns a spot into a
 transform: a floor spot stands at `x` across and `y` back to front; a wall spot hangs on its wall at `x` along
 it with its base at `height`, turned to face into the room. A wall hides while the camera stands outside it
 (`RoomSpace.wall_hidden`). A front wall and a ceiling show only while the camera is inside the box
@@ -160,3 +167,18 @@ to the front, and switches to the board. `just screenshot` renders `docs/img/roo
 
 Fingerprints are compared within one run, not pinned across platforms: the builders use float trigonometry,
 and a pinned hash would fail on a different libm rather than on a real change.
+
+## Furnished starter rooms
+
+- Home keeps the bed and bedside table separate, with a bookcase against the back wall and a book on the rug.
+- Bath time uses a handwashing vanity, a wall light, and a towel rail beside the tub.
+- Playroom uses a sofa, bookcase, and reading rug, with the door on the right.
+- Snack time uses a dining table, chair, bowl, cup, sink, towel, and plant.
+- New recipes are `sink`, `towel`, `shelf`, `book`, `sofa`, `bowl`, `chair`, `plant`, and `wall_light`.
+  They share the existing primitive meshes, picking fields, palette, and reaction system.
+- Existing recipes gain a folded blanket edge, a footboard, shoe straps, table aprons, and rug edging.
+  Baseboards follow solid wall sections and stop at door openings.
+- Revised layouts and added phrases apply when a pack is seeded or added. Existing saved layouts are not
+  rewritten. Existing objects use the improved recipes immediately.
+- `starter_test.gd` checks furniture bounds and intersections. `just content-probe` checks a tappable surface
+  on every object from Front and Top in every style. Its optional `--capture=<directory>` saves room images.

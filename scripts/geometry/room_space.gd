@@ -14,38 +14,40 @@ const APRON: float = 4.0
 ## How far the walls rise past the room's height, so their top edge runs off the top of the screen.
 const WALL_RISE: float = 1.5
 
-static func dims() -> Vector3:
-	return Vector3(WIDTH, HEIGHT, DEPTH)
+static func dims(room: Room = null) -> Vector3:
+	return Vector3(room.width, room.height, room.depth) if room != null else Vector3(WIDTH, HEIGHT, DEPTH)
 
 ## The center of the room box.
-static func center() -> Vector3:
-	return Vector3(0.0, HEIGHT / 2.0, 0.0)
+static func center(room: Room = null) -> Vector3:
+	return Vector3(0.0, dims(room).y / 2.0, 0.0)
 
 ## The spot's longest extent in meters.
-static func spot_size_m(s: Spot) -> float:
-	return s.size * WIDTH
+static func spot_size_m(s: Spot, room: Room = null) -> float:
+	return s.size * dims(room).x
 
 ## Where the spot's object stands: on the floor or against a wall with its back to it, its base at `height`.
-static func place(s: Spot) -> Transform3D:
+static func place(s: Spot, room: Room = null) -> Transform3D:
+	var box: Vector3 = dims(room)
 	match s.wall:
 		Spot.Wall.BACK:
-			return Transform3D(Basis.IDENTITY, Vector3(s.x * WIDTH - WIDTH / 2.0, s.height * HEIGHT, -DEPTH / 2.0 + WALL / 2.0))
+			return Transform3D(Basis.IDENTITY, Vector3(s.x * box.x - box.x / 2.0, s.height * box.y, -box.z / 2.0 + WALL / 2.0))
 		Spot.Wall.LEFT:
-			return Transform3D(Basis(Vector3.UP, PI / 2.0), Vector3(-WIDTH / 2.0 + WALL / 2.0, s.height * HEIGHT, -DEPTH / 2.0 + s.x * DEPTH))
+			return Transform3D(Basis(Vector3.UP, PI / 2.0), Vector3(-box.x / 2.0 + WALL / 2.0, s.height * box.y, -box.z / 2.0 + s.x * box.z))
 		Spot.Wall.RIGHT:
-			return Transform3D(Basis(Vector3.UP, -PI / 2.0), Vector3(WIDTH / 2.0 - WALL / 2.0, s.height * HEIGHT, -DEPTH / 2.0 + s.x * DEPTH))
+			return Transform3D(Basis(Vector3.UP, -PI / 2.0), Vector3(box.x / 2.0 - WALL / 2.0, s.height * box.y, -box.z / 2.0 + s.x * box.z))
 		_:
-			return Transform3D(Basis.IDENTITY, Vector3(s.x * WIDTH - WIDTH / 2.0, s.height * HEIGHT, -DEPTH / 2.0 + s.y * DEPTH))
+			return Transform3D(Basis(Vector3.UP, deg_to_rad(s.rotation_degrees)), Vector3(s.x * box.x - box.x / 2.0, s.height * box.y, -box.z / 2.0 + s.y * box.z))
 
 ## The center of a wall's inner face.
-static func wall_center(w: Spot.Wall) -> Vector3:
+static func wall_center(w: Spot.Wall, room: Room = null) -> Vector3:
+	var box: Vector3 = dims(room)
 	match w:
 		Spot.Wall.LEFT:
-			return Vector3(-WIDTH / 2.0, HEIGHT / 2.0, 0.0)
+			return Vector3(-box.x / 2.0, box.y / 2.0, 0.0)
 		Spot.Wall.RIGHT:
-			return Vector3(WIDTH / 2.0, HEIGHT / 2.0, 0.0)
+			return Vector3(box.x / 2.0, box.y / 2.0, 0.0)
 		_:
-			return Vector3(0.0, HEIGHT / 2.0, -DEPTH / 2.0)
+			return Vector3(0.0, box.y / 2.0, -box.z / 2.0)
 
 ## The direction out of the room through a wall.
 static func wall_outward(w: Spot.Wall) -> Vector3:
@@ -58,13 +60,14 @@ static func wall_outward(w: Spot.Wall) -> Vector3:
 			return Vector3.FORWARD
 
 ## A wall is hidden when the camera stands outside it, so a side view looks into the room.
-static func wall_hidden(w: Spot.Wall, camera_position: Vector3) -> bool:
-	return (camera_position - wall_center(w)).dot(wall_outward(w)) > 0.05
+static func wall_hidden(w: Spot.Wall, camera_position: Vector3, room: Room = null) -> bool:
+	return (camera_position - wall_center(w, room)).dot(wall_outward(w)) > 0.05
 
 ## Whether a point is inside the room's box. The front wall and the ceiling show only from inside, since the
 ## orbit views look in through them.
-static func inside(p: Vector3) -> bool:
-	return absf(p.x) < WIDTH / 2.0 and absf(p.z) < DEPTH / 2.0 and p.y > 0.0 and p.y < HEIGHT
+static func inside(p: Vector3, room: Room = null) -> bool:
+	var box: Vector3 = dims(room)
+	return absf(p.x) < box.x / 2.0 and absf(p.z) < box.z / 2.0 and p.y > 0.0 and p.y < box.y
 
 ## Eye height for a camera standing in the room, and how far it keeps from anything under or over it.
 const TILT_EYE_HEIGHT: float = 1.4
@@ -80,12 +83,11 @@ static func tilt_origin(r: Room) -> Vector3:
 		for s: Spot in r.spots:
 			if s.wall != Spot.Wall.NONE:
 				continue
-			var box: AABB = ObjectRecipes.make(s.kind, spot_size_m(s), StylePreset.new()).aabb()
-			var at: Vector3 = place(s).origin
-			var footprint: Rect2 = Rect2(at.x + box.position.x, at.z + box.position.z, box.size.x, box.size.z).grow(TILT_CLEARANCE)
+			var box: AABB = place(s, r) * ObjectRecipes.make(s.kind, spot_size_m(s, r), StylePreset.new()).aabb()
+			var footprint: Rect2 = Rect2(box.position.x, box.position.z, box.size.x, box.size.z).grow(TILT_CLEARANCE)
 			if footprint.has_point(Vector2.ZERO):
-				y = maxf(y, at.y + box.end.y + TILT_CLEARANCE)
-	return Vector3(0.0, minf(y, HEIGHT - TILT_CLEARANCE), 0.0)
+				y = maxf(y, box.end.y + TILT_CLEARANCE)
+	return Vector3(0.0, minf(y, dims(r).y - TILT_CLEARANCE), 0.0)
 
 ## The floor of what the camera must keep in frame: at least this much of the walls' height.
 const CONTENT_HEIGHT_MIN: float = 1.5
@@ -96,14 +98,14 @@ static func content_dims(r: Room) -> Vector3:
 	var top: float = CONTENT_HEIGHT_MIN
 	if r != null:
 		for s: Spot in r.spots:
-			top = maxf(top, s.height * HEIGHT + spot_size_m(s))
-	return Vector3(WIDTH, minf(top, HEIGHT), DEPTH)
+			top = maxf(top, s.height * dims(r).y + spot_size_m(s, r))
+	return Vector3(dims(r).x, minf(top, dims(r).y), dims(r).z)
 
 ## The smallest spot in the room, in meters; zero for an empty room.
 static func smallest_spot_m(r: Room) -> float:
 	var smallest: float = 0.0
 	for s: Spot in r.spots:
-		var m: float = spot_size_m(s)
+		var m: float = spot_size_m(s, r)
 		if smallest <= 0.0 or m < smallest:
 			smallest = m
 	return smallest
@@ -111,18 +113,19 @@ static func smallest_spot_m(r: Room) -> float:
 ## Wall coordinates run left to right on the back wall and back to front on either side.
 ## Split the solid wall around every aperture. Overlapping or edge-clipped openings remain a union.
 static func wall_sections(wall: Spot.Wall, room: Room) -> Array[Rect2]:
-	var length: float = WIDTH if wall == Spot.Wall.BACK else DEPTH
+	var box: Vector3 = dims(room)
+	var length: float = box.x if wall == Spot.Wall.BACK else box.z
 	var drawn_length: float = length if wall == Spot.Wall.BACK else length + APRON
-	var sections: Array[Rect2] = [Rect2(0.0, 0.0, drawn_length, HEIGHT + WALL_RISE)]
+	var sections: Array[Rect2] = [Rect2(0.0, 0.0, drawn_length, box.y + WALL_RISE)]
 	if room == null:
 		return sections
 	for spot: Spot in room.spots:
 		if spot.wall != wall:
 			continue
-		var hole: Rect2 = ObjectRecipes.opening(spot.kind, spot_size_m(spot))
+		var hole: Rect2 = ObjectRecipes.opening(spot.kind, spot_size_m(spot, room))
 		if not hole.has_area():
 			continue
-		hole.position += Vector2(spot.x * length, spot.height * HEIGHT)
+		hole.position += Vector2(spot.x * length, spot.height * box.y)
 		var next: Array[Rect2] = []
 		for section: Rect2 in sections:
 			var cut: Rect2 = section.intersection(hole)

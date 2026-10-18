@@ -15,7 +15,7 @@ enum Motion {
 const DIR: String = "res://styles"
 
 @export var display_name: String = "Calm"
-@export var background: Color = Color("f4f1ea")
+@export var background: Color = Color("ecf1f5")
 @export var surface: Color = Color("ffffff")
 @export var accent: Color = Color("2f6f8f")
 @export var text: Color = Color("1e2a32")

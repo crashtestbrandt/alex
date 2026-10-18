@@ -26,6 +26,17 @@ enum Kind {
 	TUB = 8,
 	STAR = 9,
 	TABLE = 10,
+	SINK = 11,
+	TOWEL = 12,
+	SHELF = 13,
+	BOOK = 14,
+	SOFA = 15,
+	BOWL = 16,
+	CHAIR = 17,
+	PLANT = 18,
+	WALL_LIGHT = 19,
+	PRIVACY_WINDOW = 20,
+	DINING_TABLE = 21,
 }
 
 ## How the spot moves when tapped. Every reaction multiplies by `Style.motion_scale()`.
@@ -50,6 +61,17 @@ const _KIND_NAMES: Dictionary[String, int] = {
 	"circle": Kind.CIRCLE, "door": Kind.DOOR, "light": Kind.LIGHT, "window": Kind.WINDOW,
 	"ball": Kind.BALL, "bed": Kind.BED, "cup": Kind.CUP, "shoes": Kind.SHOES, "tub": Kind.TUB,
 	"star": Kind.STAR, "table": Kind.TABLE,
+	"sink": Kind.SINK,
+	"towel": Kind.TOWEL,
+	"shelf": Kind.SHELF,
+	"book": Kind.BOOK,
+	"sofa": Kind.SOFA,
+	"bowl": Kind.BOWL,
+	"chair": Kind.CHAIR,
+	"plant": Kind.PLANT,
+	"wall_light": Kind.WALL_LIGHT,
+	"privacy_window": Kind.PRIVACY_WINDOW,
+	"dining_table": Kind.DINING_TABLE,
 }
 const _REACTION_NAMES: Dictionary[String, int] = {
 	"bounce": Reaction.BOUNCE, "open": Reaction.OPEN, "glow": Reaction.GLOW, "spin": Reaction.SPIN,
@@ -68,6 +90,8 @@ var size: float = 0.18
 var wall: Wall = Wall.NONE
 ## The base of the object as a fraction of the room's height: up a wall, or on top of something on the floor.
 var height: float = 0.0
+## Rotation about the floor normal, in degrees. Wall attachments face inward automatically.
+var rotation_degrees: float = 0.0
 var gestalt_id: String = ""
 var alt_gestalt_id: String = ""
 ## The phrase pair written for a stage, 1 to 6, keyed by that stage. A stage with no pair uses the nearest
@@ -145,6 +169,7 @@ func to_dict() -> Dictionary:
 		"size": size,
 		"wall": wall_name(wall),
 		"height": height,
+		"rotation": rotation_degrees,
 		"gestalt": gestalt_id,
 		"alt_gestalt": alt_gestalt_id,
 	}
@@ -179,6 +204,8 @@ static func from_dict(d: Dictionary) -> Spot:
 	s.y = clampf(JsonValue.to_float(d.get("y"), 0.5), 0.0, 1.0)
 	s.size = clampf(JsonValue.to_float(d.get("size"), 0.18), 0.05, 0.6)
 	s.wall = wall_from_name(JsonValue.to_text(d.get("wall"), "none"))
+	var rotation: float = JsonValue.to_float(d.get("rotation"), 0.0)
+	s.rotation_degrees = wrapf(rotation, -180.0, 180.0) if is_finite(rotation) else 0.0
 	s.height = clampf(JsonValue.to_float(d.get("height"), 0.0), 0.0, 0.9)
 	# A stage pair is keyed by its stage, 1 to 6. A pair with no gestalt, or a key that is not a stage, is
 	# skipped.
