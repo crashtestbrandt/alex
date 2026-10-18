@@ -9,9 +9,14 @@ const FOCUS_BORDER_PX: float = 3.0
 const MIN_HEIGHT_PX: float = 132.0
 
 var _shape: SdfShape = null
+var _pointer_down: bool = false
+var _pointer_start: Vector2 = Vector2.ZERO
+var _pointer_dragged: bool = false
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	virtual_keyboard_show_on_focus = false
+	virtual_keyboard_enabled = false
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	empty.set_content_margin_all(CONTENT_MARGIN_PX)
 	for state: String in ["normal", "focus", "read_only"]:
@@ -29,6 +34,8 @@ func _ready() -> void:
 	move_child(_shape, 0)
 	focus_entered.connect(refresh)
 	focus_exited.connect(refresh)
+	focus_exited.connect(_end_text_entry)
+	visibility_changed.connect(_on_visibility_changed)
 	Style.changed.connect(_on_style_changed)
 	refresh()
 
@@ -51,3 +58,42 @@ func refresh() -> void:
 
 func _on_style_changed(_preset: StylePreset) -> void:
 	refresh()
+
+## Native TextEdit requests its keyboard on mouse release, even after a sheet drag released focus.
+## Permit that request only for a press received by this field followed by a short, focused release.
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse: InputEventMouseButton = event
+		if mouse.button_index == MOUSE_BUTTON_LEFT and mouse.pressed:
+			_pointer_down = true
+			_pointer_start = get_global_transform_with_canvas() * mouse.position
+			_pointer_dragged = false
+			virtual_keyboard_enabled = false
+
+func _input(event: InputEvent) -> void:
+	if not _pointer_down:
+		return
+	if event is InputEventMouseMotion:
+		var motion: InputEventMouseMotion = event
+		var deadzone: int = ProjectSettings.get_setting("gui/common/default_scroll_deadzone", 24)
+		_pointer_dragged = _pointer_dragged or motion.position.distance_to(_pointer_start) >= deadzone
+	elif event is InputEventMouseButton:
+		var mouse: InputEventMouseButton = event
+		if mouse.button_index == MOUSE_BUTTON_LEFT and not mouse.pressed:
+			var local: Vector2 = get_global_transform_with_canvas().affine_inverse() * mouse.position
+			var deadzone: int = ProjectSettings.get_setting("gui/common/default_scroll_deadzone", 24)
+			var tap: bool = not _pointer_dragged and mouse.position.distance_to(_pointer_start) < deadzone
+			virtual_keyboard_enabled = tap and has_focus() and is_visible_in_tree() and Rect2(Vector2.ZERO, size).has_point(local)
+			# Native GUI handling consumes this event before deferred calls run. Later releases cannot reopen it.
+			set_deferred("virtual_keyboard_enabled", false)
+			_pointer_down = false
+
+func _end_text_entry() -> void:
+	_pointer_down = false
+	virtual_keyboard_enabled = false
+	if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+		DisplayServer.virtual_keyboard_hide()
+
+func _on_visibility_changed() -> void:
+	if not is_visible_in_tree():
+		_end_text_entry()

@@ -223,6 +223,7 @@ func _on_style_pressed(style_id: String) -> void:
 	_style_bar.set_active(_current_style_index())
 
 func _show_mode(mode: Mode) -> void:
+	dismiss_text_entry()
 	_mode = mode
 	_profiles.visible = mode == Mode.PICK
 	_new_button.visible = mode == Mode.PICK
@@ -510,6 +511,10 @@ func _save_look(style_id: String) -> void:
 	refresh()
 	profile_chosen.emit(profile_id)
 
+## End native text entry before hiding a form or entering learner mode.
+func dismiss_text_entry() -> void:
+	_sheet.dismiss_text_entry()
+
 func _on_profile_pressed(profile_id: String) -> void:
 	profile_chosen.emit(profile_id)
 
@@ -517,6 +522,7 @@ func _on_name_submitted(_text: String) -> void:
 	_on_create()
 
 func _on_create() -> void:
+	dismiss_text_entry()
 	_status.visible = true
 	var style_id: String = "calm"
 	var style_index: int = _style_bar.active_index()

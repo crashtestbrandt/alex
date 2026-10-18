@@ -245,6 +245,8 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Caregiver sheets use a subtle top highlight, a fine inner edge, and a soft shadow. Text surfaces stay opaque.
 - Nested panels pass drag input to the sheet. Stage and scene changes retain the current scroll position.
 - Tapping outside a text entry or beginning a sheet scroll dismisses the keyboard. The sheet stays above the mobile keyboard.
+- Save, Back, page changes and entry into learner mode explicitly end native text entry. Save releases focus before reading the text so IME composition is committed.
+- Notes permits native keyboard requests only after a focused tap. Focus changes, drag releases and releases without a matching press cannot reopen it.
 - Markdown text selection is disabled so text drags scroll the page. Each new page starts at the top.
 - `just caregiver-probe` exercises focus dismissal, nested-panel drags, scene updates and Markdown scrolling.
 - Scene entries sit in flat tonal panels. Their descriptions stay visible on touch screens.
