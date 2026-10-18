@@ -115,6 +115,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   identity, never a judgment. Every chunk on screen is a `ChunkRow` pill, and its text keeps the preset's
   text color.
 - **A stage is optional, informs the caregiver only, and never appears on the learner's screen.**
+- **A profile grows by re-chunking a phrase in place** (docs/design.md "Progression"). One spoken phrase is
+  one row, one recording and one tile. Moving it along is editing its bars.
 - **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
   in profile data and off the learner's screen. Words is the whole bank, as Palette tiles or as Build, a
   strip filled from chunk beginnings and endings (`ChunkBank`), chunk-first and never word-first.
