@@ -46,23 +46,16 @@ times is fine. Nothing on the learner's screen can delete anything, buy anything
 
 ## What a caregiver does
 
-1. **Make a profile.** A name, a starter pack, a look. One minute.
-2. **Record the phrases in your own voice.** Hold any object, tile or chunk for two seconds. Tap the whole
-   phrase or one of its chunks, hold the big button, say it, let go, hear it back, keep it. A chunk you
-   record once speaks in every phrase it appears in, and in the builder. Until you record, the device's own
-   voice fills in. A recorded part shows a microphone; pick it and hold **Hold to remove this recording** to
-   go back to the device's voice.
-3. **Record the name.** Hold the profile name to record it; tap the name to hear it.
+1. **Make a profile.** A name, a starter pack, a look.
+2. **Record the phrases in your own voice.** Hold any object or phrase for two seconds, then hold the big button
+   and speak.
+3. **Record the name.** Hold the profile name.
 4. **Hand it over.** The app reopens this profile next time.
 
-To come back to the profiles, hold three fingers on the screen for three seconds. With a mouse, hold both
-buttons; with a keyboard, hold Escape. **Caregiver guide** on the profile picker covers the rest
-([GUIDE.md](GUIDE.md)).
+The **Caregiver guide** on the profile picker covers everything else, from reaching caregiver mode to recording
+each part of a phrase and deleting a profile. The same text is [GUIDE.md](GUIDE.md).
 
 ![The recording overlay: the phrase as pills, whole and by chunk, a round microphone button, and "Hold the button, say it, let go."](docs/img/record.png)
-
-To permanently remove a profile and all its recordings, choose **Edit** in the profile picker and hold
-**Hold 3 seconds to delete**. There is no undo.
 
 New recordings get local noise reduction, quiet-end trimming, and volume balancing before preview.
 
@@ -221,7 +214,7 @@ how much weight to give the stage model should read both sides.
 ## Privacy
 
 Alex collects no personal data, and nothing leaves the device. See [PRIVACY.md](PRIVACY.md). In the app,
-hold **Hold to read the privacy policy** on the profile picker. The app shows the same file, offline.
+choose **Privacy policy** on the profile picker. The app shows the same file, offline.
 
 ## License
 
