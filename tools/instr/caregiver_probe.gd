@@ -47,10 +47,14 @@ func _run() -> void:
 	# Simulate a room saved by the previous build.
 	p.rooms[0].width = 4.0
 	p.rooms[0].depth = 3.0
+	p.gestalts[0].recording = "familiar.wav"
+	var phrase_before: Dictionary = p.gestalts[0].to_dict()
 	repo.save_profile(p)
+	repo.remember(p.id)
 	var main: Main = MAIN.instantiate() as Main
 	add_child(main)
 	await _settle()
+	_check(Starter.find("home_routines").layout_matches(repo.load_profile(p.id)), "launch refreshes the remembered profile room")
 	main.show_picker()
 	var picker: ProfilePicker = main.get_node("%ProfilePicker") as ProfilePicker
 	picker._on_edit_profile(p.id)
@@ -100,9 +104,21 @@ func _run() -> void:
 	bar.items()[2].pressed.emit()
 	await _settle()
 	_check(absi(sheet.scroll_vertical - before) < 3, "changing a scene stage preserves scroll position")
-	picker._on_update_room(Starter.find("home_routines"))
+	var saved: Profile = repo.load_profile(p.id)
+	for room: Room in saved.rooms:
+		room.width = 4.0
+		room.depth = 3.0
+	repo.save_profile(saved)
+	picker.profile_chosen.emit(p.id)
 	await _settle()
-	_check(Starter.find("home_routines").layout_matches(repo.load_profile(p.id)), "Update room saves the new geometry")
+	var refreshed: Profile = repo.load_profile(p.id)
+	for pack: Starter in Starter.list_all():
+		if refreshed.has_scene(pack.id):
+			_check(pack.layout_matches(refreshed), "profile selection refreshes %s on disk" % pack.id)
+	_check(refreshed.gestalts[0].to_dict() == phrase_before, "automatic refresh preserves the recorded phrase")
+	_check(refreshed.scene_stages == saved.scene_stages, "automatic refresh preserves scene stages")
+	_check(Starter.find("home_routines").layout_matches(App.active_profile), "the active profile displays refreshed geometry")
+	main.show_picker()
 	picker._on_glossary_pressed()
 	await _settle()
 	var page: VBoxContainer = picker.get_node("%Page") as VBoxContainer

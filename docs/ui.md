@@ -170,7 +170,7 @@ three seconds (`CaregiverChord`):
 - New profile opens a separate form. An empty profile list opens that form directly.
 - The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
 - Edit also lists every shipped scene. Add copies the scene's room and phrases into the profile and saves it (docs/profiles.md "Adding a scene").
-- A scene with older geometry shows Update room. It updates placement and adds missing objects while preserving phrase assignments and recordings.
+- Opening a profile refreshes its scenes' room geometry and adds missing objects while preserving phrase assignments and recordings.
 - A scene the profile holds shows Remove (docs/profiles.md "Removing a scene").
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.

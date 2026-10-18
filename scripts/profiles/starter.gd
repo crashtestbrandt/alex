@@ -2,8 +2,8 @@ extends RefCounted
 class_name Starter
 ## A starter pack: a scene, its room, its gestalts and its boards. Shipped as JSON under res://starters/ so a
 ## parent or clinician can write one without touching code (docs/profiles.md). A profile copies the pack at
-## creation (`seed`) or adds it later (`add_to`). Only an explicit Update room action reads new geometry
-## into an existing scene; phrase assignments and recordings remain unchanged.
+## creation (`seed`) or adds it later (`add_to`). Opening the profile refreshes its room geometry.
+## Phrase assignments and recordings remain unchanged.
 
 const DIR: String = "res://starters"
 ## Joins a pack id to a local id when a pack is added to a profile. A gestalt id names a recording file, so
@@ -164,7 +164,7 @@ func layout_matches(p: Profile) -> bool:
 				return false
 	return true
 
-## An explicit caregiver action updates the furniture while keeping every existing phrase assignment.
+## Refresh the furniture when opening a profile, keeping every existing phrase assignment.
 ## New spots reuse phrases in the bank, or copy only the phrases they need. Nothing is deleted.
 func update_layout(p: Profile) -> bool:
 	if not p.has_scene(id) or layout_matches(p):

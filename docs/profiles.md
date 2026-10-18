@@ -136,11 +136,12 @@ profile and records its id in `scenes`:
 
 ### Updating a room
 
-- Edit shows Update room when a held scene differs from its shipped geometry.
+- Opening a profile refreshes every held scene to its shipped geometry, including when launch reopens the last profile.
 - `Starter.update_layout` replaces room dimensions and existing object placement, size and kind.
 - Missing objects are added. Their phrases reuse the bank when available.
 - Existing phrase assignments, recordings, scene stages and custom objects remain unchanged.
-- Updates are explicit; loading a profile never refreshes its scenes automatically.
+- Changes are saved once before displaying the profile. An unchanged profile is not rewritten.
+- Listing profiles and editing notes do not refresh room geometry.
 
 ### Removing a scene
 

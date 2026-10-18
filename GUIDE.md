@@ -30,7 +30,7 @@
 
 - A scene is a room to explore and the phrases that go with it.
 - Add puts a scene's room and phrases in the profile.
-- Update room refreshes the furniture and layout. Your phrases and recordings stay.
+- Opening a profile refreshes its room layouts. Your phrases and recordings stay.
 - Remove takes a scene out. Phrases you recorded stay in the profile.
 - Start here picks the room Explore opens on.
 

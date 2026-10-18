@@ -91,6 +91,12 @@ func open_profile(profile_id: String) -> void:
 	if p == null:
 		show_picker()
 		return
+	var updated: bool = false
+	for starter: Starter in Starter.list_all():
+		if starter.update_layout(p):
+			updated = true
+	if updated and ProfileStore.save_profile(p) != OK:
+		printerr("Main: could not save refreshed rooms for profile %s" % profile_id)
 	App.set_active_profile(p)
 	Style.apply(StylePreset.load_by_id(p.style_id))
 	_home.show_profile(p)

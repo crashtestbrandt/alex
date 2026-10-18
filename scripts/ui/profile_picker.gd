@@ -327,8 +327,6 @@ func _fill_scenes(profile: Profile) -> void:
 			if profile.scene_has_room(s.id):
 				var here: bool = s.id == entry
 				actions.add_child(_scene_button("Starts here" if here else "Start here", here, _on_entry_scene.bind(s)))
-			if not s.layout_matches(profile):
-				actions.add_child(_scene_button("Update room", false, _on_update_room.bind(s)))
 			actions.add_child(_scene_button("Remove", false, _on_remove_scene.bind(s)))
 		scene_entry.add_child(row)
 		if profile.has_scene(s.id):
@@ -387,9 +385,6 @@ func _scene_button(text: String, done: bool, on_pressed: Callable) -> SdfButton:
 
 func scene_rows() -> Array[Node]:
 	return _scene_entries
-
-func _on_update_room(s: Starter) -> void:
-	_change_scene(s.update_layout, "Updated %s." % s.title, "Could not update the room. Try again.")
 
 func _on_add_scene(s: Starter) -> void:
 	_change_scene(s.add_to, "Added %s." % s.title, "Could not save the scene. Try again.")

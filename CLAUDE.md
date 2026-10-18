@@ -150,7 +150,7 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   shows, `PRIVACY.md`, `GUIDE.md` and `GLOSSARY.md` (`tools/check-export-presets.sh`).
 - **A profile adds a pack as a scene** (`Starter.add_to`, docs/profiles.md "Adding a scene"). Copied ids are
   prefixed with the pack id, a phrase the bank already says is reused rather than copied, and a pack is
-  added once. Only an explicit Update room action refreshes its geometry; phrase assignments and recordings stay.
+  added once. Opening a profile refreshes its room geometry; phrase assignments and recordings stay.
 - **Removing a scene keeps every recorded phrase** (`Profile.remove_scene`, docs/profiles.md "Removing a
   scene"). Explore opens on the profile's `entry` scene.
 - **Style presets are `.tres` under `styles/`.** `Style.apply` builds the Theme; there is no theme file. A
