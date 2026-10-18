@@ -71,9 +71,9 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
   voice, whole or one chunk at a time. Hold the big button, say it, let go, hear it back, keep it. The
   previous take is kept beside the new one. A chunk take serves every phrase the chunk appears in. A held
   button removes a take and hands that part back to the device's voice.
-- **Scene packs and style presets.** A pack is a scene: a room and its phrases. A profile starts with one
-  and adds any number from the adults' screen; its bank is the union, with a phrase held once however many
-  scenes say it. A look is chosen at creation and changed on the adults' screen.
+- **Scene packs and style presets.** A pack is a scene: a room and its phrases. New profiles include all
+  starter scenes at the selected initial stage, with an explicit Blank option. Scenes can be removed or
+  added on the adults' screen; shared phrases are held once. A look is chosen at creation and changed on the adults' screen.
 
 Planned, in rough order: more rooms and more reactions; the learner's own songs and clips, since so much
 echolalia comes from them; video self-modeling; a bank view for caregivers. Assessment features stay off the list unless a caregiver asks,

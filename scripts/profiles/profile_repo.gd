@@ -62,12 +62,21 @@ func save_profile(p: Profile) -> Error:
 	file.close()
 	return OK
 
-## Create, seed and save a profile. `starter` may be null for a blank start.
-func create_profile(display_name: String, starter: Starter, style_id: String) -> Profile:
+## Create and save once, including all starter scenes when requested by the New profile form.
+## A null or blank starter keeps an explicitly empty profile. Tools can seed one scene in isolation.
+func create_profile(display_name: String, starter: Starter, style_id: String, stage: NlaStage.Stage = NlaStage.Stage.ECHOLALIA, all_scenes: bool = false) -> Profile:
 	var p: Profile = Profile.make(new_id(), display_name)
 	p.style_id = style_id
 	if starter != null:
 		starter.seed(p)
+		if starter.is_scene():
+			if all_scenes:
+				p.set_entry(starter.id)
+				for pack: Starter in Starter.list_all():
+					if pack.is_scene() and not p.has_scene(pack.id):
+						pack.add_to(p)
+			for scene_id: String in p.scenes:
+				p.set_scene_stage(scene_id, stage)
 	var err: Error = save_profile(p)
 	if err != OK:
 		printerr("ProfileRepo: could not save new profile %s (%s)" % [p.id, error_string(err)])

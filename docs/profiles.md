@@ -23,7 +23,7 @@ this repository.
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
-| `scene_stages` | Each held scene's stage, 1 to 6, keyed by scene id. Every object in the scene says the phrase pair written for it (`Profile.says`). A scene with no entry is at stage 1. New profile sets the starter's; Edit sets every held scene's. Added in schema 7. The profile-wide `stage` went in schema 8. |
+| `scene_stages` | Each held scene's stage, 1 to 6, keyed by scene id. Every object in the scene says the phrase pair written for it (`Profile.says`). A scene with no entry is at stage 1. New profile sets every starter scene's initial stage; Edit changes each scene independently. Added in schema 7. The profile-wide `stage` went in schema 8. |
 | `notes` | Free text the adults keep with the profile. Edit sets it. Never on the learner's screen. Added in schema 6. |
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
@@ -87,8 +87,11 @@ JSON under `starters/`, one file per pack, the same gestalt and board rows as a 
 }
 ```
 
-A profile **copies** the pack at creation (`Starter.seed`) and never reads it again. Editing a pack changes
-nothing for an existing child. `starter_test.gd` checks every shipped pack parses and that every board names
+New profile includes all four starter scenes at the selected initial stage. The chosen starter remains
+the entry scene. An explicit Blank start stays empty. Creation saves the complete setup once.
+
+A profile **copies** phrases from each pack (`Starter.seed`, `Starter.add_to`). Room geometry and camera
+defaults refresh on opening; existing phrases and recordings remain unchanged. `starter_test.gd` checks every shipped pack parses and that every board names
 gestalts the pack holds.
 
 `blank` and four scenes ship. A pack with at least one gestalt is a scene the adults' screen offers.

@@ -13,8 +13,8 @@ func load_profile(profile_id: String) -> Profile:
 func save_profile(p: Profile) -> Error:
 	return repo.save_profile(p)
 
-func create_profile(display_name: String, starter: Starter, style_id: String) -> Profile:
-	return repo.create_profile(display_name, starter, style_id)
+func create_profile(display_name: String, starter: Starter, style_id: String, stage: NlaStage.Stage = NlaStage.Stage.ECHOLALIA) -> Profile:
+	return repo.create_profile(display_name, starter, style_id, stage, true)
 
 func media_dir(profile_id: String) -> String:
 	return repo.media_dir(profile_id)

@@ -34,12 +34,12 @@ The learner moves between two modes, Explore and Words.
 - **Chunks** show on colored pills while a phrase plays, and each is marked as it is spoken. A chunk keeps
   its color everywhere it appears, so "Let's go" looks the same on every tile and caption.
 - **Views** look at the scene from the front and from above, and a drag or a pinch moves in closer. A
-  caregiver can add a third view that stands the learner in the middle of the room to look around, or
-  remove all of them. A tap on a view's button puts it back, and a room left alone returns to the front.
+  third view, Tilt, stands the learner in the middle of the room to look around. Every starter room
+  includes all three views. A tap on a view's button puts it back, and a room left alone returns to the front.
 
 Four scene packs ship. The bedroom's door opens to "Let's go outside" and closes to "Let's go inside"; the
-bathroom's tub fills to "Water on"; the playroom says single words; the kitchen says short sentences. A
-profile starts with one pack and adds others from the adults' screen. Scenes, objects and phrases are data
+bathroom's tub fills to "Water on"; the playroom says single words; the kitchen says short sentences. New
+profiles include all four packs at the chosen initial stage, unless Blank is selected. Scenes, objects and phrases are data
 in a pack, so a pack can describe any place.
 
 There are no questions, no right answers, no scores, no timers and no rewards. Touching the same thing forty

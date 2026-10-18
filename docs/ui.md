@@ -183,7 +183,7 @@ three seconds (`CaregiverChord`):
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
-- A stage belongs to a scene and is set where the scene is chosen (docs/design.md "Progression"). New profile shows a stage bar for the starter scene, 1 to 6, with the stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). A blank start shows none. Create writes it.
+- A stage belongs to a scene and is set where the scene is chosen (docs/design.md "Progression"). New profile includes all starter scenes and shows an initial stage bar, 1 to 6, with the stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). A blank start shows none. Create sets every included scene to the selected stage.
 - On Edit, every held scene's row carries its own stage bar, 1 to 6, and a line under it naming the stage and what the adults model there. A tap saves at once (`Profile.set_scene_stage`). A scene starts at 1.
 - Edit shows a Notes field, an `SdfTextArea`. Save writes the stage and the notes with the look. Back discards both. Neither reaches the learner's screen.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.

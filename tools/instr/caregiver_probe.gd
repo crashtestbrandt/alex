@@ -173,10 +173,16 @@ func _run() -> void:
 	await _settle()
 	var name_edit: SdfField = picker.get_node("%NameEdit") as SdfField
 	name_edit.text = "Created with keyboard"
+	picker._on_stage_pressed(NlaStage.Stage.SINGLE_WORDS)
 	name_edit.grab_focus()
 	picker._on_name_submitted(name_edit.text)
 	await _settle()
 	_check(not picker.visible and not name_edit.has_focus(), "name submission clears text focus before learner mode")
+	var created: Profile = repo.load_profile(App.active_profile.id)
+	for pack: Starter in Starter.list_all():
+		if pack.is_scene():
+			_check(created.has_scene(pack.id), "Create includes " + pack.id)
+			_check(created.stage_for_scene(pack.id) == NlaStage.Stage.SINGLE_WORDS, "Create applies the selected stage to " + pack.id)
 	repo.delete_profile(App.active_profile.id)
 	repo.delete_profile(p.id)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(repo.root))
