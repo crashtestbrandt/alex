@@ -237,6 +237,13 @@ func _run() -> void:
 			_shot("guide")
 			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
 			await _settle()
+			(picker.get_node("%GlossaryButton") as SdfButton).pressed.emit()
+			await _settle()
+			_check(page.visible and page.get_child_count() > 10, "the glossary opens with its terms")
+			_inside(picker.get_node("%Heading") as Control, screen, "glossary heading")
+			_shot("glossary")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+			await _settle()
 			var profile_card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()

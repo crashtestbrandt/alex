@@ -137,7 +137,7 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
 | `store/` | The Google Play and App Store listings and their images. `just store-graphics` renders the images. |
-| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md), [`exports.md`](docs/exports.md), [`releases.md`](docs/releases.md), [`glossary.md`](docs/glossary.md). |
+| `docs/` | [`design.md`](docs/design.md), [`geometry.md`](docs/geometry.md), [`ui.md`](docs/ui.md), [`profiles.md`](docs/profiles.md), [`dev-setup.md`](docs/dev-setup.md), [`gates.md`](docs/gates.md), [`exports.md`](docs/exports.md), [`releases.md`](docs/releases.md). |
 
 `CLAUDE.md` carries the durable rules for anyone, person or agent, working in the repository. This README is
 capped at 16 kB by `tools/check-doc-size.sh`; depth lives in `docs/`.
@@ -172,8 +172,8 @@ the checks. [`docs/releases.md`](docs/releases.md) has the release workflow and 
 
 ## Glossary
 
-The words this README and the docs use, from "gestalt" and "chunk" to "take" and "look", are defined in
-[`docs/glossary.md`](docs/glossary.md).
+The words the app, this README and the docs use, from "gestalt" and "chunk" to "take" and "look", are defined in
+[GLOSSARY.md](GLOSSARY.md). The app shows the same text under **Glossary** on the profile picker.
 
 ## Research
 

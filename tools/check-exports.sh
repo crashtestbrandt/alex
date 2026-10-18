@@ -113,7 +113,7 @@ if [[ -d "$BUILD/android" ]]; then
 			fail "$name is not in the APK"
 		fi
 	done
-	for page in PRIVACY.md GUIDE.md; do
+	for page in PRIVACY.md GUIDE.md GLOSSARY.md; do
 		if grep -q " assets/$page\$" <<< "$listing"; then
 			pass "$page is in the APK"
 		else
@@ -161,7 +161,7 @@ if [[ -d "$BUILD/play" ]]; then
 			fail "$name is not in the AAB"
 		fi
 	done
-	for page in PRIVACY.md GUIDE.md; do
+	for page in PRIVACY.md GUIDE.md GLOSSARY.md; do
 		if grep -q "/assets/$page\$" <<< "$listing"; then
 			pass "$page is in the AAB"
 		else
