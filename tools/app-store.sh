@@ -14,6 +14,9 @@
 #   beta-setup           TestFlight test information, the Beta App Review contact, and the external group with a
 #                        public link, from metadata.json. Safe to run again.
 #   beta X.Y.Z n         Build n to the external group with What to Test, and Beta App Review when Apple asks.
+#                        With another build of X.Y.Z in review, build n waits for beta-pending.
+#   beta-pending         The newest build in the external group to Beta App Review, once nothing of its
+#                        version is in review. Changes nothing otherwise.
 #   release X.Y.Z n      All of it for a version tag: supersede, metadata, age-rating, screenshots, submit.
 #                        An approved version goes live without a further step.
 #
@@ -444,14 +447,50 @@ cmd_beta() {
 	fi
 	api POST "/v1/betaGroups/$gid/relationships/builds" "$(jq -cn --arg b "$bid" '{data: [{type: "builds", id: $b}]}')" > /dev/null
 	printf 'app-store: build %s of %s is in the %s group\n' "$number" "$version" "$(meta .testflight.group)"
+	beta_review "$id" "$bid" "$number" "$version"
+}
+
+# beta_review <app id> <build id> <build number> <version>: the build to Beta App Review when Apple asks for it.
+# Apple takes one build of a version at a time. With another build of it in review, this leaves the build
+# waiting, and beta-pending sends it later.
+beta_review() {
+	local id="$1" bid="$2" number="$3" version="$4" state waiting
 	state="$(api GET "/v1/builds/$bid/buildBetaDetail" | jq -r '.data.attributes.externalBuildState')"
-	if [[ "$state" == "READY_FOR_BETA_SUBMISSION" ]]; then
-		api POST /v1/betaAppReviewSubmissions "$(jq -cn --arg b "$bid" '{data: {type: "betaAppReviewSubmissions",
-			relationships: {build: {data: {type: "builds", id: $b}}}}}')" > /dev/null
-		printf 'app-store: build %s sent to Beta App Review\n' "$number"
-	else
+	if [[ "$state" != "READY_FOR_BETA_SUBMISSION" ]]; then
 		printf 'app-store: build %s needs no Beta App Review submission (%s)\n' "$number" "$state"
+		return 0
 	fi
+	waiting="$(api GET "/v1/builds?filter%5Bapp%5D=$id&filter%5BpreReleaseVersion.version%5D=$version&filter%5BbetaAppReviewSubmission.betaReviewState%5D=WAITING_FOR_REVIEW,IN_REVIEW&limit=1" \
+		| jq -r '.data[0].attributes.version // empty')"
+	if [[ -n "$waiting" ]]; then
+		printf 'app-store: build %s waits. Build %s of %s is in Beta App Review, and beta-pending sends %s after it.\n' \
+			"$number" "$waiting" "$version" "$number"
+		return 0
+	fi
+	api POST /v1/betaAppReviewSubmissions "$(jq -cn --arg b "$bid" '{data: {type: "betaAppReviewSubmissions",
+		relationships: {build: {data: {type: "builds", id: $b}}}}}')" > /dev/null
+	printf 'app-store: build %s sent to Beta App Review\n' "$number"
+}
+
+# The newest build in the external group to Beta App Review, once no build of its version is in review. The
+# beta-review workflow runs this on a schedule, for a build a tag left waiting. An older build left waiting is
+# skipped, since testers take the newest.
+cmd_beta_pending() {
+	local id gid newest bid number version
+	id="$(app_id)"
+	gid="$(beta_group "$id")"
+	if [[ -z "$gid" ]]; then
+		printf 'app-store: no external group. Run tools/app-store.sh beta-setup first.\n' >&2
+		exit 1
+	fi
+	newest="$(api GET "/v1/builds?filter%5BbetaGroups%5D=$gid&sort=-uploadedDate&limit=1&include=preReleaseVersion" \
+		| jq -r '.data[0] as $b | if $b then "\($b.id) \($b.attributes.version) \(.included[0].attributes.version)" else "" end')"
+	if [[ -z "$newest" ]]; then
+		printf 'app-store: no build in the %s group\n' "$(meta .testflight.group)"
+		return 0
+	fi
+	read -r bid number version <<< "$newest"
+	beta_review "$id" "$bid" "$number" "$version"
 }
 
 cmd_status() {
@@ -473,6 +512,7 @@ case "$1" in
 	supersede) cmd_supersede "${2:?usage: tools/app-store.sh supersede X.Y.Z}" ;;
 	beta-setup) cmd_beta_setup ;;
 	beta) cmd_beta "${2:?usage: tools/app-store.sh beta X.Y.Z <build number>}" "${3:?usage: tools/app-store.sh beta X.Y.Z <build number>}" ;;
+	beta-pending) cmd_beta_pending ;;
 	release) cmd_release "${2:?usage: tools/app-store.sh release X.Y.Z <build number>}" "${3:?usage: tools/app-store.sh release X.Y.Z <build number>}" ;;
 	*)
 		printf 'app-store: unknown command %s\n' "$1" >&2
