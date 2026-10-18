@@ -14,6 +14,11 @@ signal profile_deleted(profile_id: String)
 enum Mode { PICK, CREATE, LOOK, POLICY, GUIDE }
 
 const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md"
+## The stages a scene can be at, in pill order. A bar's index is the stage less one.
+const _STAGES: Array[NlaStage.Stage] = [
+	NlaStage.Stage.ECHOLALIA, NlaStage.Stage.MITIGATION, NlaStage.Stage.SINGLE_WORDS,
+	NlaStage.Stage.EARLY_GRAMMAR, NlaStage.Stage.COMPLEX_GRAMMAR, NlaStage.Stage.FULL_GRAMMAR,
+]
 
 @onready var _profiles: GridContainer = %Profiles
 @onready var _name_edit: SdfField = %NameEdit
@@ -141,11 +146,23 @@ func _fill_starters() -> void:
 	for i: int in _starters.size():
 		var button: SdfButton = SdfButton.new()
 		button.text = _starters[i].title
+		button.pressed.connect(_on_starter_pressed.bind(i))
 		_starter_bar.add_item(button)
 		# Prefer the worked example over the blank start for a first run.
 		if _starters[i].id == "home_routines":
 			preferred = i
 	_starter_bar.set_active(preferred)
+
+## Whether the starter picked on the New profile form is a scene, and so takes a stage.
+func _starter_is_scene() -> bool:
+	var index: int = _starter_bar.active_index()
+	return index >= 0 and index < _starters.size() and _starters[index].is_scene()
+
+## The stage row belongs to the starter scene. A blank start has none.
+func _on_starter_pressed(index: int) -> void:
+	_starter_bar.set_active(index)
+	_stage_section.visible = _mode == Mode.CREATE and _starter_is_scene()
+	_layout_choices.call_deferred()
 
 func _fill_styles() -> void:
 	_style_bar.clear()
@@ -157,28 +174,31 @@ func _fill_styles() -> void:
 		_style_bar.add_item(button)
 	_style_bar.set_active(_current_style_index())
 
-## One pill per stage, None first, numbered so seven fit one row on a phone. The lines under the bar carry
-## the picked stage's name and what the adults model there. The index is the stage.
+## The starter scene's stage on the New profile form: one numbered pill per stage, 1 to 6, so six fit one
+## row on a phone. The lines under the bar carry the picked stage's name and what the adults model there.
 func _fill_stages() -> void:
 	_stage_bar.clear()
-	for stage: NlaStage.Stage in NlaStage.Stage.values():
+	for stage: NlaStage.Stage in _STAGES:
 		var button: SdfButton = SdfButton.new()
-		button.text = "None" if stage == NlaStage.Stage.UNKNOWN else str(int(stage))
+		button.text = str(int(stage))
 		button.tooltip_text = NlaStage.label(stage)
 		button.pressed.connect(_on_stage_pressed.bind(stage))
 		_stage_bar.add_item(button)
 	_stage_bar.set_active(0)
-	_show_stage(NlaStage.Stage.UNKNOWN)
+	_show_stage(NlaStage.Stage.ECHOLALIA)
 
 func _on_stage_pressed(stage: NlaStage.Stage) -> void:
-	_stage_bar.set_active(int(stage))
+	_stage_bar.set_active(int(stage) - 1)
 	_show_stage(stage)
 
-## The stage's name and its model line. Not staged says what the stage does.
+## The stage picked on the New profile form, from the bar's index.
+func _picked_stage() -> NlaStage.Stage:
+	return NlaStage.from_value(_stage_bar.active_index() + 1)
+
+## The stage's name and its model line.
 func _show_stage(stage: NlaStage.Stage) -> void:
 	_stage_name.text = NlaStage.label(stage)
-	var line: String = NlaStage.models(stage)
-	_stage_model.text = line if not line.is_empty() else "Every object says the phrase written for the stage. Not staged says the first one."
+	_stage_model.text = NlaStage.models(stage)
 
 ## The pill for the style the app is wearing right now, or Calm when the current preset is not one on disk.
 func _current_style_index() -> int:
@@ -201,7 +221,7 @@ func _show_mode(mode: Mode) -> void:
 	_actions.visible = mode != Mode.PICK
 	_delete_section.visible = mode == Mode.LOOK
 	_scene_section.visible = mode == Mode.LOOK
-	_stage_section.visible = mode == Mode.LOOK
+	_stage_section.visible = mode == Mode.CREATE and _starter_is_scene()
 	_notes_section.visible = mode == Mode.LOOK
 	var reading: bool = mode == Mode.POLICY or mode == Mode.GUIDE
 	_page.visible = reading
@@ -237,8 +257,6 @@ func _on_edit_profile(profile_id: String) -> void:
 	_show_mode(Mode.LOOK)
 	_heading.text = "Edit %s" % profile.display_name
 	_fill_scenes(profile)
-	_stage_bar.set_active(int(profile.stage))
-	_show_stage(profile.stage)
 	_notes_edit.text = profile.notes
 	_on_style_pressed(profile.style_id)
 	_style_bar.items()[_current_style_index()].grab_focus()
@@ -282,9 +300,10 @@ func _fill_scenes(profile: Profile) -> void:
 		scene_entry.add_child(row)
 		if profile.has_scene(s.id):
 			scene_entry.add_child(_scene_stage_row(profile, s))
+			scene_entry.add_child(_scene_stage_line(profile, s))
 	_layout_choices.call_deferred()
 
-## A held scene's stage bar: Profile's, then 1 to 6. The active pill is the scene's pin, or Profile's.
+## A held scene's stage bar, 1 to 6. The active pill is the scene's stage.
 func _scene_stage_row(profile: Profile, s: Starter) -> BoxContainer:
 	var row: BoxContainer = BoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
@@ -294,21 +313,28 @@ func _scene_stage_row(profile: Profile, s: Starter) -> BoxContainer:
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(label)
 	var bar: PillBar = PillBar.new()
-	for stage: NlaStage.Stage in NlaStage.Stage.values():
+	for stage: NlaStage.Stage in _STAGES:
 		var button: SdfButton = SdfButton.new()
-		button.text = "Profile's" if stage == NlaStage.Stage.UNKNOWN else str(int(stage))
-		button.tooltip_text = "Follows the profile's stage" if stage == NlaStage.Stage.UNKNOWN else NlaStage.label(stage)
-		button.pressed.connect(_on_pin_scene.bind(s, stage))
+		button.text = str(int(stage))
+		button.tooltip_text = NlaStage.label(stage)
+		button.pressed.connect(_on_scene_stage.bind(s, stage))
 		bar.add_item(button)
-	var pinned: int = profile.scene_stages.get(s.id, 0)
-	bar.set_active(pinned)
+	bar.set_active(int(profile.stage_for_scene(s.id)) - 1)
 	row.add_child(bar)
 	return row
 
-func _on_pin_scene(s: Starter, stage: NlaStage.Stage) -> void:
-	var pin: Callable = func(p: Profile) -> bool: return p.pin_scene_stage(s.id, stage)
-	var done: String = "%s follows the profile's stage." % s.title if stage == NlaStage.Stage.UNKNOWN else "%s says its stage %d phrases." % [s.title, stage]
-	_change_scene(pin, done, "Could not save the stage. Try again.")
+## The line under a held scene's stage bar: the stage's name and what the adults model there.
+func _scene_stage_line(profile: Profile, s: Starter) -> Label:
+	var line: Label = Label.new()
+	line.theme_type_variation = &"HintLabel"
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var at: NlaStage.Stage = profile.stage_for_scene(s.id)
+	line.text = "%s. %s" % [NlaStage.label(at), NlaStage.models(at)]
+	return line
+
+func _on_scene_stage(s: Starter, stage: NlaStage.Stage) -> void:
+	var change: Callable = func(p: Profile) -> bool: return p.set_scene_stage(s.id, stage)
+	_change_scene(change, "%s says its stage %d phrases." % [s.title, stage], "Could not save the stage. Try again.")
 
 func _scene_button(text: String, done: bool, on_pressed: Callable) -> SdfButton:
 	var button: SdfButton = SdfButton.new()
@@ -407,7 +433,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_on_back()
 		get_viewport().set_input_as_handled()
 
-## Save writes the look, the stage and the notes. Scenes were saved as they changed.
+## Save writes the look and the notes. Scenes and their stages were saved as they changed.
 func _save_look(style_id: String) -> void:
 	# Reload before saving so previewing a look cannot overwrite other profile changes.
 	var profile: Profile = ProfileStore.load_profile(_editing_id)
@@ -415,7 +441,6 @@ func _save_look(style_id: String) -> void:
 		_status.text = "Could not open the profile."
 		return
 	profile.style_id = style_id
-	profile.stage = NlaStage.from_value(_stage_bar.active_index())
 	profile.notes = _notes_edit.text
 	if ProfileStore.save_profile(profile) != OK:
 		_status.text = "Could not save the changes. Try again."
@@ -452,6 +477,11 @@ func _on_create() -> void:
 	if p == null:
 		_status.text = "Could not save the profile. Check the log."
 		return
+	# The starter scene's stage, picked on the form. A blank start has no scene to stage.
+	if starter != null and starter.is_scene() and p.set_scene_stage(starter.id, _picked_stage()):
+		if ProfileStore.save_profile(p) != OK:
+			_status.text = "Could not save the stage. Try again."
+			return
 	_name_edit.text = ""
 	refresh()
 	profile_chosen.emit(p.id)

@@ -1,8 +1,9 @@
 extends RefCounted
 class_name NlaStage
-## The six stages of Natural Language Acquisition (Blanc), plus UNKNOWN for a profile nobody has staged yet.
-## A gestalt carries the stage it models; a profile carries the stage the child is working in. The stage never
-## gates what the child can see. It tells the adults what to model next (docs/design.md).
+## The six stages of Natural Language Acquisition (Blanc), plus UNKNOWN for a scene nobody has staged yet.
+## A gestalt carries the stage it models; a scene in a profile carries the stage its objects speak at
+## (`Profile.scene_stages`). A stage never advances on its own and never shows on the learner's screen
+## (docs/design.md "Progression").
 
 enum Stage {
 	UNKNOWN = 0,

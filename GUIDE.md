@@ -18,12 +18,11 @@
 
 - Choose a profile's name to open it for the learner.
 - New profile asks for a name, a starting scene and a look.
-- Edit changes a profile's look, its scenes, its stage and its notes.
-- The stage picks what every object says. Each object has a phrase written for stage 1 and 2, for 3 and
-  for 4, and says the one for the stage you pick. Not staged says the first one.
-- A scene follows the profile's stage. Pick a number beside the scene to give that scene a stage of its
-  own, and Profile's to have it follow again.
-- The stage never changes on its own, and the learner never sees it. The notes are for the adults.
+- Edit changes a profile's look, its scenes, each scene's stage, and its notes.
+- Every scene has a stage, 1 to 6, and starts at 1. It picks what each object in that scene says. Each
+  object has a phrase written for stages 1 and 2, for 3 and for 4, and says the one for the scene's stage.
+- Pick the starter scene's stage on New profile, and every scene's stage beside it on Edit.
+- A stage never changes on its own, and the learner never sees it. The notes are for the adults.
 - To delete a profile, choose Edit and hold the delete button for three seconds. Its recordings go with it,
   and there is no undo.
 

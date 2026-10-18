@@ -89,17 +89,16 @@ func _run() -> void:
 		_check(overlay.selected_pill() == pills[0] and pills[0].whole, "the whole is picked on open")
 		_check(overlay.gestalt().id == "lets_go_outside", "Keep targets the displayed phrase")
 		overlay.close()
-		# The profile's stage picks the pair the open door says, a pin on its scene wins, and the bank stays whole.
+		# The scene's stage picks the pair the open door says, and the bank stays whole.
 		var live: Profile = home._profile
 		var scene_id: String = live.scene_of(live.rooms[0].id)
-		live.stage = NlaStage.Stage.SINGLE_WORDS
+		_check(live.set_scene_stage(scene_id, NlaStage.Stage.SINGLE_WORDS), "the scene is staged 3")
 		_check(room_view.gestalt_for(door.spot).text == "Come in", "at stage 3 the open door says its stage 3 alternate")
 		_check(live.words_gestalts().size() == live.gestalts.size(), "Words still offers the whole bank")
-		_check(live.pin_scene_stage(scene_id, NlaStage.Stage.EARLY_GRAMMAR), "the scene is pinned to 4")
-		_check(room_view.gestalt_for(door.spot).text == "Shut the door", "the pin wins over the profile's stage")
-		live.pin_scene_stage(scene_id, NlaStage.Stage.UNKNOWN)
-		live.stage = NlaStage.Stage.UNKNOWN
-		_check(room_view.gestalt_for(door.spot).id == "lets_go_inside", "not staged says the first pair again")
+		_check(live.set_scene_stage(scene_id, NlaStage.Stage.EARLY_GRAMMAR), "the scene is staged 4")
+		_check(room_view.gestalt_for(door.spot).text == "Shut the door", "at stage 4 the open door says its stage 4 alternate")
+		live.set_scene_stage(scene_id, NlaStage.Stage.ECHOLALIA)
+		_check(room_view.gestalt_for(door.spot).id == "lets_go_inside", "stage 1 says the first pair again")
 	var tub: SpotBody = room_view.body("tub")
 	if tub != null:
 		var water: Node = tub.get_node_or_null("Object/water")

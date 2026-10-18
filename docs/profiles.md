@@ -19,12 +19,11 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 6 forward before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 7 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
-| `stage` | `NlaStage`, 0 for not staged. Every object says the phrase pair written for this stage (`Profile.says`). Edit sets it. |
-| `scene_stages` | A scene's own stage, keyed by scene id, for a scene that does not follow the profile's. Edit pins it. Added in schema 7. |
+| `scene_stages` | Each held scene's stage, 1 to 6, keyed by scene id. Every object in the scene says the phrase pair written for it (`Profile.says`). A scene with no entry is at stage 1. New profile sets the starter's; Edit sets every held scene's. Added in schema 7. The profile-wide `stage` went in schema 8. |
 | `notes` | Free text the adults keep with the profile. Edit sets it. Never on the learner's screen. Added in schema 6. |
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
@@ -127,7 +126,7 @@ profile and records its id in `scenes`:
   A gestalt id names a recording file, so the separator is a dot.
 - A phrase the bank already says, by its chunk key, is not copied. The pack's spots, at every stage, and
   its boards point at the bank's own gestalt, so one recording serves every scene that says the phrase.
-- An added scene follows the profile's stage until Edit pins it.
+- An added scene is not staged until its row on Edit stages it.
 - A pack is added once. A second Add changes nothing.
 - A pack carries no recordings. A family's recordings never enter the repository.
 - The bank is the union, so every added scene's phrases are in Words and in Build.

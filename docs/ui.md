@@ -174,8 +174,8 @@ three seconds (`CaregiverChord`):
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
-- Edit shows the stage as a pill bar, None then 1 to 6, with the picked stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). The stage picks the phrase pair every object says (docs/design.md "Progression"). None reads Not staged under the bar and says each object's first pair.
-- A held scene's row carries its own stage bar, Profile's then 1 to 6. Profile's follows the profile's stage. A number pins the scene to that stage and saves at once (`Profile.pin_scene_stage`).
+- A stage belongs to a scene and is set where the scene is chosen (docs/design.md "Progression"). New profile shows a stage bar for the starter scene, 1 to 6, with the stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). A blank start shows none. Create writes it.
+- On Edit, every held scene's row carries its own stage bar, 1 to 6, and a line under it naming the stage and what the adults model there. A tap saves at once (`Profile.set_scene_stage`). A scene starts at 1.
 - Edit shows a Notes field, an `SdfTextArea`. Save writes the stage and the notes with the look. Back discards both. Neither reaches the learner's screen.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Caregiver guide opens `GUIDE.md` on a tap. Privacy policy opens `PRIVACY.md` on a tap (`PageText`).

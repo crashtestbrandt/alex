@@ -11,7 +11,7 @@ The words the README and the docs use, and what each means in Alex.
 | Mitigation | Recombining chunks of known gestalts into new phrases. Build is made for it. |
 | Echolalia | Repeating heard speech. Treated as communication and never corrected. |
 | Gestalt language processor | A child who acquires language in whole gestalts before single words. |
-| NLA stage | Where the learner is in the Natural Language Acquisition framework, set by a caregiver. It picks which written phrase each object says. A scene can pin its own. Shown nowhere on the learner's screen and never advances on its own. |
+| NLA stage | A scene's place in the Natural Language Acquisition framework, set by a caregiver where the scene is chosen. It picks which written phrase each object in the scene says. Shown nowhere on the learner's screen and never advances on its own. |
 | Profile | One learner's configuration: name, look, bank, rooms, boards and recordings. |
 | Bank | Every gestalt a profile holds. |
 | Scene pack | JSON under `starters/`: a room and its phrases. A profile starts with one and adds others. Also called a starter pack. |
