@@ -31,11 +31,23 @@
 
 ## Recording your voice
 
-- Hold any object or phrase for two seconds to record its phrase.
-- Hold the big button, say the phrase, and let go.
-- Listen to the take, then press Keep. Nothing is saved before Keep.
+- Hold any object, phrase or part of a phrase for two seconds to open the recorder.
+- The recorder shows the phrase as its parts, plus one for the whole phrase. The whole phrase is picked first.
+- Tap a part to record only that part.
+- Hold the big button, say it, and let go.
+- Listen to the take, then press Keep or Try again. Nothing is saved before Keep.
+- After Keep the recorder stays open, so you can record every part in one visit.
+- A recorded part shows a microphone.
+- A part you record once speaks in every phrase that has it, and in Words when the learner builds a phrase.
 - A new take replaces the old one. The old take is kept once, as a backup.
-- Until a phrase has a recording, the device's voice says it.
+- To go back to the device's voice for a part, pick it and hold Hold to remove this recording.
+- The recorder closes after 20 seconds with nothing touched.
+
+## What plays
+
+- A recording of the whole phrase plays first.
+- Without one, each part plays its own recording.
+- A part with no recording is said by the device's voice.
 
 ## The learner's name
 

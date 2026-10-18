@@ -136,6 +136,7 @@ three seconds (`CaregiverChord`):
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Caregiver guide opens `GUIDE.md` on a tap. The privacy policy opens `PRIVACY.md` on a hold (`PageText`).
+- `GUIDE.md` is the one place caregiver instructions live. The README lists the first steps and points to it. A change to how a caregiver does something updates `GUIDE.md` in the same PR.
 - Nothing on the picker is drawn by a theme style box.
 
 ## Gates
