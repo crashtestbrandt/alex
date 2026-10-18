@@ -7,62 +7,74 @@
     {
       "id": "time_for_a_bath",
       "text": "It's time for | a bath",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "all_clean",
       "text": "All | clean",
-      "function": "comment"
+      "function": "comment",
+      "stage": 1
     },
     {
       "id": "lets_get_in_the_tub",
       "text": "Let's get | in the tub",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "water_on",
       "text": "Water | on",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "water_off",
       "text": "Water | off",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "lights_on",
       "text": "Lights | on",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "lights_off",
       "text": "Lights | off",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "splash_splash",
       "text": "Splash | splash",
-      "function": "comment"
+      "function": "comment",
+      "stage": 1
     },
     {
       "id": "wash_your_hands",
       "text": "Wash | your hands",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "look_at_the_star",
       "text": "Look at | the star",
-      "function": "comment"
+      "function": "comment",
+      "stage": 1
     },
     {
       "id": "so_warm",
       "text": "So | warm",
-      "function": "comment"
+      "function": "comment",
+      "stage": 1
     },
     {
       "id": "lets_get_dry",
       "text": "Let's get | dry",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     }
   ],
   "rooms": [

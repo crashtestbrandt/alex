@@ -7,82 +7,98 @@
     {
       "id": "lets_go_outside",
       "text": "Let's go | outside",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "lets_go_inside",
       "text": "Let's go | inside",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "lights_on",
       "text": "Lights | on",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "lights_off",
       "text": "Lights | off",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "look_outside",
       "text": "Look | outside",
-      "function": "comment"
+      "function": "comment",
+      "stage": 2
     },
     {
       "id": "lets_play_ball",
       "text": "Let's play | ball",
-      "function": "request"
+      "function": "request",
+      "stage": 1
     },
     {
       "id": "time_for_a_snack",
       "text": "It's time for | a snack",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "time_for_a_bath",
       "text": "It's time for | a bath",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "time_for_bed",
       "text": "It's time for | bed",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "lets_get_shoes",
       "text": "Let's get | your shoes",
-      "function": "routine"
+      "function": "routine",
+      "stage": 1
     },
     {
       "id": "lets_go_in_the_car",
       "text": "Let's go | in the car",
-      "function": "routine"
+      "function": "routine",
+      "stage": 2
     },
     {
       "id": "all_done",
       "text": "All done",
-      "function": "protest"
+      "function": "protest",
+      "stage": 1
     },
     {
       "id": "want_more",
       "text": "I want | more",
-      "function": "request"
+      "function": "request",
+      "stage": 1
     },
     {
       "id": "its_okay",
       "text": "It's okay",
-      "function": "regulation"
+      "function": "regulation",
+      "stage": 1
     },
     {
       "id": "that_was_loud",
       "text": "That was | loud",
-      "function": "comment"
+      "function": "comment",
+      "stage": 1
     },
     {
       "id": "see_you_later",
       "text": "See you | later",
-      "function": "greeting"
+      "function": "greeting",
+      "stage": 1
     }
   ],
   "rooms": [

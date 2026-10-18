@@ -89,6 +89,20 @@ gestalts the pack holds.
 `blank`, `home_routines` (a bedroom) and `bath_time` (a bathroom) ship. A pack with at least one gestalt is
 a scene the adults' screen offers.
 
+Every row in a scene carries the `stage` of language it models (docs/design.md "Progression"). The stage
+informs the adults and gates nothing. A pack author sets it by this rule, reading the pack in row order:
+
+| Row | Stage |
+| --- | --- |
+| A phrase learned whole, with bars so it can be split later (`Let's go \| outside`), or with none (`All done`) | 1 |
+| A phrase that reuses a beginning or an ending a row before it holds (`Let's go \| in the car` after `Let's go \| outside`) | 2 |
+| A single word or a two-word combination | 3 |
+| A short original sentence | 4 |
+
+- Both shipped scenes are stage 1 and 2 material, so every row carries 1 or 2.
+- `starter_test.gd` fails a scene row with no stage, a stage 2 row that reuses nothing, and a stage 1 row
+  that reuses a chunk.
+
 ### Adding a scene
 
 Edit on the adults' screen lists every shipped scene with Add. `Starter.add_to` copies the pack into the
