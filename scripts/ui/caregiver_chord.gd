@@ -8,7 +8,7 @@ class_name CaregiverChord
 ## - the Escape key.
 ##
 ## A fourth finger or a lifted finger breaks the chord. A hand whose center moves more than `STILL_PX` from
-## where the count began starts the count again from where it is. The center averages the three fingers, so
+## where the count began starts the count again from zero at its new place. The center averages the three fingers, so
 ## one finger rolling on the glass moves it a third as far. Pure state: [CaregiverGate] feeds it input and
 ## time, and shows `progress()` once `shows_progress()`.
 

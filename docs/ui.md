@@ -112,7 +112,7 @@ three seconds (`CaregiverChord`):
 | Keyboard | Escape. |
 
 - A fourth finger or a lifted finger breaks the chord.
-- A hand whose center moves more than 120 px starts the count again from where it stopped. The center
+- A hand whose center moves more than 120 px starts the count again from zero at its new place. The center
   averages the three fingers, so one rolling finger counts a third as much.
 - A chord held for half a second shows a pill bar above the hand, or below it near the top edge
   (`ChordProgress`). The bar fills until the picker opens.
