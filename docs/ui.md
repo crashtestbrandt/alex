@@ -63,6 +63,45 @@ it. Words reopens in the mode the learner last used.
 - A chunk landing on the strip plays its take, or the bank's own one-chunk phrase, or the OS voice.
 - Hold a chunk to record that chunk. Hold the strip to record what it says.
 - The strip keeps what the learner built until they change it, across Explore and back.
+- The chunks the bank says next carry a border (`ChunkBank.leads`, `ChunkButton.lead`). See "Build with
+  longer phrases".
+
+### Build with longer phrases
+
+Build serves a phrase of any length with the same two columns. The layout rule, by bank shape:
+
+| Bank | Left column | Right column | Bordered |
+| --- | --- | --- | --- |
+| Two-chunk phrases (stages 1 and 2) | Every first chunk | Every second chunk | On an empty strip, the left column. After a chunk lands, the chunks that follow it in some phrase. |
+| Longer phrases (stages 3 and 4) | Every first chunk | Every middle and last chunk, each once | The same rule. After `I` lands in the kitchen pack, `want`, `am`, `see` and `have` carry the border. |
+| Any mix | The union | The union | The same rule. |
+
+- **The border is the only cue.** A bordered chunk is one the bank says next after the strip's last chunk
+  (`ChunkBank.next`). Nothing moves, nothing dims, and every chunk stays tappable. A finished phrase borders
+  nothing. The border is in the style's text color at `ChunkButton.LEAD_BORDER_PX`, because the quiet
+  preset's relief is near flat and a relief cue would vanish there.
+- **Two columns is the ceiling.** A phone at the 160 px floor holds two columns. A column per position would
+  also show one chunk several times, since a chunk's position varies across phrases.
+- **Positions stay put.** A column is in bank order and never reorders after a tap. A chunk that both starts
+  a phrase and follows one appears in both columns.
+- **The strip wraps and never reorders.** A tap on a strip chunk takes it off. Insertion is remove and
+  re-add. A drag would collide with the press rules.
+- **A strip is said as the bank says it.** A strip that spells a bank phrase plays its recording, whatever
+  its bars. Any other strip is said chunk by chunk.
+- **The pool is measured, not filtered.** `just layout-probe` loads every shipped scene into one bank on a
+  phone and prints the column sizes as `BUILD-LONG`. Words stays the whole bank. A filter or a category
+  would be a thing the learner has to understand. Scrolling the right column to the first bordered chunk
+  is #66.
+
+| Bank | Beginnings | Endings | Right column on a phone |
+| --- | --- | --- | --- |
+| `home_routines` alone | 11 | 13 | 2 screens |
+| `snack_time` alone | 10 | 28 | 5 screens |
+| Every shipped scene | 40 | 49 | 9 screens |
+
+- **Build and the layout editor share the composition model and nothing else.** An object is a union of
+  primitives with authored seams, a room is a layout of objects, and a sentence is a union of chunks with
+  authored seams. Whether a learner can move an object so the room says the relation is #65.
 
 ## Chunk colors
 

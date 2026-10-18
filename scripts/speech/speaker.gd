@@ -86,7 +86,16 @@ func _play_next() -> void:
 	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_tts_ended)
 	DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_CANCELED, _on_tts_ended)
 	_tts_utterance = _serial
-	DisplayServer.tts_speak(text, _tts_voice, 50, 1.0, 1.0, _tts_utterance, true)
+	DisplayServer.tts_speak(os_text(text), _tts_voice, 50, 1.0, 1.0, _tts_utterance, true)
+
+## `text` as the OS voice should get it. A single uppercase letter is lowercased, because iOS reads a lone
+## capital as a spelled letter, "capital I", and the chunk `I` reaches the voice alone when it lands on the
+## strip or when a sentence is said chunk by chunk.
+static func os_text(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	if trimmed.length() == 1:
+		return trimmed.to_lower()
+	return text
 
 ## A short quiet between two segments, then the next one. Nothing between the last and the end.
 func _after_gap() -> void:

@@ -4,7 +4,7 @@ extends UnitTest
 
 func test_every_shipped_pack_parses() -> void:
 	var packs: Array[Starter] = Starter.list_all()
-	assert_true(packs.size() >= 3, "blank, home_routines and bath_time ship")
+	assert_true(packs.size() >= 5, "blank, home_routines, bath_time, play_room and snack_time ship")
 	assert_false(Starter.find("blank").is_scene(), "blank is not a scene")
 	assert_true(Starter.find("bath_time").is_scene(), "bath_time is a scene")
 	for s: Starter in packs:
@@ -87,7 +87,8 @@ func test_home_routines_has_a_room_to_explore() -> void:
 	assert_true(s.rooms[0].spots.size() >= 6, "a handful of spots")
 
 ## Every scene row carries the stage of language it models (docs/profiles.md "Starter packs"). A stage 2
-## row recombines a beginning or an ending a row before it in the pack holds.
+## row recombines a beginning or an ending a stage 1 or 2 row before it in the pack holds. A stage 3 row is
+## one or two single-word chunks. A stage 4 row is three or more.
 func test_every_scene_row_is_staged() -> void:
 	for s: Starter in Starter.list_all():
 		if not s.is_scene():
@@ -98,13 +99,37 @@ func test_every_scene_row_is_staged() -> void:
 			var first: String = ChunkColors.key(g.chunks[0])
 			var last: String = ChunkColors.key(g.chunks[g.chunks.size() - 1])
 			var reused: bool = g.chunks.size() > 1 and (seen.has(first) or seen.has(last))
-			if g.stage == NlaStage.Stage.MITIGATION:
-				assert_true(reused, "%s '%s' is stage 2, so it reuses a beginning or an ending" % [s.id, g.id])
-			elif g.stage == NlaStage.Stage.ECHOLALIA:
-				assert_false(reused, "%s '%s' is stage 1, so nothing before it says its beginning or ending" % [s.id, g.id])
-			if g.chunks.size() > 1:
+			match g.stage:
+				NlaStage.Stage.ECHOLALIA:
+					assert_false(reused, "%s '%s' is stage 1, so nothing before it says its beginning or ending" % [s.id, g.id])
+				NlaStage.Stage.MITIGATION:
+					assert_true(reused, "%s '%s' is stage 2, so it reuses a beginning or an ending" % [s.id, g.id])
+				NlaStage.Stage.SINGLE_WORDS:
+					assert_true(g.chunks.size() <= 2 and _single_words(g), "%s '%s' is stage 3, so it is one or two single words" % [s.id, g.id])
+				NlaStage.Stage.EARLY_GRAMMAR:
+					assert_true(g.chunks.size() >= 3 and _single_words(g), "%s '%s' is stage 4, so it is a sentence of single words" % [s.id, g.id])
+			if g.chunks.size() > 1 and g.stage <= NlaStage.Stage.MITIGATION:
 				seen[first] = true
 				seen[last] = true
+
+func _single_words(g: Gestalt) -> bool:
+	for chunk: String in g.chunks:
+		if chunk.contains(" "):
+			return false
+	return true
+
+## The two later packs are one stage each, so a caregiver can read a pack's title as its stage.
+func test_the_later_packs_are_one_stage_each() -> void:
+	for pair: Array in [["play_room", NlaStage.Stage.SINGLE_WORDS], ["snack_time", NlaStage.Stage.EARLY_GRAMMAR]]:
+		var pack_id: String = pair[0]
+		var stage: NlaStage.Stage = pair[1]
+		var s: Starter = Starter.find(pack_id)
+		assert_not_null(s, "%s ships" % pack_id)
+		if s == null:
+			continue
+		assert_true(s.is_scene() and s.rooms.size() == 1, "%s is a scene with a room" % pack_id)
+		for g: Gestalt in s.gestalts:
+			assert_eq(g.stage, stage, "%s '%s' is stage %d" % [pack_id, g.id, stage])
 
 func test_home_routines_is_mitigable() -> void:
 	var s: Starter = Starter.find("home_routines")

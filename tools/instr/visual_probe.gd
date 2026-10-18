@@ -264,6 +264,7 @@ func _run() -> void:
 	_check(_profile_looks_complete, "profile look flow completed")
 	await _short_picker(main, picker)
 	await _stress(main, home, picker, overlay, profile)
+	await _long_bank(main, profile)
 	ProfileStore.repo.delete_profile(profile.id)
 	main.show_picker()
 	await _settle()
@@ -277,6 +278,57 @@ func _run() -> void:
 	ProfileStore.repo = previous_repo
 	print("VISUAL-PROBE %s (%d failures)" % ["PASS" if _failures.is_empty() else "FAIL", _failures.size()])
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+## Build with every shipped scene in one bank, the stage 4 pack first, on a phone: every chunk honors the
+## floor and fits, the border follows the strip, and the pool size is printed for docs/ui.md "Build with
+## longer phrases".
+func _long_bank(main: Main, profile: Profile) -> void:
+	_label = "build-long"
+	get_window().size = Vector2i(390, 844)
+	var long_profile: Profile = ProfileStore.create_profile("Long bank", Starter.find("snack_time"), "calm")
+	for pack_id: String in ["play_room", "home_routines", "bath_time"]:
+		_check(Starter.find(pack_id).add_to(long_profile), "%s joins the bank" % pack_id)
+	ProfileStore.save_profile(long_profile)
+	main.open_profile(long_profile.id)
+	await _settle()
+	var home: ChildHome = main.get_node("%ChildHome") as ChildHome
+	var screen: Rect2 = home.get_global_rect()
+	home.show_words()
+	home.show_build()
+	await _settle()
+	var build: BuildView = home.build_view()
+	build.clear()
+	await _settle()
+	var beginnings: Array[ChunkButton] = build.beginning_buttons()
+	var endings: Array[ChunkButton] = build.ending_buttons()
+	for button: ChunkButton in beginnings + endings:
+		_check(button.size.y >= Style.current.tile_min_size, "long bank chunk meets touch floor")
+		_check(button.get_global_rect().end.x <= screen.end.x + 1.0, "long bank chunk fits horizontally")
+	var begins: Dictionary[String, bool] = {}
+	for button: ChunkButton in beginnings:
+		begins[ChunkColors.key(button.chunk)] = true
+		_check(button.lead, "every beginning leads an empty strip")
+	for button: ChunkButton in endings:
+		_check(button.lead == begins.has(ChunkColors.key(button.chunk)), "an ending leads an empty strip only when it also begins a phrase (%s)" % button.chunk)
+	var i_button: ChunkButton = null
+	for button: ChunkButton in beginnings:
+		if ChunkColors.key(button.chunk) == "i":
+			i_button = button
+	_check(i_button != null, "the stage 4 pack's 'I' begins")
+	if i_button != null:
+		i_button.pressed.emit()
+		await _settle()
+		var expected: PackedStringArray = ChunkBank.next(long_profile.gestalts, "I")
+		_check(build.lead_buttons().size() == expected.size() and expected.size() >= 3, "after 'I', what the bank says next is bordered (%d)" % expected.size())
+		_check(not i_button.lead, "and 'I' itself is not")
+		_shot("build-long")
+		build.clear()
+	var left: Control = build.get_node("%Beginnings") as Control
+	var right: Control = build.get_node("%Endings") as Control
+	print("BUILD-LONG %d beginnings (%.0f px), %d endings (%.0f px), %.0f px of column on screen" % [beginnings.size(), left.size.y, endings.size(), right.size.y, (build.get_node("Columns") as Control).size.y])
+	main.open_profile(profile.id)
+	await _settle()
+	ProfileStore.repo.delete_profile(long_profile.id)
 
 func _profile_deletion(main: Main, picker: ProfilePicker, target: Profile) -> void:
 	_label = "profile-deletion"

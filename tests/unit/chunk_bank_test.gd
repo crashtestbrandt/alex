@@ -18,6 +18,19 @@ func test_endings_are_later_chunks_once_each() -> void:
 	assert_eq(ChunkBank.endings(_bank()), PackedStringArray(["outside", "in the car", "a snack", "now"]), "later chunks, bank order, a repeat merged")
 	assert_true(ChunkBank.endings([] as Array[Gestalt]).is_empty(), "an empty bank has no endings")
 
+func test_next_is_what_follows_a_chunk_once_each() -> void:
+	assert_eq(ChunkBank.next(_bank(), "let's GO"), PackedStringArray(["outside", "in the car"]), "what follows, bank order, by key, a repeat merged")
+	assert_eq(ChunkBank.next(_bank(), "outside"), PackedStringArray(["now"]), "a middle chunk has a follower")
+	assert_true(ChunkBank.next(_bank(), "now").is_empty(), "a last chunk has none")
+	assert_true(ChunkBank.next(_bank(), "All done").is_empty(), "nor does a whole gestalt")
+	assert_true(ChunkBank.next(_bank(), "  ").is_empty(), "nor a blank")
+
+func test_leads_are_beginnings_then_followers() -> void:
+	assert_eq(ChunkBank.leads(_bank(), PackedStringArray()), ChunkBank.beginnings(_bank()), "an empty strip leads with every beginning")
+	assert_eq(ChunkBank.leads(_bank(), PackedStringArray(["Let's go"])), PackedStringArray(["outside", "in the car"]), "after a chunk, what follows it")
+	assert_eq(ChunkBank.leads(_bank(), PackedStringArray(["Let's go", "outside"])), PackedStringArray(["now"]), "only the last chunk decides")
+	assert_true(ChunkBank.leads(_bank(), PackedStringArray(["a snack"])).is_empty(), "a finished phrase leads nowhere")
+
 func test_a_whole_gestalt_is_a_beginning_with_no_ending() -> void:
 	var bank: Array[Gestalt] = [Gestalt.from_text("c", "All done")]
 	assert_eq(ChunkBank.beginnings(bank), PackedStringArray(["All done"]), "it begins")

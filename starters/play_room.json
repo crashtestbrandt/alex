@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "id": "play_room",
+  "title": "Playroom",
+  "description": "A playroom for single words and pairs: a ball, a star, a cup, a door, a lamp. Every object says two words, and every word is a chunk on its own. Replace the words with the ones your child says on their own.",
+  "gestalts": [
+    {
+      "id": "door_open",
+      "text": "Door | open",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "door_shut",
+      "text": "Door | shut",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "light_on",
+      "text": "Light | on",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "light_off",
+      "text": "Light | off",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "ball_up",
+      "text": "Ball | up",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "ball_down",
+      "text": "Ball | down",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "look_out",
+      "text": "Look | out",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "big_star",
+      "text": "Big | star",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "wow",
+      "text": "Wow",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "more_juice",
+      "text": "More | juice",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "all_done",
+      "text": "All | done",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "snack_time",
+      "text": "Snack | time",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "jump_up",
+      "text": "Jump | up",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "sit_down",
+      "text": "Sit | down",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "shoes_on",
+      "text": "Shoes | on",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "go_out",
+      "text": "Go | out",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "my_turn",
+      "text": "My | turn",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "big_ball",
+      "text": "Big | ball",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "up",
+      "text": "Up",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "down",
+      "text": "Down",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "more",
+      "text": "More",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "done",
+      "text": "Done",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "help",
+      "text": "Help",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "go",
+      "text": "Go",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "open",
+      "text": "Open",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "juice",
+      "text": "Juice",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "ball",
+      "text": "Ball",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "look",
+      "text": "Look",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "jump",
+      "text": "Jump",
+      "function": "request",
+      "stage": 3
+    }
+  ],
+  "rooms": [
+    {
+      "id": "play",
+      "title": "Playroom",
+      "camera": "views",
+      "spots": [
+        {
+          "id": "door",
+          "kind": "door",
+          "reaction": "open",
+          "wall": "left",
+          "x": 0.25,
+          "height": 0.0,
+          "size": 0.5,
+          "gestalt": "door_open",
+          "alt_gestalt": "door_shut"
+        },
+        {
+          "id": "window",
+          "kind": "window",
+          "reaction": "glow",
+          "wall": "back",
+          "x": 0.62,
+          "height": 0.4,
+          "size": 0.3,
+          "gestalt": "look_out"
+        },
+        {
+          "id": "star",
+          "kind": "star",
+          "reaction": "spin",
+          "wall": "back",
+          "x": 0.3,
+          "height": 0.65,
+          "size": 0.12,
+          "gestalt": "big_star",
+          "alt_gestalt": "wow"
+        },
+        {
+          "id": "light",
+          "kind": "light",
+          "reaction": "glow",
+          "x": 0.28,
+          "y": 0.15,
+          "size": 0.4,
+          "gestalt": "light_on",
+          "alt_gestalt": "light_off"
+        },
+        {
+          "id": "table",
+          "kind": "table",
+          "reaction": "wobble",
+          "x": 0.9,
+          "y": 0.2,
+          "size": 0.16,
+          "gestalt": "snack_time"
+        },
+        {
+          "id": "cup",
+          "kind": "cup",
+          "reaction": "wobble",
+          "x": 0.9,
+          "y": 0.2,
+          "height": 0.2215384615,
+          "size": 0.09,
+          "gestalt": "more_juice",
+          "alt_gestalt": "all_done"
+        },
+        {
+          "id": "rug",
+          "kind": "circle",
+          "reaction": "grow",
+          "x": 0.5,
+          "y": 0.62,
+          "size": 0.35,
+          "gestalt": "jump_up",
+          "alt_gestalt": "sit_down"
+        },
+        {
+          "id": "ball",
+          "kind": "ball",
+          "reaction": "bounce",
+          "x": 0.58,
+          "y": 0.72,
+          "size": 0.12,
+          "gestalt": "ball_up",
+          "alt_gestalt": "ball_down"
+        },
+        {
+          "id": "shoes",
+          "kind": "shoes",
+          "reaction": "bounce",
+          "x": 0.12,
+          "y": 0.6,
+          "size": 0.16,
+          "gestalt": "shoes_on",
+          "alt_gestalt": "go_out"
+        }
+      ]
+    }
+  ],
+  "boards": [
+    {
+      "id": "play",
+      "title": "Play",
+      "gestalts": [
+        "help",
+        "more",
+        "done",
+        "up",
+        "go",
+        "my_turn",
+        "big_ball"
+      ]
+    }
+  ]
+}

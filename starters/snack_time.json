@@ -1,0 +1,197 @@
+{
+  "schema": 1,
+  "id": "snack_time",
+  "title": "Snack time",
+  "description": "A kitchen for first sentences: a table, a cup, a door, a lamp, a window. Every phrase is a short sentence, one word to a chunk. Replace the words with the ones your child is putting together.",
+  "gestalts": [
+    {
+      "id": "i_want_juice",
+      "text": "I | want | juice",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "i_want_more",
+      "text": "I | want | more",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "i_want_more_juice",
+      "text": "I | want | more | juice",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "i_want_a_cracker",
+      "text": "I | want | a | cracker",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "i_am_all_done",
+      "text": "I | am | all | done",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "its_time_to_eat",
+      "text": "It's | time | to | eat",
+      "function": "routine",
+      "stage": 4
+    },
+    {
+      "id": "turn_on_the_light",
+      "text": "Turn | on | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "turn_off_the_light",
+      "text": "Turn | off | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "open_the_door",
+      "text": "Open | the | door",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "shut_the_door",
+      "text": "Shut | the | door",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "look_out_the_window",
+      "text": "Look | out | the | window",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "i_see_a_star",
+      "text": "I | see | a | star",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "throw_the_ball",
+      "text": "Throw | the | ball",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "can_i_have_more",
+      "text": "Can | I | have | more",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "help_me_please",
+      "text": "Help | me | please",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "the_cup_is_empty",
+      "text": "The | cup | is | empty",
+      "function": "comment",
+      "stage": 4
+    }
+  ],
+  "rooms": [
+    {
+      "id": "kitchen",
+      "title": "Kitchen",
+      "camera": "views",
+      "spots": [
+        {
+          "id": "door",
+          "kind": "door",
+          "reaction": "open",
+          "wall": "left",
+          "x": 0.25,
+          "height": 0.0,
+          "size": 0.5,
+          "gestalt": "open_the_door",
+          "alt_gestalt": "shut_the_door"
+        },
+        {
+          "id": "window",
+          "kind": "window",
+          "reaction": "glow",
+          "wall": "back",
+          "x": 0.62,
+          "height": 0.4,
+          "size": 0.3,
+          "gestalt": "look_out_the_window"
+        },
+        {
+          "id": "star",
+          "kind": "star",
+          "reaction": "spin",
+          "wall": "back",
+          "x": 0.3,
+          "height": 0.65,
+          "size": 0.12,
+          "gestalt": "i_see_a_star"
+        },
+        {
+          "id": "light",
+          "kind": "light",
+          "reaction": "glow",
+          "x": 0.28,
+          "y": 0.15,
+          "size": 0.4,
+          "gestalt": "turn_on_the_light",
+          "alt_gestalt": "turn_off_the_light"
+        },
+        {
+          "id": "table",
+          "kind": "table",
+          "reaction": "wobble",
+          "x": 0.9,
+          "y": 0.2,
+          "size": 0.16,
+          "gestalt": "its_time_to_eat"
+        },
+        {
+          "id": "cup",
+          "kind": "cup",
+          "reaction": "wobble",
+          "x": 0.9,
+          "y": 0.2,
+          "height": 0.2215384615,
+          "size": 0.09,
+          "gestalt": "i_want_juice",
+          "alt_gestalt": "the_cup_is_empty"
+        },
+        {
+          "id": "ball",
+          "kind": "ball",
+          "reaction": "bounce",
+          "x": 0.58,
+          "y": 0.72,
+          "size": 0.12,
+          "gestalt": "throw_the_ball"
+        }
+      ]
+    }
+  ],
+  "boards": [
+    {
+      "id": "snack",
+      "title": "Snack",
+      "gestalts": [
+        "i_want_more",
+        "i_want_more_juice",
+        "i_want_a_cracker",
+        "can_i_have_more",
+        "help_me_please",
+        "i_am_all_done"
+      ]
+    }
+  ]
+}
