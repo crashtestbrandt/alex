@@ -65,6 +65,10 @@ room-probe:
 caregiver-probe:
     "{{godot}}" {{headless}} --path . tools/instr/caregiver_probe.tscn
 
+# Room chooser, per-room state, and return from Words at phone and tablet sizes.
+room-switch-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/room_switch_probe.tscn
+
 # Tap visibility in every shipped room, from Front and Top in every style.
 content-probe:
     "{{godot}}" {{headless}} --path . tools/instr/content_probe.tscn

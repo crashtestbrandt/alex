@@ -87,7 +87,7 @@ signing key. A device can move between the two without losing its recordings.
   "Get Alex" section lists the steps. The Play API cannot manage testers on this kind of track, so the group
   was attached once in Play Console.
 - The listing is `store/play/listing.json` and `description.txt`. `just store-graphics` renders its icon,
-  feature graphic and five 1920x1080 screenshots into `store/play/`.
+  feature graphic and six 1920x1080 screenshots into `store/play/`, including the room chooser.
 - Every upload sets the listing, the icon, the feature graphic and the phone and tablet screenshots. They go in
   an edit of their own after the bundle, so a bad listing never holds a build back from testers.
 - The API has no Chromebook image type, so that set was uploaded once in Play Console.

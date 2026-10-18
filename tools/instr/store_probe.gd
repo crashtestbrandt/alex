@@ -67,6 +67,10 @@ func _screenshots() -> Error:
 	var repo: ProfileRepo = ProfileRepo.new("user://store_probe_%s" % OS.get_process_id())
 	ProfileStore.repo = repo
 	var home_profile: Profile = repo.create_profile("Sam", Starter.find("home_routines"), "bold")
+	for pack: Starter in Starter.list_all():
+		if pack.is_scene() and not home_profile.has_scene(pack.id):
+			pack.add_to(home_profile)
+	repo.save_profile(home_profile)
 	var bath_profile: Profile = repo.create_profile("Sam", Starter.find("bath_time"), "calm")
 	var err: Error = OK
 	for i: int in _SHOT_DIRS.size():
@@ -142,6 +146,11 @@ func _home_shots(main: Main, p: Profile) -> Error:
 	await get_tree().create_timer(0.3).timeout
 	err = _shoot("screenshot-4-record.png")
 	overlay.close()
+	if err != OK:
+		return err
+	home.show_room_chooser()
+	await get_tree().create_timer(0.5).timeout
+	err = _shoot("screenshot-6-rooms.png")
 	return err
 
 func _bath_shot(main: Main, p: Profile) -> Error:

@@ -62,6 +62,8 @@
 ## What the learner sees
 
 - Explore is a room. Touching an object plays it and says its phrase.
+- With more than one room, tap the four-room icon and choose a room picture. Back keeps the current room.
+- Returning from Words brings you back to the room you chose. Rooms keep their doors, lights and camera positions until you reopen the profile.
 - Words holds every phrase in the profile.
 - Words has two ways to play. One is a column of phrases. The other builds a phrase from its parts.
 - The view buttons look at the room from the front or from above. A drag moves the room and a pinch zooms.

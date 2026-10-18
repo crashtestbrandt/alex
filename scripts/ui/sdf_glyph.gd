@@ -18,6 +18,8 @@ enum Figure {
 	MICROPHONE = 5,
 	PALETTE = 6,
 	BUILD = 7,
+	ROOMS = 8,
+	BACK = 9,
 }
 
 @export var figure: Figure = Figure.FRONT:

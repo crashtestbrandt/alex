@@ -59,7 +59,8 @@ comments do (README "Research", items 1 to 3). The intent above adds the rest. T
   look around. Every view is reversible: a tap on its button puts it back, and a long idle returns to
   Front. A room can be set to no view buttons at all. Views are the first step in scene complexity a
   caregiver can grow.
-- **Explore and Words.** The learner's strip has two pills. Explore is the room. Words is the whole bank in
+- **Explore and Words.** The learner's strip has two pills. Explore is the current room. A visual chooser
+  offers the profile's other rooms, preserving their state during the session. Words is the whole bank in
   two modes: Palette, large tiles that say a phrase, and Build, a strip the learner fills by tapping chunk
   beginnings and endings. Build is chunk-first and never word-first: the units are the seams the caregiver
   authored, not words or symbols (docs/ui.md "Words"). The chunks the bank says next carry a border, and

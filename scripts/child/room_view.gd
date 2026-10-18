@@ -28,6 +28,28 @@ const CAPTION_MAX_PX: float = 504.0
 
 ## The idle period in use. A probe shortens it.
 var idle_seconds: float = IDLE_RESET_SECONDS
+## A chooser preview renders once, with no input, controls, speech or idle motion.
+var preview: bool = false
+var navigation_size: Vector2 = Vector2.ZERO:
+	set(value):
+		if navigation_size == value:
+			return
+		navigation_size = value
+		if is_node_ready():
+			_layout()
+
+## Session-only state. No recordings, transient gestures or scene nodes are retained.
+class State extends RefCounted:
+	var on: Dictionary[String, bool] = {}
+	var spoken: Dictionary[String, Gestalt] = {}
+	var view: CameraFraming.View = CameraFraming.View.FRONT
+	var azimuth: float = 0.0
+	var elevation: float = CameraFraming.FRONT_ELEVATION_DEG
+	var zoom: float = 1.0
+	var pan: Vector2 = Vector2.ZERO
+	var yaw: float = 0.0
+	var pitch: float = 0.0
+	var tilt_zoom: float = 1.0
 ## How much of the top of the view floating controls cover. The home sets it from its top bar; the camera
 ## frames the room into the band below it and above the view widget.
 var safe_top_px: float = 0.0:
@@ -93,9 +115,12 @@ var _idle: float = 0.0
 @onready var _widget: ViewWidget = %ViewWidget
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_IGNORE if preview else Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
-	add_to_group(CaregiverGate.HOLD_GROUP)
+	if not preview:
+		add_to_group(CaregiverGate.HOLD_GROUP)
+	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if preview else SubViewport.UPDATE_WHEN_VISIBLE
+	_viewport.gui_disable_input = true
 	_build_shell()
 	# From the front and high, so the raised side walls throw their shadow onto the apron, not the back wall.
 	_sun.look_at_from_position(Vector3(0.8, 6.0, 5.0), Vector3.ZERO, Vector3.UP)
@@ -131,9 +156,48 @@ func show_room(p: Profile, r: Room) -> void:
 	_build_shell()
 	_clear_captions()
 	_widget.set_mode(r.camera)
+	if preview:
+		_widget.hide()
 	_layout()
 	_cancel_press()
 	set_view(CameraFraming.View.FRONT, false)
+	if preview:
+		_elevation = 35.0
+		_layout()
+
+## Capture logical toggles and the current camera, without keeping extra live room renderers.
+func capture_state() -> State:
+	var state: State = State.new()
+	for id: String in _bodies:
+		state.on[id] = _bodies[id].is_on
+	state.spoken = _spoken_gestalts.duplicate()
+	state.view = _view
+	state.azimuth = _azimuth
+	state.elevation = _elevation
+	state.zoom = _zoom
+	state.pan = _pan
+	state.yaw = _yaw
+	state.pitch = _pitch
+	state.tilt_zoom = _tilt_zoom
+	return state
+
+func restore_state(state: State) -> void:
+	_stop_view_tween()
+	for id: String in state.on:
+		if _bodies.has(id):
+			_bodies[id].restore_state(state.on[id])
+	_spoken_gestalts = state.spoken.duplicate()
+	_view = state.view
+	_azimuth = state.azimuth
+	_elevation = state.elevation
+	_zoom = state.zoom
+	_pan = state.pan
+	_yaw = state.yaw
+	_pitch = state.pitch
+	_tilt_zoom = state.tilt_zoom
+	_widget.show_view(_view)
+	_idle = 0.0
+	_layout()
 
 ## The gestalt a spot says right now, at the scene's stage (`Profile.says`): its alternate when toggled on
 ## and one exists.
@@ -180,8 +244,9 @@ func safe_rect() -> Rect2:
 	var safe: Rect2 = device_safe_rect()
 	var top: float = maxf(safe.position.y, safe_top_px)
 	var bottom: float = safe.end.y
-	if _widget.visible:
-		bottom -= _widget.size.y + 2.0 * WIDGET_MARGIN
+	var controls_height: float = maxf(_widget.size.y if _widget.visible else 0.0, navigation_size.y)
+	if controls_height > 0.0:
+		bottom -= controls_height + 2.0 * WIDGET_MARGIN
 	return Rect2(safe.position.x, top, safe.size.x, maxf(bottom - top, 1.0))
 
 ## Where a body's center falls on this control.
@@ -370,6 +435,8 @@ func _clear_captions() -> void:
 ## are tracked beside them only to see a second finger, which turns the gesture into a pinch. A trackpad's
 ## magnify and pan gestures and a scroll wheel do the same on a desktop.
 func _gui_input(event: InputEvent) -> void:
+	if preview:
+		return
 	_idle = 0.0
 	if event is InputEventScreenTouch:
 		var touch: InputEventScreenTouch = event
@@ -498,7 +565,7 @@ func _cancel_press() -> void:
 	_press_body = null
 	_dragging = false
 	_idle = 0.0
-	set_process(_room != null and is_visible_in_tree())
+	set_process(not preview and _room != null and is_visible_in_tree())
 
 ## End a press without a tap or a hold, for the caregiver chord ([CaregiverGate]).
 func cancel_hold() -> void:
@@ -657,13 +724,15 @@ func _target() -> Vector3:
 ## frames the room into the band the floating controls leave.
 func _layout() -> void:
 	var safe: Rect2 = device_safe_rect()
-	_widget.fit_width(maxf(safe.size.x - WIDGET_MARGIN * 2.0, 1.0))
+	_widget.fit_width(maxf(safe.size.x - WIDGET_MARGIN * 2.0 - navigation_size.x - (WIDGET_MARGIN if navigation_size.x > 0.0 else 0.0), 1.0))
 	_widget.reset_size()
 	_container.position = Vector2.ZERO
 	_container.size = size
 	_widget.position = safe.end - _widget.size - Vector2.ONE * WIDGET_MARGIN
 	_extent = _extent_for(_azimuth, _elevation)
 	_apply_camera()
+	if preview:
+		_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 # --- the room box -----------------------------------------------------------------------------------------
 
@@ -762,6 +831,9 @@ func _make_environment(preset: StylePreset) -> Environment:
 	return env
 
 func _on_style_changed(preset: StylePreset) -> void:
+	# The chooser can remove previews during this same style signal, before their queued deletion.
+	if not is_inside_tree():
+		return
 	_env.environment = _make_environment(preset)
 	_build_shell()
 	_apply_camera()
