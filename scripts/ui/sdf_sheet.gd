@@ -10,7 +10,7 @@ var _scroll_revision: int = 0
 
 func _ready() -> void:
 	super()
-	scroll_started.connect(_dismiss_text_entry)
+	scroll_started.connect(dismiss_text_entry)
 	_panel = get_child(0) as Control
 	_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	_content = Control.new()
@@ -61,14 +61,15 @@ func _input(event: InputEvent) -> void:
 		return
 	var local: Vector2 = focus.get_global_transform_with_canvas().affine_inverse() * point
 	if not Rect2(Vector2.ZERO, focus.size).has_point(local):
-		_dismiss_text_entry()
+		dismiss_text_entry()
 
-func _dismiss_text_entry() -> void:
+func dismiss_text_entry() -> void:
 	var focus: Control = get_viewport().gui_get_focus_owner()
 	if (focus is LineEdit or focus is TextEdit) and is_ancestor_of(focus):
 		focus.release_focus()
-		if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
-			DisplayServer.virtual_keyboard_hide()
+	# Focus may already belong to Save, or have been cleared by hiding the field.
+	if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+		DisplayServer.virtual_keyboard_hide()
 
 ## iOS overlays its keyboard without resizing the window. Keep the sheet's scrolling area above it.
 func _process(delta: float) -> void:

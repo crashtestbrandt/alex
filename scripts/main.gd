@@ -97,6 +97,7 @@ func open_profile(profile_id: String) -> void:
 			updated = true
 	if updated and ProfileStore.save_profile(p) != OK:
 		printerr("Main: could not save refreshed rooms for profile %s" % profile_id)
+	_picker.dismiss_text_entry()
 	App.set_active_profile(p)
 	Style.apply(StylePreset.load_by_id(p.style_id))
 	_home.show_profile(p)
