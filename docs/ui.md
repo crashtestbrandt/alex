@@ -5,6 +5,30 @@ is `shaders/ui/shape.gdshader`, every icon is `shaders/ui/glyph.gdshader`, and t
 rendered as a multichannel distance field (`gui/theme/default_font_multichannel_signed_distance_field`). No
 StyleBoxFlat is drawn anywhere a user looks, and no image is loaded.
 
+## Mobile typography
+
+- `Typography` defines logical point/dp sizes. `Style` converts them to canvas units before rendering.
+- iOS uses the display scale. Android uses `densityDpi / 160`. Desktop windows use one logical unit per pixel.
+- The layout canvas has a minimum short side of 640 units after density conversion. Rotation preserves the type size.
+- The default body is 17 points. This follows [Apple’s iOS default](https://developer.apple.com/design/human-interface-guidelines/accessibility) and the hierarchy of [Material 3 typography](https://developer.android.com/develop/ui/compose/designsystems/material3).
+
+| Role | Logical size |
+| --- | --- |
+| Page title | 28 |
+| Section heading | 22 |
+| Body and controls | 17 |
+| Supporting text | 15 |
+| Build stamp | 12 |
+| Learner phrases | 22 |
+| Spoken caption and Build strip | 24 |
+
+- Preset font multipliers remain: Calm 1.0, Bold 1.15, Quiet 1.1.
+- Caregiver **Text size** offers 100%, 125%, 150% and 200%. Selection applies immediately and persists in `user://accessibility.cfg` for every profile on the device.
+- This is an app text-size preference. It does not yet follow iOS Dynamic Type or Android’s system font-size setting.
+- Text enlargement updates the theme, phrase pills and open Markdown pages without resetting learner state.
+- Phrase pills and forms wrap and grow. Markdown headings never fall below body size; line spacing and emphasis scale with text.
+- `just typography-probe` checks all presets at 100% and 200% on a logical phone, a 3× phone in both orientations and a 2× tablet. It covers learner modes, captions, room selection, recording, profile forms and all Markdown pages.
+
 ## Why a field
 
 A field is evaluated per pixel, so an edge covers exactly its share of every pixel it crosses at every size and
@@ -105,7 +129,7 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 | --- | --- | --- | --- |
 | `home_routines` alone | 28 | 32 | 6 screens |
 | `snack_time` alone | 26 | 35 | 6 screens |
-| Every shipped scene | 55 | 65 | 12 screens |
+| Every shipped scene | 65 | 77 | 14 screens |
 
 - **Build and the layout editor share the composition model and nothing else.** An object is a union of
   primitives with authored seams, a room is a layout of objects, and a sentence is a union of chunks with
@@ -264,7 +288,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 - Table headers remain visible as bold cells. Escaped bars and bars inside inline code stay in their cells.
 - Literal BBCode stays literal. Images and HTML are not evaluated. HTTP(S) links open only after an adult taps them.
 - The renderer covers the shipped pages' Markdown subset; it is not a full CommonMark implementation.
-- Godot's synthetic bold distorts the bundled MSDF font. Rich pages use the normal font with a one-pixel
-  text-colored outline for emphasis.
+- Godot's synthetic bold distorts the bundled MSDF font. Rich pages use the normal font with a
+  text-colored outline that scales with the text for emphasis.
 
 ![The glossary with a formatted table on a phone](img/glossary.png)

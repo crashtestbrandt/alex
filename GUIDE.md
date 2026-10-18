@@ -27,6 +27,12 @@
 - To delete a profile, choose Edit and hold the delete button for three seconds. Its recordings go with it,
   and there is no undo.
 
+## Text size
+
+- Choose Text size in caregiver mode to make text larger, up to 200%.
+- The change applies immediately to every profile on this device, including learner phrases and this guide.
+- This setting is separate from the device’s text-size setting.
+
 ## Scenes
 
 - A scene is a room to explore and the phrases that go with it.

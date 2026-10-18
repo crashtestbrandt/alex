@@ -31,6 +31,8 @@ const _STAGES: Array[NlaStage.Stage] = [
 @onready var _new_button: SdfButton = %NewProfileButton
 @onready var _starter_row: BoxContainer = %StarterRow
 @onready var _style_row: BoxContainer = %StyleRow
+@onready var _text_size_row: BoxContainer = %TextSizeRow
+@onready var _text_size_bar: PillBar = %TextSizeBar
 @onready var _actions: Control = %Actions
 @onready var _sheet: SdfSheet = %Center
 @onready var _back_button: SdfButton = %BackButton
@@ -53,6 +55,7 @@ const _STAGES: Array[NlaStage.Stage] = [
 
 var _scene_entries: Array[Node] = []
 var _starters: Array[Starter] = []
+var _page_markdown: String = ""
 var _style_ids: PackedStringArray = PackedStringArray()
 var _editing_id: String = ""
 var _previous_style: StylePreset = null
@@ -71,10 +74,13 @@ func _ready() -> void:
 	_fill_starters()
 	_fill_styles()
 	_fill_stages()
+	_fill_text_sizes()
 	resized.connect(_layout_profiles)
 	_starter_row.resized.connect(_layout_choices)
 	_style_row.resized.connect(_layout_choices)
 	_stage_row.resized.connect(_layout_choices)
+	_text_size_row.resized.connect(_layout_choices)
+	Style.fonts_changed.connect(_on_fonts_changed)
 	_scene_rows.resized.connect(_layout_choices)
 	Style.changed.connect(func(_preset: StylePreset) -> void: _layout_choices.call_deferred())
 	refresh()
@@ -84,7 +90,7 @@ func _layout_profiles() -> void:
 	_layout_choices.call_deferred()
 
 func _layout_choices() -> void:
-	for row: BoxContainer in [_starter_row, _style_row, _stage_row]:
+	for row: BoxContainer in [_starter_row, _style_row, _stage_row, _text_size_row]:
 		_layout_choice_row(row)
 	# A scene row puts its title over its buttons when the two do not fit side by side, and its stage bar
 	# under its label the same way the profile's does.
@@ -180,6 +186,27 @@ func _on_starter_pressed(index: int) -> void:
 	_stage_section.visible = _mode == Mode.CREATE and _starter_is_scene()
 	_layout_choices.call_deferred()
 
+func _fill_text_sizes() -> void:
+	for scale_value: float in Typography.TEXT_SCALES:
+		var button: SdfButton = SdfButton.new()
+		button.text = "%d%%" % roundi(scale_value * 100.0)
+		button.pressed.connect(_on_text_size.bind(scale_value))
+		_text_size_bar.add_item(button)
+	_on_fonts_changed()
+
+func _on_text_size(scale_value: float) -> void:
+	if Style.set_text_scale(scale_value, true) != OK:
+		_status.text = "Could not save the text size. Try again."
+		_status.show()
+	_on_fonts_changed()
+
+func _on_fonts_changed() -> void:
+	_text_size_bar.set_active(Typography.TEXT_SCALES.find(Style.text_scale))
+	_layout_choices.call_deferred()
+	for child: Node in _page.get_children():
+		if child is RichTextLabel:
+			_style_page(child as RichTextLabel)
+
 func _fill_styles() -> void:
 	_style_bar.clear()
 	_style_ids = StylePreset.list_ids()
@@ -243,6 +270,7 @@ func _show_mode(mode: Mode) -> void:
 	_notes_section.visible = mode == Mode.LOOK
 	var reading: bool = mode == Mode.POLICY or mode == Mode.GUIDE or mode == Mode.GLOSSARY
 	_page.visible = reading
+	_text_size_row.visible = not reading
 	_guide_button.visible = mode == Mode.PICK or mode == Mode.CREATE
 	_glossary_button.visible = mode == Mode.PICK or mode == Mode.CREATE
 	_privacy_button.visible = mode == Mode.PICK or mode == Mode.CREATE
@@ -469,23 +497,26 @@ func _show_page(path: String, mode: Mode) -> void:
 	label.scroll_active = false
 	label.selection_enabled = false
 	label.mouse_filter = Control.MOUSE_FILTER_PASS
-	label.add_theme_color_override("default_color", Style.current.text)
-	label.add_theme_font_size_override("normal_font_size", Style.font_px(22))
-	label.add_theme_font_size_override("bold_font_size", Style.font_px(22))
-	label.add_theme_font_size_override("italics_font_size", Style.font_px(22))
-	label.add_theme_font_size_override("mono_font_size", Style.font_px(20))
-	label.add_theme_constant_override("line_separation", 5)
-	var markdown: String = FileAccess.get_file_as_string(path)
-	# Godot's synthetic bold font distorts MSDF glyphs. A one-pixel outline keeps the bundled
-	# font crisp at every canvas scale and gives Markdown emphasis a visible weight change.
-	label.add_theme_font_override("bold_font", label.get_theme_font("normal_font"))
-	var rich: String = PageMarkdown.render(markdown, Style.font_px(28))
-	var bold: String = "[b][outline_size=1][outline_color=#%s]" % Style.current.text.to_html(false)
-	label.text = rich.replace("[b]", bold).replace("[/b]", "[/outline_color][/outline_size][/b]")
+	_page_markdown = FileAccess.get_file_as_string(path)
+	_style_page(label)
 	label.meta_clicked.connect(_on_page_link)
 	_page.add_child(label)
 	# Focus stays put: the sheet follows focus, and the page reads from the top.
 	_show_mode(mode)
+
+func _style_page(label: RichTextLabel) -> void:
+	label.add_theme_color_override("default_color", Style.current.text)
+	for role: String in ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]:
+		label.add_theme_font_size_override(role, Style.font_px(Typography.BODY))
+	# The bundled font's natural line height plus this spacing is about 1.5 times the body size.
+	label.add_theme_constant_override("line_separation", ceili(Style.font_px(Typography.BODY) * 0.2))
+	label.add_theme_font_override("bold_font", label.get_theme_font("normal_font"))
+	label.add_theme_font_override("bold_italics_font", label.get_theme_font("italics_font"))
+	var rich: String = PageMarkdown.render(_page_markdown, Style.font_px(Typography.SECTION), Style.font_px(Typography.BODY))
+	# Synthetic bold distorts MSDF glyphs; a scaled outline preserves crisp emphasis.
+	var outline: int = maxi(1, roundi(Style.units_per_point * Style.text_scale))
+	var bold: String = "[b][outline_size=%d][outline_color=#%s]" % [outline, Style.current.text.to_html(false)]
+	label.text = rich.replace("[b]", bold).replace("[/b]", "[/outline_color][/outline_size][/b]")
 
 ## Links only open after an adult taps one in a caregiver page.
 func _on_page_link(meta: Variant) -> void:

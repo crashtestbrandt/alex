@@ -31,3 +31,8 @@ func test_all_shipped_pages_render_structure() -> void:
 		var rendered: String = PageMarkdown.render(FileAccess.get_file_as_string(path))
 		assert_false(rendered.is_empty(), "%s renders" % path)
 		assert_true(rendered.contains("[table=") or rendered.contains("[ul]"), "%s preserves structure" % path)
+
+func test_heading_sizes_follow_accessible_body_size() -> void:
+	var rendered: String = PageMarkdown.render("## Section\n\n###### Small heading", 72, 56)
+	assert_true(rendered.contains("[font_size=72]"), "section uses the supplied logical size")
+	assert_true(rendered.contains("[font_size=56]"), "deep headings never shrink below body text")

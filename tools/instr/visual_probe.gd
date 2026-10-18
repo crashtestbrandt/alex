@@ -319,7 +319,7 @@ func _long_bank(main: Main, profile: Profile) -> void:
 	get_window().size = Vector2i(390, 844)
 	var long_profile: Profile = ProfileStore.create_profile("Long bank", Starter.find("snack_time"), "calm")
 	for pack_id: String in ["play_room", "home_routines", "bath_time"]:
-		_check(Starter.find(pack_id).add_to(long_profile), "%s joins the bank" % pack_id)
+		_check(long_profile.has_scene(pack_id), "%s is in the bank" % pack_id)
 	ProfileStore.save_profile(long_profile)
 	main.open_profile(long_profile.id)
 	await _settle()
@@ -555,17 +555,17 @@ func _profile_stage_notes(main: Main, picker: ProfilePicker, profile: Profile) -
 	main.open_profile(profile.id)
 	await _settle()
 
-## The line under the one held scene's stage bar on Edit.
+## The Home scene stage line on Edit.
 func _scene_stage_line(picker: ProfilePicker) -> String:
 	for entry: VBoxContainer in picker.scene_rows():
-		if entry.get_child_count() > 2:
+		if (entry.get_child(0).get_child(0) as Label).text == "Home" and entry.get_child_count() > 2:
 			return (entry.get_child(2) as Label).text
 	return ""
 
-## The stage bar of the one held scene on Edit, or null.
+## The Home scene stage bar on Edit, or null.
 func _scene_pins(picker: ProfilePicker) -> PillBar:
 	for entry: VBoxContainer in picker.scene_rows():
-		if entry.get_child(1) is BoxContainer:
+		if (entry.get_child(0).get_child(0) as Label).text == "Home" and entry.get_child(1) is BoxContainer:
 			return (entry.get_child(1) as BoxContainer).get_child(1) as PillBar
 	return null
 

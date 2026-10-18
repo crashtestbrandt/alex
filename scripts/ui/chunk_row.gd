@@ -26,6 +26,7 @@ var floating: bool = false:
 
 var _pills: Array[Pill] = []
 var _tween: Tween = null
+var _font_base: int = Typography.PHRASE
 
 func _init() -> void:
 	alignment = FlowContainer.ALIGNMENT_CENTER
@@ -33,8 +34,16 @@ func _init() -> void:
 	add_theme_constant_override("h_separation", GAP_PX)
 	add_theme_constant_override("v_separation", GAP_PX)
 
+func _ready() -> void:
+	Style.fonts_changed.connect(_refresh_fonts)
+
+func _refresh_fonts() -> void:
+	for pill: Pill in _pills:
+		pill.set_font_size(Style.font_px(_font_base))
+
 ## Replace the pills with one per chunk, lettered at `font_base` scaled by the style.
 func set_chunks(chunks: PackedStringArray, font_base: int) -> void:
+	_font_base = font_base
 	stop()
 	for pill: Pill in _pills:
 		remove_child(pill)
@@ -103,7 +112,8 @@ func stop() -> void:
 ## resets the scale of the children it sorts, so the scaled body sits one level down.
 class Pill extends Control:
 	var text: String = ""
-	var _font_px: int = 24
+	var _font_px: int = Typography.PHRASE
+	var _width: float = INF
 	var _body: MarginContainer = MarginContainer.new()
 	var _shape: SdfShape = SdfShape.new()
 	var _label: Label = Label.new()
@@ -163,7 +173,13 @@ class Pill extends Control:
 	func relief() -> float:
 		return _shape.relief
 
+	func set_font_size(font_px: int) -> void:
+		_font_px = font_px
+		_label.add_theme_font_size_override("font_size", font_px)
+		fit_width(_width)
+
 	func fit_width(width: float) -> void:
+		_width = width
 		var font: Font = _label.get_theme_font("font")
 		var text_width: float = ceilf(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_px).x) + 2.0
 		_label.custom_minimum_size.x = minf(text_width, maxf(width - ChunkRow.PAD_X_PX * 2.0, 1.0))

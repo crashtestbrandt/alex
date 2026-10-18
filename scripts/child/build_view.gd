@@ -13,7 +13,7 @@ signal strip_tapped(chunks: PackedStringArray)
 signal chunk_held(chunk: String)
 signal strip_held(chunks: PackedStringArray)
 
-const FONT_BASE: int = 28
+const FONT_BASE: int = Typography.CAPTION
 const MARGIN_PX: float = 20.0
 
 @onready var _strip: HoldButton = %Strip
