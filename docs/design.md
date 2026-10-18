@@ -91,6 +91,29 @@ text and the chunk list.
 The same chunk list feeds the remix board later. Authoring the seam once, in the text, keeps every feature
 agreeing on where the seams are.
 
+## Progression
+
+A profile grows by editing its phrases in place. The caregiver re-chunks a phrase when the learner is ready
+to break it. These are decisions, and every progression issue cites them.
+
+- **A phrase's identity is its spoken text**, bars stripped, lowercased (`ChunkColors.key`). One spoken
+  phrase is one gestalt row, one whole-phrase recording and one Palette tile.
+- **The bars on a row are the stage it models today.** Moving a phrase along is editing its bars:
+  `Let's go outside`, then `Let's go | outside`, then `Let's | go | outside`. Nothing is duplicated and
+  nothing is linked.
+- **A bar-only edit keeps the row's id and its whole-phrase recording.** A chunk take stays with every chunk
+  whose text is unchanged, since it is keyed by that text.
+- **An edit that changes the spoken words clears `recording`** and keeps the old take as the previous take.
+- **A pack is for new scenes and new phrases.** A pack that re-chunks phrases the bank already says adds
+  nothing (`Starter.add_to`, docs/profiles.md "Adding a scene").
+- **A mixed-stage bank comes from variety across phrases**: `Let's go | outside` beside
+  `Let's | go | in the car`. One phrase has one chunking at a time.
+- **The stage on a profile and on a gestalt shapes adult screens only.** It orders and labels. It never
+  hides Explore, Palette or Build, and it never advances on its own. The app cannot hear the child, so it has
+  no basis to change a stage.
+- **Sentence-forming is in scope.** Build is the sentence-former at chunk granularity. Later stages mean
+  smaller chunks and longer strips, authored by the caregiver.
+
 ## Reference: the Natural Language Acquisition stages
 
 The NLA framework (Blanc, after Peters and Prizant) describes how echolalia becomes self-generated language.
