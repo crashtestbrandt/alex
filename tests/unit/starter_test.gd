@@ -86,6 +86,26 @@ func test_home_routines_has_a_room_to_explore() -> void:
 	assert_eq(s.rooms[0].title, "Explore", "the room is titled for the learner's Explore pill")
 	assert_true(s.rooms[0].spots.size() >= 6, "a handful of spots")
 
+## Every scene row carries the stage of language it models (docs/profiles.md "Starter packs"). A stage 2
+## row recombines a beginning or an ending a row before it in the pack holds.
+func test_every_scene_row_is_staged() -> void:
+	for s: Starter in Starter.list_all():
+		if not s.is_scene():
+			continue
+		var seen: Dictionary[String, bool] = {}
+		for g: Gestalt in s.gestalts:
+			assert_true(g.stage != NlaStage.Stage.UNKNOWN, "%s '%s' carries a stage" % [s.id, g.id])
+			var first: String = ChunkColors.key(g.chunks[0])
+			var last: String = ChunkColors.key(g.chunks[g.chunks.size() - 1])
+			var reused: bool = g.chunks.size() > 1 and (seen.has(first) or seen.has(last))
+			if g.stage == NlaStage.Stage.MITIGATION:
+				assert_true(reused, "%s '%s' is stage 2, so it reuses a beginning or an ending" % [s.id, g.id])
+			elif g.stage == NlaStage.Stage.ECHOLALIA:
+				assert_false(reused, "%s '%s' is stage 1, so nothing before it says its beginning or ending" % [s.id, g.id])
+			if g.chunks.size() > 1:
+				seen[first] = true
+				seen[last] = true
+
 func test_home_routines_is_mitigable() -> void:
 	var s: Starter = Starter.find("home_routines")
 	assert_not_null(s, "present")
