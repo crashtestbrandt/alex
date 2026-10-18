@@ -135,7 +135,7 @@ three seconds (`CaregiverChord`):
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
-- Caregiver guide opens `GUIDE.md` on a tap. The privacy policy opens `PRIVACY.md` on a hold (`PageText`).
+- Caregiver guide opens `GUIDE.md` on a tap. Privacy policy opens `PRIVACY.md` on a tap (`PageText`).
 - `GUIDE.md` is the one place caregiver instructions live. The README lists the first steps and points to it. A change to how a caregiver does something updates `GUIDE.md` in the same PR.
 - Nothing on the picker is drawn by a theme style box.
 

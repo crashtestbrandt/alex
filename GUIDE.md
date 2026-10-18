@@ -65,4 +65,4 @@
 ## Privacy
 
 - Nothing leaves the device. There is no account, no network and no analytics.
-- Hold the privacy button in caregiver mode to read the full policy.
+- Choose Privacy policy on the profile picker to read the full policy.

@@ -5,8 +5,8 @@ class_name ProfilePicker
 ## scene or completing the delete hold changes a profile.
 ##
 ## It also shows two shipped pages ([PageText]), so nothing leaves the app to show them: the caregiver guide,
-## GUIDE.md, on a tap, and the privacy policy, PRIVACY.md, which Google Play's Families policy requires inside
-## the app, on a hold.
+## GUIDE.md, and the privacy policy, PRIVACY.md, which Google Play's Families policy requires inside the app. Both
+## open on a tap; the picker sits behind the caregiver chord.
 
 signal profile_chosen(profile_id: String)
 signal profile_deleted(profile_id: String)
@@ -33,7 +33,7 @@ const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/P
 @onready var _scene_section: VBoxContainer = %SceneSection
 @onready var _scene_rows: VBoxContainer = %SceneRows
 @onready var _guide_button: SdfButton = %GuideButton
-@onready var _privacy_button: HoldButton = %PrivacyButton
+@onready var _privacy_button: SdfButton = %PrivacyButton
 @onready var _page: VBoxContainer = %Page
 @onready var _build_stamp: Label = %BuildStamp
 
@@ -48,7 +48,7 @@ func _ready() -> void:
 	_back_button.pressed.connect(_on_back)
 	_new_button.pressed.connect(_on_new_profile)
 	_delete_button.held.connect(_on_delete_held)
-	_privacy_button.held.connect(_on_privacy_held)
+	_privacy_button.pressed.connect(_on_privacy_pressed)
 	_guide_button.pressed.connect(_on_guide_pressed)
 	_build_stamp.text = BuildStamp.current()
 	_name_edit.text_submitted.connect(_on_name_submitted)
@@ -300,7 +300,7 @@ func _on_delete_held() -> void:
 	else:
 		_new_button.grab_focus()
 
-func _on_privacy_held() -> void:
+func _on_privacy_pressed() -> void:
 	_show_page(PageText.PRIVACY, Mode.POLICY)
 
 func _on_guide_pressed() -> void:
