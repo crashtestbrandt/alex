@@ -146,8 +146,8 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   A migration is a function that takes the old dictionary and returns the new one, with a unit test.
 - **A bad row is skipped, never fatal.** One malformed gestalt does not lose a profile.
 - **Starter packs are JSON under `starters/`**, written for non-developers. `starter_test.gd` checks every
-  board names gestalts the pack holds. Every export preset includes `starters/*.json` and `PRIVACY.md`
-  (`tools/check-export-presets.sh`).
+  board names gestalts the pack holds. Every export preset includes `starters/*.json` and the pages the picker
+  shows, `PRIVACY.md`, `GUIDE.md` and `GLOSSARY.md` (`tools/check-export-presets.sh`).
 - **A profile adds a pack as a scene** (`Starter.add_to`, docs/profiles.md "Adding a scene"). Copied ids are
   prefixed with the pack id, a phrase the bank already says is reused rather than copied, and a pack is
   added once. The profile never reads the pack again.

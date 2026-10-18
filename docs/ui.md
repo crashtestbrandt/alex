@@ -178,7 +178,9 @@ three seconds (`CaregiverChord`):
 - On Edit, every held scene's row carries its own stage bar, 1 to 6, and a line under it naming the stage and what the adults model there. A tap saves at once (`Profile.set_scene_stage`). A scene starts at 1.
 - Edit shows a Notes field, an `SdfTextArea`. Save writes the stage and the notes with the look. Back discards both. Neither reaches the learner's screen.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
-- Caregiver guide opens `GUIDE.md` on a tap. Privacy policy opens `PRIVACY.md` on a tap (`PageText`).
+- Caregiver guide opens `GUIDE.md` on a tap. Glossary opens `GLOSSARY.md` on a tap. Privacy policy opens
+  `PRIVACY.md` on a tap (`PageText`).
+- `GLOSSARY.md` is in-app copy. It names no file, identifier or markup.
 - `GUIDE.md` is the one place caregiver instructions live. The README lists the first steps and points to it. A change to how a caregiver does something updates `GUIDE.md` in the same PR.
 - Nothing on the picker is drawn by a theme style box.
 

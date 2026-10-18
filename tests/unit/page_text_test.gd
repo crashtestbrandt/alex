@@ -1,5 +1,5 @@
 extends UnitTest
-## [PageText]: the Markdown subset PRIVACY.md uses comes out as plain blocks, and the real PRIVACY.md reads
+## [PageText]: the Markdown subset the shipped pages use comes out as plain blocks, and each shipped page reads
 ## with no Markdown left in it.
 
 func test_title_is_dropped_and_headings_are_blocks() -> void:
@@ -19,6 +19,10 @@ func test_table_rows_become_label_value_lines() -> void:
 	var md: String = "| Data | Why |\n| --- | --- |\n| Names | To show them. |\n| Voices | To play them. |"
 	assert_eq(PageText.blocks(md), PackedStringArray(["Names: To show them.", "Voices: To play them."]), "header and rule dropped")
 
+func test_an_escaped_bar_stays_in_its_cell() -> void:
+	var md: String = "| A | B |\n| --- | --- |\n| Chunk | Let's go \\| outside |"
+	assert_eq(PageText.blocks(md), PackedStringArray(["Chunk: Let's go | outside"]), "the escaped bar is text")
+
 func test_inline_marks_keep_their_text() -> void:
 	assert_eq(PageText.blocks("Choose **Edit**, see `a.md` and [the issues](https://example.com)."), PackedStringArray(["Choose Edit, see a.md and the issues."]), "bold, code and links")
 
@@ -37,5 +41,12 @@ func test_the_shipped_guide_reads_as_plain_text() -> void:
 	var blocks: PackedStringArray = PageText.load_blocks(PageText.GUIDE)
 	assert_true(blocks.size() > 10, "GUIDE.md is at res:// and has its sections")
 	assert_true(PageText.load_headings(PageText.GUIDE).has("Open caregiver mode"), "it starts with how to get here")
+	for block: String in blocks:
+		assert_false(block.contains("**") or block.contains("`") or block.contains("|") or block.begins_with("#") or block.begins_with("- "), "no Markdown left in: %s" % block)
+
+func test_the_shipped_glossary_reads_as_plain_text() -> void:
+	var blocks: PackedStringArray = PageText.load_blocks(PageText.GLOSSARY)
+	assert_true(blocks.size() > 10, "GLOSSARY.md is at res:// and has its terms")
+	assert_true(blocks.has("Learner: The child using the app. Nothing on their screen tests, scores, times or rewards them."), "a table row reads as term: meaning")
 	for block: String in blocks:
 		assert_false(block.contains("**") or block.contains("`") or block.contains("|") or block.begins_with("#") or block.begins_with("- "), "no Markdown left in: %s" % block)

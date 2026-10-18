@@ -1,16 +1,18 @@
 class_name PageText
-## A page shipped beside the app, the privacy policy or the caregiver guide, as plain text blocks for the
-## profile picker. It reads the subset of Markdown that PRIVACY.md and GUIDE.md use:
+## A page shipped beside the app, the privacy policy, the caregiver guide or the glossary, as plain text blocks
+## for the profile picker. It reads the subset of Markdown that PRIVACY.md, GUIDE.md and GLOSSARY.md use:
 ##
 ## - The `#` title is dropped, because the picker's heading shows it.
 ## - A `##` heading becomes its own block.
 ## - A paragraph's lines join into one block.
 ## - A `- ` item becomes a block that starts with a bullet. Its indented lines join it.
-## - A table's header and rule rows are dropped. Each other row becomes "first cell: second cell".
+## - A table's header and rule rows are dropped. Each other row becomes "first cell: second cell". A `\|` in
+##   a cell is a bar, not a cell break.
 ## - `**bold**`, backticks and `[text](url)` links keep only their text.
 
 const PRIVACY: String = "res://PRIVACY.md"
 const GUIDE: String = "res://GUIDE.md"
+const GLOSSARY: String = "res://GLOSSARY.md"
 const BULLET: String = "• "
 
 ## The blocks of the page at `path`, or none when the file is missing.
@@ -70,8 +72,10 @@ static func blocks(markdown: String) -> PackedStringArray:
 
 static func _cells(row: String) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
-	for cell: String in row.trim_prefix("|").trim_suffix("|").split("|"):
-		out.push_back(cell.strip_edges())
+	# A private-use character stands in for an escaped bar while the row splits.
+	var bar: String = char(0xE000)
+	for cell: String in row.replace("\\|", bar).trim_prefix("|").trim_suffix("|").split("|"):
+		out.push_back(cell.strip_edges().replace(bar, "|"))
 	return out
 
 static func _inline(text: String) -> String:

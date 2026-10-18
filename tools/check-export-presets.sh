@@ -82,8 +82,8 @@ for name in "${PRESETS[@]}"; do
 	fi
 done
 
-# Starter packs, PRIVACY.md and GUIDE.md are read as files, so nothing references them. The include keeps them
-# in a build whose export mode is not "all resources". The profile picker shows both pages (PageText).
+# Starter packs, PRIVACY.md, GUIDE.md and GLOSSARY.md are read as files, so nothing references them. The include
+# keeps them in a build whose export mode is not "all resources". The profile picker shows the pages (PageText).
 while IFS= read -r name; do
 	filter="$(get "$name" include_filter || true)"
 	entries="$(printf '%s' "$filter" | tr ',' '\n' | sed 's/^ *//; s/ *$//')"
@@ -95,6 +95,9 @@ while IFS= read -r name; do
 	fi
 	if ! grep -qx 'GUIDE\.md' <<< "$entries"; then
 		fail "\"$name\" has no GUIDE.md in include_filter."
+	fi
+	if ! grep -qx 'GLOSSARY\.md' <<< "$entries"; then
+		fail "\"$name\" has no GLOSSARY.md in include_filter."
 	fi
 done < <(printf '%s\n' "$FLAT" | awk -F '\t' '$2 == "name" { print $3 }')
 

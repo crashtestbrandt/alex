@@ -4,14 +4,14 @@ class_name ProfilePicker
 ## removes and picks the entry scene for them. Style pills preview immediately. Saving a look, changing a
 ## scene or completing the delete hold changes a profile.
 ##
-## It also shows two shipped pages ([PageText]), so nothing leaves the app to show them: the caregiver guide,
-## GUIDE.md, and the privacy policy, PRIVACY.md, which Google Play's Families policy requires inside the app. Both
-## open on a tap; the picker sits behind the caregiver chord.
+## It also shows three shipped pages ([PageText]), so nothing leaves the app to show them: the caregiver guide,
+## GUIDE.md, the glossary, GLOSSARY.md, and the privacy policy, PRIVACY.md, which Google Play's Families policy
+## requires inside the app. Each opens on a tap; the picker sits behind the caregiver chord.
 
 signal profile_chosen(profile_id: String)
 signal profile_deleted(profile_id: String)
 
-enum Mode { PICK, CREATE, LOOK, POLICY, GUIDE }
+enum Mode { PICK, CREATE, LOOK, POLICY, GUIDE, GLOSSARY }
 
 const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/PRIVACY.md"
 ## The stages a scene can be at, in pill order. A bar's index is the stage less one.
@@ -45,6 +45,7 @@ const _STAGES: Array[NlaStage.Stage] = [
 @onready var _notes_section: VBoxContainer = %NotesSection
 @onready var _notes_edit: SdfTextArea = %NotesEdit
 @onready var _guide_button: SdfButton = %GuideButton
+@onready var _glossary_button: SdfButton = %GlossaryButton
 @onready var _privacy_button: SdfButton = %PrivacyButton
 @onready var _page: VBoxContainer = %Page
 @onready var _build_stamp: Label = %BuildStamp
@@ -62,6 +63,7 @@ func _ready() -> void:
 	_delete_button.held.connect(_on_delete_held)
 	_privacy_button.pressed.connect(_on_privacy_pressed)
 	_guide_button.pressed.connect(_on_guide_pressed)
+	_glossary_button.pressed.connect(_on_glossary_pressed)
 	_build_stamp.text = BuildStamp.current()
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
@@ -223,9 +225,10 @@ func _show_mode(mode: Mode) -> void:
 	_scene_section.visible = mode == Mode.LOOK
 	_stage_section.visible = mode == Mode.CREATE and _starter_is_scene()
 	_notes_section.visible = mode == Mode.LOOK
-	var reading: bool = mode == Mode.POLICY or mode == Mode.GUIDE
+	var reading: bool = mode == Mode.POLICY or mode == Mode.GUIDE or mode == Mode.GLOSSARY
 	_page.visible = reading
 	_guide_button.visible = mode == Mode.PICK or mode == Mode.CREATE
+	_glossary_button.visible = mode == Mode.PICK or mode == Mode.CREATE
 	_privacy_button.visible = mode == Mode.PICK or mode == Mode.CREATE
 	_back_button.visible = reading or (mode != Mode.PICK and _profiles.get_child_count() > 0)
 	_create_button.visible = not reading
@@ -237,6 +240,8 @@ func _show_mode(mode: Mode) -> void:
 			_heading.text = "Privacy policy"
 		Mode.GUIDE:
 			_heading.text = "Caregiver guide"
+		Mode.GLOSSARY:
+			_heading.text = "Glossary"
 		_:
 			_heading.text = "Choose a profile"
 	_status.hide()
@@ -408,6 +413,9 @@ func _on_privacy_pressed() -> void:
 
 func _on_guide_pressed() -> void:
 	_show_page(PageText.GUIDE, Mode.GUIDE)
+
+func _on_glossary_pressed() -> void:
+	_show_page(PageText.GLOSSARY, Mode.GLOSSARY)
 
 ## Fill the page from the shipped Markdown at `path` and show it in `mode`.
 func _show_page(path: String, mode: Mode) -> void:
