@@ -3,9 +3,10 @@ class_name BuildView
 ## Build: the learner fills a strip with chunks from the bank (docs/ui.md "Words"). Beginnings stand in the
 ## left column and endings in the right, each a [ChunkButton] in its chunk's color (ChunkBank). A tap on a
 ## chunk lands it on the strip, a tap on the strip says the whole, and a tap on a chunk in the strip takes it
-## off. The strip keeps what the learner built until they change it. Nothing is scored, nothing is timed,
-## and there is no send button. The home owns the speaking. A hold on a chunk or on the strip reports itself
-## for the caregiver's recording flow; a hold is never a tap.
+## off. The strip keeps what the learner built until they change it. The chunks the bank says next
+## (ChunkBank.leads) carry a border; every other chunk stays as it is and stays tappable. Nothing is scored,
+## nothing is timed, and there is no send button. The home owns the speaking. A hold on a chunk or on the
+## strip reports itself for the caregiver's recording flow; a hold is never a tap.
 
 signal chunk_added(chunk: String, index: int)
 signal strip_tapped(chunks: PackedStringArray)
@@ -23,6 +24,7 @@ const MARGIN_PX: float = 20.0
 @onready var _ending_spacer: Control = %EndingSpacer
 
 var _chunks: PackedStringArray = PackedStringArray()
+var _gestalts: Array[Gestalt] = []
 var _press_point: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
@@ -36,6 +38,7 @@ func _ready() -> void:
 
 ## Offer `gestalts`' beginnings and endings. The strip keeps its chunks.
 func set_bank(gestalts: Array[Gestalt]) -> void:
+	_gestalts = gestalts
 	_fill(_beginnings, ChunkBank.beginnings(gestalts), _beginning_spacer)
 	_fill(_endings, ChunkBank.endings(gestalts), _ending_spacer)
 	_rebuild_strip()
@@ -76,6 +79,14 @@ func beginning_buttons() -> Array[ChunkButton]:
 func ending_buttons() -> Array[ChunkButton]:
 	return _buttons_in(_endings)
 
+## The chunks carrying the border, what the bank says next, beginnings first.
+func lead_buttons() -> Array[ChunkButton]:
+	var out: Array[ChunkButton] = []
+	for button: ChunkButton in beginning_buttons() + ending_buttons():
+		if button.lead:
+			out.push_back(button)
+	return out
+
 ## Leave `px` clear at the bottom of each column, for a control floating over it.
 func set_bottom_clearance(px: float) -> void:
 	_beginning_spacer.custom_minimum_size.y = maxf(px, 0.0)
@@ -106,6 +117,15 @@ func _rebuild_strip() -> void:
 		return
 	_row.set_chunks(_chunks, FONT_BASE)
 	_layout_strip()
+	_mark_leads()
+
+## Border the chunks the bank says next after the strip, in both columns, and clear the rest.
+func _mark_leads() -> void:
+	var leads: Dictionary[String, bool] = {}
+	for chunk: String in ChunkBank.leads(_gestalts, _chunks):
+		leads[ChunkColors.key(chunk)] = true
+	for button: ChunkButton in beginning_buttons() + ending_buttons():
+		button.lead = leads.has(ChunkColors.key(button.chunk))
 
 func _layout_strip() -> void:
 	var width: float = maxf(_strip.size.x - MARGIN_PX * 2.0, 1.0)

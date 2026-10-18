@@ -4,13 +4,22 @@ class_name ChunkButton
 ## its text in the style's text color, so it is the same chunk the tiles and captions show. While pressed it
 ## brightens the way a spoken pill does at motion NONE, keeping its hue. A hold fires `held` (from
 ## [HoldButton]) for the recording flow, and `consumed_by_hold` keeps that press from counting as a tap.
+## A `lead` chunk, one the bank says next (ChunkBank.leads), carries a border in the style's text color. The
+## border is the cue because every preset shows it; the quiet preset's relief is near flat.
 
 const FONT_BASE: int = 24
+const LEAD_BORDER_PX: float = 5.0
 
 var chunk: String = "":
 	set(value):
 		chunk = value
 		text = value
+		refresh()
+
+## Whether the bank says this chunk next. The pill stays tappable either way.
+var lead: bool = false:
+	set(value):
+		lead = value
 		refresh()
 
 func _init() -> void:
@@ -30,6 +39,8 @@ func refresh() -> void:
 	var rest: Color = ChunkColors.color_for(chunk, Style.current.chunk_palette)
 	_shape.fill = ChunkColors.spoken(rest) if is_active() else rest
 	_shape.border_color = Style.current.text
+	if lead:
+		_shape.border_px = LEAD_BORDER_PX
 	for color_name: String in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
 		add_theme_color_override(color_name, Style.current.text)
 

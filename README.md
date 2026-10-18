@@ -30,16 +30,17 @@ The learner moves between two modes, Explore and Words.
   in a familiar voice.
 - **Words** holds every phrase. Palette is a column of phrase tiles, and tapping a tile says its phrase.
   Build offers the beginnings of phrases beside their endings. Tapping a chunk puts it on a strip and says
-  it, and tapping the strip says the whole.
+  it, and tapping the strip says the whole. The chunks your phrases say next carry a border.
 - **Chunks** show on colored pills while a phrase plays, and each is marked as it is spoken. A chunk keeps
   its color everywhere it appears, so "Let's go" looks the same on every tile and caption.
 - **Views** look at the scene from the front and from above, and a drag or a pinch moves in closer. A
   caregiver can add a third view that stands the learner in the middle of the room to look around, or
   remove all of them. A tap on a view's button puts it back, and a room left alone returns to the front.
 
-Two scene packs ship. The bedroom's door opens to "Let's go outside" and closes to "Let's go inside"; the
-bathroom's tub fills to "Water on". A profile starts with one pack and adds the other from the adults'
-screen. Scenes, objects and phrases are data in a pack, so a pack can describe any place.
+Four scene packs ship. The bedroom's door opens to "Let's go outside" and closes to "Let's go inside"; the
+bathroom's tub fills to "Water on"; the playroom says single words; the kitchen says short sentences. A
+profile starts with one pack and adds others from the adults' screen. Scenes, objects and phrases are data
+in a pack, so a pack can describe any place.
 
 There are no questions, no right answers, no scores, no timers and no rewards. Touching the same thing forty
 times is fine. Nothing on the learner's screen can delete anything, buy anything, or leave the device.
@@ -92,8 +93,9 @@ install serves a family, a classroom or a caseload ([`docs/profiles.md`](docs/pr
 
 Early and usable.
 
-- **Ships:** two scene packs, a bedroom and a bathroom, that a profile can add, remove and open on, a Words
-  palette and a chunk builder, three looks, and recording in your own voice, by phrase or by chunk.
+- **Ships:** four scene packs, a bedroom, a bathroom, a playroom and a kitchen, that a profile can add,
+  remove and open on, a Words palette and a chunk builder, three looks, and recording in your own voice, by
+  phrase or by chunk.
 - **Coming:** moving between a profile's rooms, more objects and reactions, the learner's own songs and
   clips, and a bank view for caregivers.
 - **Runs on:** Android and iOS phones and tablets, macOS, Windows and Linux. Recording is tried on an Android
@@ -138,7 +140,7 @@ Godot is found through `GODOT_BIN`, then `godot` on PATH, then `/Applications/Go
 | `scripts/child/` | The learner's screens: `ChildHome`, `RoomView`, `SpotBody`, `ViewWidget`, `GestaltTile`. |
 | `scripts/ui/` | Adult-facing screens and the field-drawn controls: `ProfilePicker`, `RecordOverlay`, `TakePill`, `SdfShape`, `SdfGlyph`, `SdfButton`, `SdfPanel`, `PillBar`, `HoldButton`, `CaregiverGate`, `ChunkRow`, `UiGeometry`. |
 | `shaders/ui/` | `shape.gdshader` and `glyph.gdshader`, the two fields every control is drawn from. |
-| `starters/` | Starter packs as JSON. `blank` and `home_routines` ship. |
+| `starters/` | Starter packs as JSON. `blank`, `home_routines`, `bath_time`, `play_room` and `snack_time` ship. |
 | `styles/` | Style presets as `.tres`. `calm`, `bold` and `quiet` ship. |
 | `tests/unit/` | Hand-rolled suites, one per pure class. `tools/instr/` holds the scene probes. |
 | `store/` | The Google Play and App Store listings and their images. `just store-graphics` renders the images. |

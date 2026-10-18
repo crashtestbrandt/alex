@@ -420,6 +420,8 @@ func _check_build(home: ChildHome, p: Profile) -> void:
 	_check(go.custom_minimum_size.y >= Style.current.tile_min_size, "a chunk button honors the touch floor")
 	var go_shape: SdfShape = go.get_node("Shape") as SdfShape
 	_check(go_shape != null and go_shape.fill == ChunkColors.color_for("Let's go", Style.current.chunk_palette), "a chunk button wears its chunk's color")
+	_check(build.lead_buttons().size() == beginnings.size() and go.lead and not outside.lead, "an empty strip borders every beginning and no ending")
+	_check(go_shape != null and go_shape.border_px == ChunkButton.LEAD_BORDER_PX, "the border is the lead mark")
 	var speaker: Speaker = home.get_node("%Speaker") as Speaker
 	var heard: Array[Gestalt] = []
 	speaker.started.connect(func(g: Gestalt, _seconds: float) -> void: heard.push_back(g))
@@ -427,10 +429,14 @@ func _check_build(home: ChildHome, p: Profile) -> void:
 	await get_tree().process_frame
 	_check(build.chunks() == PackedStringArray(["Let's go"]), "a tapped beginning lands on the strip")
 	_check(heard.size() == 1 and heard[0].text == "Let's go", "and is said on its own")
+	var after_go: PackedStringArray = ChunkBank.next(p.gestalts, "Let's go")
+	_check(build.lead_buttons().size() == after_go.size() and outside.lead and not go.lead, "after a chunk lands, what the bank says next is bordered (%d)" % after_go.size())
+	_check(go_shape != null and go_shape.border_px == 0.0, "and the beginning's border is gone")
 	outside.pressed.emit()
 	await get_tree().process_frame
 	_check(build.chunks() == PackedStringArray(["Let's go", "outside"]), "a tapped ending follows it")
 	_check(build.strip_row().pills().size() == 2, "the strip shows both pills")
+	_check(build.lead_buttons().is_empty(), "a finished phrase borders nothing")
 	_tap_strip(build, Vector2(-100.0, -100.0))
 	await get_tree().process_frame
 	_check(heard.size() == 3 and heard[2].id == "lets_go_outside", "a tap on the strip says the bank's own phrase")

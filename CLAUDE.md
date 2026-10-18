@@ -119,7 +119,9 @@ the learner alone; interesting enough to sustain interest; useful; harmless. The
   one row, one recording and one tile. Moving it along is editing its bars.
 - **The learner's strip reads Explore and Words** (docs/ui.md "The mode strip"). Room and board titles stay
   in profile data and off the learner's screen. Words is the whole bank, as Palette tiles or as Build, a
-  strip filled from chunk beginnings and endings (`ChunkBank`), chunk-first and never word-first.
+  strip filled from chunk beginnings and endings (`ChunkBank`), chunk-first and never word-first. Build
+  borders the chunks the bank says next (`ChunkBank.leads`, docs/ui.md "Build with longer phrases") and
+  never moves or hides a chunk.
 - **Nothing on the learner's screen leads to the adults' screens.** The caregiver chord does: three fingers,
   both mouse buttons or Escape, held for three seconds (`CaregiverChord`, docs/ui.md "Caregiver mode").
 - **Launch reopens the profile used last** (`ProfileRepo.last_id`). With none, it opens the picker.

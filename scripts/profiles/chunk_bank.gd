@@ -1,8 +1,9 @@
 extends RefCounted
 class_name ChunkBank
 ## What a bank offers Build, pure (docs/ui.md "Words"): its beginnings, the first chunk of every gestalt, and
-## its endings, every later chunk, each once by the same key its color uses. And which gestalt an assembled
-## strip is, so a familiar recording plays when the learner builds a phrase the bank holds.
+## its endings, every later chunk, each once by the same key its color uses. What it says next after a strip,
+## so Build can mark those chunks. And which gestalt an assembled strip is, so a familiar recording plays when
+## the learner builds a phrase the bank holds.
 
 ## The id of the transient gestalt that voices a strip no bank gestalt matches.
 const BUILD_ID: String = "build"
@@ -25,6 +26,27 @@ static func endings(gestalts: Array[Gestalt]) -> PackedStringArray:
 		for i: int in range(1, g.chunks.size()):
 			_add_once(g.chunks[i], out, seen)
 	return out
+
+## Every chunk that follows `chunk` in some gestalt, by the chunk key, in bank order, each once. Empty for a
+## chunk nothing follows.
+static func next(gestalts: Array[Gestalt], chunk: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var seen: Dictionary[String, bool] = {}
+	var wanted: String = ChunkColors.key(chunk)
+	if wanted.is_empty():
+		return out
+	for g: Gestalt in gestalts:
+		for i: int in range(1, g.chunks.size()):
+			if ChunkColors.key(g.chunks[i - 1]) == wanted:
+				_add_once(g.chunks[i], out, seen)
+	return out
+
+## What the bank says next after `strip` (docs/ui.md "Build with longer phrases"): its beginnings for an
+## empty strip, else what follows the strip's last chunk. Build marks these; it never hides the rest.
+static func leads(gestalts: Array[Gestalt], strip: PackedStringArray) -> PackedStringArray:
+	if strip.is_empty():
+		return beginnings(gestalts)
+	return next(gestalts, strip[strip.size() - 1])
 
 ## The gestalt whose text is `chunks` said in order, by the chunk key, or null. The first match in bank order
 ## wins, so a recorded phrase speaks in the voice the caregiver gave it.

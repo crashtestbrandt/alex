@@ -86,8 +86,14 @@ A profile **copies** the pack at creation (`Starter.seed`) and never reads it ag
 nothing for an existing child. `starter_test.gd` checks every shipped pack parses and that every board names
 gestalts the pack holds.
 
-`blank`, `home_routines` (a bedroom) and `bath_time` (a bathroom) ship. A pack with at least one gestalt is
-a scene the adults' screen offers.
+`blank` and four scenes ship. A pack with at least one gestalt is a scene the adults' screen offers.
+
+| Pack | Room | Stage |
+| --- | --- | --- |
+| `home_routines` | A bedroom | 1 and 2 |
+| `bath_time` | A bathroom | 1 and 2 |
+| `play_room` | A playroom, single words and pairs | 3 |
+| `snack_time` | A kitchen, short sentences one word to a chunk | 4 |
 
 Every row in a scene carries the `stage` of language it models (docs/design.md "Progression"). The stage
 informs the adults and gates nothing. A pack author sets it by this rule, reading the pack in row order:
@@ -95,13 +101,14 @@ informs the adults and gates nothing. A pack author sets it by this rule, readin
 | Row | Stage |
 | --- | --- |
 | A phrase learned whole, with bars so it can be split later (`Let's go \| outside`), or with none (`All done`) | 1 |
-| A phrase that reuses a beginning or an ending a row before it holds (`Let's go \| in the car` after `Let's go \| outside`) | 2 |
-| A single word or a two-word combination | 3 |
-| A short original sentence | 4 |
+| A phrase that reuses a beginning or an ending a stage 1 or 2 row before it holds (`Let's go \| in the car` after `Let's go \| outside`) | 2 |
+| One or two single-word chunks (`Juice`, `More \| juice`) | 3 |
+| A sentence of three or more single-word chunks (`I \| want \| more \| juice`) | 4 |
 
-- Both shipped scenes are stage 1 and 2 material, so every row carries 1 or 2.
-- `starter_test.gd` fails a scene row with no stage, a stage 2 row that reuses nothing, and a stage 1 row
-  that reuses a chunk.
+- `starter_test.gd` fails a scene row with no stage, a stage 1 row that reuses a chunk, a stage 2 row that
+  reuses nothing, a stage 3 row with more than two chunks or a chunk of several words, and a stage 4 row
+  with fewer than three chunks or a chunk of several words.
+- `play_room` is stage 3 throughout and `snack_time` stage 4 throughout, so a title reads as a stage.
 
 ### Adding a scene
 

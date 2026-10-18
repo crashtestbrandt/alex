@@ -21,7 +21,7 @@ The words the README and the docs use, and what each means in Alex.
 | Explore | The learner's room mode. |
 | Words | The learner's phrase mode, in two parts: Palette and Build. |
 | Palette | Every phrase in the bank as a tile. |
-| Build | A strip the learner fills by tapping beginnings and endings. |
+| Build | A strip the learner fills by tapping beginnings and endings. The chunks the bank says next carry a border. |
 | Beginnings, endings | The first chunk of every phrase in the bank, and every later chunk, each once. |
 | Views | Front, Top and Tilt. A caregiver chooses which a room offers. |
 | Hold | A two-second press. The only way to an adult screen or the recorder. |
