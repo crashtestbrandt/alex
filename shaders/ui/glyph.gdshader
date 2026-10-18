@@ -1,5 +1,5 @@
-// THE GLYPHS ON THE LEARNER'S BUTTONS: the front, side, top and tilt views, the three dots that lead to the
-// adults' screens, and the microphone. Each is a composition of segments, boxes, arcs and discs evaluated as a
+// THE GLYPHS ON THE LEARNER'S BUTTONS: the front, side, top and tilt views, three dots (unused), and the
+// microphone. Each is a composition of segments, boxes, arcs and discs evaluated as a
 // distance field per pixel, so a stroke covers exactly its share of every pixel at every scale (docs/ui.md).
 // `figure` picks the composition, so every glyph shares one shader and one uniform set. A figure added later
 // is a case here plus a value in [enum SdfGlyph.Figure].

@@ -31,7 +31,8 @@ A pull request restores the Godot and template caches and saves none, and upload
 `main` saves the caches. A `v*` tag runs the release workflow instead (docs/releases.md).
 
 `just check` runs the first four locally, then the headless scene probes. `just room-probe` picks, taps, walks
-the views and idles back (docs/geometry.md "Gates"). `just overscroll-probe` drags past both ends of a scroll,
+the views and idles back (docs/geometry.md "Gates"), then holds each caregiver chord (docs/ui.md "Caregiver
+mode"). `just overscroll-probe` drags past both ends of a scroll,
 flings into one and repeats with motion off (docs/ui.md). A probe stays out of the PR gate. `just lint` also loads every `tools/instr/*.gd` so a probe that does not compile fails
 there rather than at a run.
 

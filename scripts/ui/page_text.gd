@@ -1,6 +1,6 @@
-class_name PolicyText
-## The privacy policy as plain text blocks for the profile picker. It reads the subset of Markdown that
-## PRIVACY.md uses:
+class_name PageText
+## A page shipped beside the app, the privacy policy or the caregiver guide, as plain text blocks for the
+## profile picker. It reads the subset of Markdown that PRIVACY.md and GUIDE.md use:
 ##
 ## - The `#` title is dropped, because the picker's heading shows it.
 ## - A `##` heading becomes its own block.
@@ -9,20 +9,21 @@ class_name PolicyText
 ## - A table's header and rule rows are dropped. Each other row becomes "first cell: second cell".
 ## - `**bold**`, backticks and `[text](url)` links keep only their text.
 
-const PATH: String = "res://PRIVACY.md"
+const PRIVACY: String = "res://PRIVACY.md"
+const GUIDE: String = "res://GUIDE.md"
 const BULLET: String = "• "
 
-## The blocks of the policy shipped with the app, or none when the file is missing.
-static func load_blocks() -> PackedStringArray:
-	if not FileAccess.file_exists(PATH):
+## The blocks of the page at `path`, or none when the file is missing.
+static func load_blocks(path: String) -> PackedStringArray:
+	if not FileAccess.file_exists(path):
 		return PackedStringArray()
-	return blocks(FileAccess.get_file_as_string(PATH))
+	return blocks(FileAccess.get_file_as_string(path))
 
-## The section headings of the shipped policy, as [method blocks] writes them, so a caller can style them.
-static func load_headings() -> PackedStringArray:
-	if not FileAccess.file_exists(PATH):
+## The section headings of the page at `path`, as [method blocks] writes them, so a caller can style them.
+static func load_headings(path: String) -> PackedStringArray:
+	if not FileAccess.file_exists(path):
 		return PackedStringArray()
-	return headings(FileAccess.get_file_as_string(PATH))
+	return headings(FileAccess.get_file_as_string(path))
 
 static func headings(markdown: String) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()

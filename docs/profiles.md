@@ -12,6 +12,8 @@ user://profiles/<id>/
   media/name/      the name recording
 ```
 
+`user://profiles/last_profile` holds the id of the profile opened last, which launch reopens.
+
 `user://` is the app's data directory on the device. A family's recordings never leave it, and never enter
 this repository.
 

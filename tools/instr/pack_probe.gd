@@ -1,6 +1,6 @@
 extends SceneTree
 ## Pack probe: mount an exported .pck as res:// and check what a shipped build can read. Every starter pack
-## and style preset loads, the privacy policy reads, and nothing from tests/, tools/ or docs/ shipped. tools/check-exports.sh runs it
+## and style preset loads, the privacy policy and the caregiver guide read, and nothing from tests/, tools/ or docs/ shipped. tools/check-exports.sh runs it
 ## with `--main-pack <pck> --script <this file>`; tools/ never ships, so the script is read from disk. Prints
 ## PACK-PROBE PASS or FAIL and exits with the matching code.
 
@@ -28,9 +28,12 @@ func _initialize() -> void:
 	print("  build stamp: %s" % stamp)
 	_check(stamp != "dev", "the export stamped a build number")
 
-	var policy: PackedStringArray = PolicyText.load_blocks()
+	var policy: PackedStringArray = PageText.load_blocks(PageText.PRIVACY)
 	print("  privacy policy: %d blocks" % policy.size())
 	_check(not policy.is_empty(), "the privacy policy reads")
+	var guide: PackedStringArray = PageText.load_blocks(PageText.GUIDE)
+	print("  caregiver guide: %d blocks" % guide.size())
+	_check(not guide.is_empty(), "the caregiver guide reads")
 
 	for path: String in _ABSENT:
 		_check(not DirAccess.dir_exists_absolute(path) and not FileAccess.file_exists(path), "%s did not ship" % path)

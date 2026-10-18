@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://scenes/child/room_view.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/record_overlay.tscn" id="5"]
 [ext_resource type="Script" path="res://scripts/ui/pill_bar.gd" id="6"]
-[ext_resource type="Script" path="res://scripts/ui/sdf_glyph.gd" id="7"]
 
 [ext_resource type="Script" path="res://scripts/ui/sdf_scroll.gd" id="scroll"]
 [ext_resource type="PackedScene" path="res://scenes/child/build_view.tscn" id="build"]
@@ -84,27 +83,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 script = ExtResource("6")
-
-[node name="ProfilesButton" type="Button" parent="Margin/Column/TopBar"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 96)
-tooltip_text = "Hold for profiles"
-size_flags_vertical = 4
-layout_mode = 2
-focus_mode = 2
-script = ExtResource("2")
-shape = 2
-
-[node name="Glyph" type="Control" parent="Margin/Column/TopBar/ProfilesButton"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("7")
-figure = 4
 
 [node name="Stage" type="ScrollContainer" parent="Margin/Column"]
 unique_name_in_owner = true

@@ -10,6 +10,7 @@ func setup() -> void:
 func teardown() -> void:
 	for profile_id: String in _repo.list_ids():
 		_repo.delete_profile(profile_id)
+	_repo.forget()
 	DirAccess.remove_absolute(_repo.root)
 	_repo = null
 
@@ -62,6 +63,25 @@ func test_delete_removes_the_directory() -> void:
 	assert_eq(_repo.delete_profile(p.id), OK, "deleted")
 	assert_eq(_repo.list_ids().size(), 0, "gone from the list")
 	assert_eq(_repo.delete_profile(p.id), ERR_DOES_NOT_EXIST, "deleting again says so")
+
+func test_the_last_profile_is_remembered_until_it_is_deleted() -> void:
+	assert_eq(_repo.last_id(), "", "nothing is remembered on a fresh device")
+	var a: Profile = _repo.create_profile("Sam", null, "calm")
+	var b: Profile = _repo.create_profile("Ari", null, "calm")
+	assert_eq(_repo.remember(a.id), OK, "remembered")
+	assert_eq(_repo.last_id(), a.id, "the remembered profile")
+	assert_eq(_repo.list_ids().size(), 2, "the memory is not listed as a profile")
+	assert_eq(_repo.delete_profile(b.id), OK, "another profile is deleted")
+	assert_eq(_repo.last_id(), a.id, "the memory stays")
+	assert_eq(_repo.delete_profile(a.id), OK, "the remembered profile is deleted")
+	assert_eq(_repo.last_id(), "", "and forgotten")
+	assert_false(FileAccess.file_exists("%s/%s" % [_repo.root, ProfileRepo.LAST_FILE]), "its file is gone")
+
+func test_a_remembered_id_that_no_longer_loads_is_empty() -> void:
+	assert_eq(_repo.remember("no-such-profile"), OK, "remembered")
+	assert_eq(_repo.last_id(), "", "a missing profile is not reopened")
+	assert_eq(_repo.remember("../outside"), OK, "remembered")
+	assert_eq(_repo.last_id(), "", "nor is a path")
 
 func test_ids_are_unique_and_directory_safe() -> void:
 	var a: String = ProfileRepo.new_id()

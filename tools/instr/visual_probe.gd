@@ -86,6 +86,33 @@ func _drag_hold(button: HoldButton, motion: Vector2) -> void:
 	press.global_position = drag.position
 	get_viewport().push_input(press, true)
 
+## Three fingers held past `SHOW_AFTER` show the caregiver chord's bar inside the screen. They lift before the
+## chord fires.
+func _chord_bar(main: Main, screen: Rect2) -> void:
+	var bar: ChordProgress = (main.get_node("CaregiverGate") as CaregiverGate).bar()
+	var lost: Array[int] = [0]
+	var count_lost: Callable = func() -> void: lost[0] += 1
+	get_window().focus_exited.connect(count_lost)
+	# push_input takes window pixels, so the fingers sit just under the window's center.
+	var at: Vector2 = Vector2(get_window().size) * 0.5 + Vector2(-40.0, 60.0)
+	for pressed: bool in [true, false]:
+		for i: int in 3:
+			var touch: InputEventScreenTouch = InputEventScreenTouch.new()
+			touch.index = i
+			touch.position = at + Vector2(40.0 * i, 0.0)
+			touch.pressed = pressed
+			get_viewport().push_input(touch)
+		if pressed:
+			var started: int = Time.get_ticks_msec()
+			while bar.fraction() < 0.3 and Time.get_ticks_msec() - started < 2000:
+				await get_tree().process_frame
+			var picker: Control = main.get_node("%ProfilePicker") as Control
+			_check(bar.visible and not picker.visible, "a held chord shows its bar (picker %s, %d ms, focus lost %d)" % [picker.visible, Time.get_ticks_msec() - started, lost[0]])
+			_inside(bar, screen, "chord bar")
+			_shot("chord")
+	get_window().focus_exited.disconnect(count_lost)
+	await _settle()
+
 func _run() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg == "--capture" or arg.begins_with("--capture="):
@@ -120,7 +147,6 @@ func _run() -> void:
 			var screen: Rect2 = home.get_global_rect()
 			var scale_xy: Vector2 = get_viewport().get_final_transform().get_scale()
 			_check(absf(scale_xy.x - scale_xy.y) < 0.001, "canvas scales uniformly")
-			_square(home.get_node("%ProfilesButton") as Control, "profile button")
 			var widget: ViewWidget = room.get_node("%ViewWidget") as ViewWidget
 			for button: SdfButton in widget.items():
 				if button.visible:
@@ -152,6 +178,7 @@ func _run() -> void:
 			if captions.get_child_count() == 1:
 				_inside(captions.get_child(0) as Control, screen, "caption")
 			_shot("caption")
+			await _chord_bar(main, screen)
 			home.show_words()
 			await _settle()
 			_check(grid.size.x <= screen.size.x, "board fits horizontally")
@@ -202,6 +229,14 @@ func _run() -> void:
 			var sheet: ScrollContainer = picker.get_node("Center") as ScrollContainer
 			_inside(picker.get_node("%NewProfileButton") as Control, screen, "new profile action fits")
 			_shot("picker")
+			(picker.get_node("%GuideButton") as SdfButton).pressed.emit()
+			await _settle()
+			var page: Control = picker.get_node("%Page") as Control
+			_check(page.visible and page.get_child_count() > 10, "the guide opens with its sections")
+			_inside(picker.get_node("%Heading") as Control, screen, "guide heading")
+			_shot("guide")
+			(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+			await _settle()
 			var profile_card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()
@@ -423,7 +458,6 @@ func _stress(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Record
 	_check(stage.scroll_vertical > 0, "mouse wheel scrolls the board")
 	await _drag_scroll(stage, stage.get_global_rect().get_center())
 	_check(not overlay.visible, "drag scrolling does not open the recorder")
-	_square(home.get_node("%ProfilesButton") as Control, "profile button with wrapped navigation")
 	_inside(home.get_node("%TopBar") as Control, screen, "long name header")
 	_inside(home.get_node("%ModeStrip") as Control, screen, "mode strip beside a long name")
 	_check(home.mode_button(ChildHome.Mode.EXPLORE).text == "Explore", "a long room title stays off the strip")
@@ -518,7 +552,6 @@ func _safe_areas(main: Main, home: ChildHome, picker: ProfilePicker, overlay: Re
 			_inside(home.get_node("%TopBar") as Control, safe, "header avoids cutouts")
 			_inside(home.get_node("%ModeStrip") as Control, safe, "modes avoid cutouts")
 			_inside(room.get_node("%ViewWidget") as Control, safe, "views avoid gesture area")
-			_square(home.get_node("%ProfilesButton") as Control, "profile control")
 			for view: CameraFraming.View in [CameraFraming.View.FRONT, CameraFraming.View.TOP]:
 				room.set_view(view, false)
 				await _settle()

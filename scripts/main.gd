@@ -1,9 +1,11 @@
 extends Control
 class_name Main
 ## Root coordinator: the adults' profile picker on one side, the child's home on the other. Opening a profile
-## applies its style and hands it to the home; holding the home's profiles button comes back here.
+## applies its style, hands it to the home and remembers it. The caregiver chord ([CaregiverGate]) comes back
+## here.
 ##
-## `--profile=<id>` after `--` opens straight into a profile, for a smoke run or a kiosk device.
+## Launch reopens the profile opened last, or the picker when none is remembered. `--profile=<id>` after `--`
+## opens a given profile instead, for a smoke run or a kiosk device.
 
 const _HOME_SCENE: PackedScene = preload("res://scenes/child/home.tscn")
 
@@ -15,6 +17,7 @@ var _mobile: bool = false
 var _safe_poll: float = 0.0
 var _override_safe_area: bool = false
 var _safe_pixels: Rect2 = Rect2()
+var _gate: CaregiverGate = CaregiverGate.new()
 
 func _ready() -> void:
 	_mobile = DisplayServer.get_name() in ["Android", "iOS"]
@@ -24,12 +27,16 @@ func _ready() -> void:
 	_update_canvas()
 	_picker.profile_chosen.connect(open_profile)
 	_picker.profile_deleted.connect(_on_profile_deleted)
-	_home.profiles_requested.connect(show_picker)
+	_gate.name = "CaregiverGate"
+	add_child(_gate)
+	_gate.opened.connect(_on_caregiver_chord)
 	var requested: String = _profile_arg()
-	if not requested.is_empty() and ProfileStore.load_profile(requested) != null:
-		open_profile(requested)
-	else:
+	if requested.is_empty() or ProfileStore.load_profile(requested) == null:
+		requested = ProfileStore.last_id()
+	if requested.is_empty():
 		show_picker()
+	else:
+		open_profile(requested)
 	set_process(_mobile)
 	_update_safe_area.call_deferred()
 
@@ -70,9 +77,14 @@ func clear_safe_area_override() -> void:
 	_update_safe_area()
 
 func show_picker() -> void:
+	_gate.active = false
 	_picker.refresh()
 	_picker.visible = true
 	_home.visible = false
+
+func _on_caregiver_chord() -> void:
+	_home.leave()
+	show_picker()
 
 func open_profile(profile_id: String) -> void:
 	var p: Profile = ProfileStore.load_profile(profile_id)
@@ -84,6 +96,9 @@ func open_profile(profile_id: String) -> void:
 	_home.show_profile(p)
 	_picker.visible = false
 	_home.visible = true
+	_gate.active = true
+	if ProfileStore.remember(profile_id) != OK:
+		printerr("Main: could not remember profile %s" % profile_id)
 
 ## Discard the deleted profile's controls, playback and recorder references as well as its disk files.
 func _on_profile_deleted(profile_id: String) -> void:
@@ -98,7 +113,6 @@ func _on_profile_deleted(profile_id: String) -> void:
 	add_child(_home)
 	_home.owner = self
 	_home.unique_name_in_owner = true
-	_home.profiles_requested.connect(show_picker)
 	_home.set_safe_area(_safe_rect)
 
 func _update_canvas() -> void:

@@ -113,11 +113,13 @@ if [[ -d "$BUILD/android" ]]; then
 			fail "$name is not in the APK"
 		fi
 	done
-	if grep -q " assets/PRIVACY.md\$" <<< "$listing"; then
-		pass "PRIVACY.md is in the APK"
-	else
-		fail "PRIVACY.md is not in the APK"
-	fi
+	for page in PRIVACY.md GUIDE.md; do
+		if grep -q " assets/$page\$" <<< "$listing"; then
+			pass "$page is in the APK"
+		else
+			fail "$page is not in the APK"
+		fi
+	done
 	if grep -qE ' assets/(tests|tools|docs)/| assets/\.mcp\.json$' <<< "$listing"; then
 		fail "a development file is in the APK"
 	else
@@ -159,11 +161,13 @@ if [[ -d "$BUILD/play" ]]; then
 			fail "$name is not in the AAB"
 		fi
 	done
-	if grep -q "/assets/PRIVACY.md\$" <<< "$listing"; then
-		pass "PRIVACY.md is in the AAB"
-	else
-		fail "PRIVACY.md is not in the AAB"
-	fi
+	for page in PRIVACY.md GUIDE.md; do
+		if grep -q "/assets/$page\$" <<< "$listing"; then
+			pass "$page is in the AAB"
+		else
+			fail "$page is not in the AAB"
+		fi
+	done
 	if grep -qE '/assets/(tests|tools|docs)/|/assets/\.mcp\.json$' <<< "$listing"; then
 		fail "a development file is in the AAB"
 	else
