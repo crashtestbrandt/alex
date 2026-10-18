@@ -100,6 +100,10 @@ signing key. A device can move between the two without losing its recordings.
   `https://testflight.apple.com/join/2AYBxYbr`. They get no App Store Connect access.
 - Every tag sends its build to that group (`tools/app-store.sh beta`), with "What to Test" from `metadata.json`.
   Apple's Beta App Review checks the first build of each version, usually within a day.
+- Apple reviews one build of a version at a time. A build tagged while another is in review waits.
+- The `beta-review` workflow runs every three hours. It sends the newest build in the group to Beta App Review
+  once nothing of its version is in review (`tools/app-store.sh beta-pending`). An older build left waiting is
+  skipped.
 - `tools/app-store.sh beta-setup` sets the test information, the review contact and the group. The release
   workflow runs it before each build, and it changes nothing when they are already set.
 - `just app-store X.Y.Z` sets the listing from `store/app-store/`: `metadata.json`, `description.txt`, the age

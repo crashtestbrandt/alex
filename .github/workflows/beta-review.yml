@@ -1,0 +1,33 @@
+name: beta-review
+
+# Sends the newest build in the external TestFlight group to Beta App Review once no other build of its version
+# is in review (docs/releases.md "TestFlight"). Apple takes one build of a version at a time, so a tag pushed
+# while one is in review leaves its build waiting. This changes nothing when there is nothing to send.
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beta-review
+
+jobs:
+  beta-review:
+    runs-on: ubuntu-latest
+    environment: release
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/apple-keys
+        with:
+          asc-key: ${{ secrets.ASC_KEY_P8 }}
+          asc-key-id: ${{ secrets.ASC_KEY_ID }}
+          asc-issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+
+      - name: Beta App Review
+        run: tools/app-store.sh beta-pending
