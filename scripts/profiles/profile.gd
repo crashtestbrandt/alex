@@ -6,12 +6,15 @@ class_name Profile
 ## A profile is the unit of configurability (docs/profiles.md). Everything a family or clinician tailors
 ## lives here or in the style preset it names. Nothing about one child is in code.
 
-const SCHEMA_VERSION: int = 5
+const SCHEMA_VERSION: int = 6
 
 var id: String = ""
 var display_name: String = ""
 var name_recording: String = ""
 var stage: NlaStage.Stage = NlaStage.Stage.UNKNOWN
+## Free text the adults keep with the profile: a show the child quotes, a phrase to try next, a date. Never
+## on the learner's screen. Added in schema 6.
+var notes: String = ""
 ## The id of a StylePreset under res://styles/.
 var style_id: String = "calm"
 ## The starter pack this profile was seeded from, for the record. Empty for a blank start.
@@ -194,6 +197,7 @@ func to_dict() -> Dictionary:
 		"display_name": display_name,
 		"name_recording": name_recording,
 		"stage": int(stage),
+		"notes": notes,
 		"style": style_id,
 		"starter": starter_id,
 		"scenes": Array(scenes),
@@ -217,6 +221,8 @@ static func from_dict(d: Dictionary) -> Profile:
 		return from_dict(migrate_v3(d))
 	if schema == 4:
 		return from_dict(migrate_v4(d))
+	if schema == 5:
+		return from_dict(migrate_v5(d))
 	if schema != SCHEMA_VERSION:
 		return null
 	var profile_id: String = JsonValue.to_text(d.get("id")).strip_edges()
@@ -227,6 +233,10 @@ static func from_dict(d: Dictionary) -> Profile:
 	p.display_name = JsonValue.to_text(d.get("display_name")).strip_edges()
 	p.name_recording = JsonValue.to_text(d.get("name_recording"))
 	p.stage = NlaStage.from_value(d.get("stage"))
+	# A note is kept as typed. Anything but text reads as no note.
+	var raw_notes: Variant = d.get("notes")
+	if raw_notes is String:
+		p.notes = raw_notes
 	p.style_id = JsonValue.to_text(d.get("style"), "calm")
 	p.starter_id = JsonValue.to_text(d.get("starter"))
 	for item: Variant in JsonValue.to_array(d.get("scenes")):
@@ -290,4 +300,11 @@ static func migrate_v4(d: Dictionary) -> Dictionary:
 	var migrated: Dictionary = d.duplicate(true)
 	migrated["schema"] = 5
 	migrated["chunk_takes"] = {}
+	return migrated
+
+## Version 5 had no notes. The stage it carried stays.
+static func migrate_v5(d: Dictionary) -> Dictionary:
+	var migrated: Dictionary = d.duplicate(true)
+	migrated["schema"] = 6
+	migrated["notes"] = ""
 	return migrated

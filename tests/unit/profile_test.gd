@@ -136,6 +136,29 @@ func test_scenes_round_trip_once_each() -> void:
 	d["scenes"] = ["home_routines", "home_routines", "", " "]
 	assert_eq(Profile.from_dict(d).scenes, PackedStringArray(["home_routines"]), "a repeat and a blank are dropped")
 
+func test_v5_migration_adds_empty_notes_and_keeps_the_stage() -> void:
+	var p: Profile = _sample()
+	p.stage = NlaStage.Stage.MITIGATION
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 5
+	old.erase("notes")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 5 loads")
+	assert_eq(back.notes, "", "no notes yet")
+	assert_eq(back.stage, NlaStage.Stage.MITIGATION, "the stage it carried stays")
+	assert_eq(old["schema"], 5, "migration does not mutate its input")
+	assert_eq(back.to_dict()["schema"], Profile.SCHEMA_VERSION, "next save writes the current version")
+
+func test_notes_round_trip_as_written() -> void:
+	var p: Profile = _sample()
+	p.notes = "Quotes Bluey.\nTry \"Let's go | to the park\" next.  "
+	var parsed: Dictionary = JSON.parse_string(JSON.stringify(p.to_dict()))
+	var back: Profile = Profile.from_dict(parsed)
+	assert_eq(back.notes, p.notes, "line breaks, quotes, bars and trailing spaces survive")
+	var bad: Dictionary = p.to_dict()
+	bad["notes"] = 7
+	assert_eq(Profile.from_dict(bad).notes, "", "a non-text note reads as empty, never fatal")
+
 func test_v4_migration_adds_an_empty_take_map() -> void:
 	var p: Profile = _sample()
 	p.gestalts[0].recording = "a.wav"

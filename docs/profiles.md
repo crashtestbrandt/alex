@@ -19,11 +19,12 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 4 forward before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 5 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
-| `stage` | `NlaStage`, 0 for not staged. Informs the adults; gates nothing. |
+| `stage` | `NlaStage`, 0 for not staged. Informs the adults; gates nothing. Edit sets it. |
+| `notes` | Free text the adults keep with the profile. Edit sets it. Never on the learner's screen. Added in schema 6. |
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
 | `scenes` | Every pack the profile holds, the starter first, in the order added. Added in schema 3. |

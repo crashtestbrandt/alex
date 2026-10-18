@@ -241,6 +241,17 @@ func _run() -> void:
 			(profile_card.get_child(1) as SdfButton).pressed.emit()
 			await _settle()
 			_inside(picker.get_node("%StyleBar") as Control, screen, "existing profile look choices")
+			var stage_bar: Control = picker.get_node("%StageBar") as Control
+			sheet.ensure_control_visible(stage_bar)
+			await _settle()
+			_inside(stage_bar, screen, "stage choices")
+			_inside(picker.get_node("%StageModel") as Control, screen, "stage model line")
+			var notes_edit: Control = picker.get_node("%NotesEdit") as Control
+			sheet.ensure_control_visible(notes_edit)
+			await _settle()
+			_inside(notes_edit, screen, "notes field")
+			_check(notes_edit.size.y >= SdfTextArea.MIN_HEIGHT_PX, "notes field holds a few lines")
+			_shot("profile-stage")
 			var scene_rows: Control = picker.get_node("%SceneRows") as Control
 			_check(scene_rows.get_child_count() >= 2, "every shipped scene is listed (%d)" % scene_rows.get_child_count())
 			sheet.ensure_control_visible(scene_rows)
@@ -262,6 +273,7 @@ func _run() -> void:
 	await _safe_areas(main, home, picker, overlay, profile)
 	await _profile_looks(main, picker, profile)
 	_check(_profile_looks_complete, "profile look flow completed")
+	await _profile_stage_notes(main, picker, profile)
 	await _short_picker(main, picker)
 	await _stress(main, home, picker, overlay, profile)
 	await _long_bank(main, profile)
@@ -443,6 +455,47 @@ func _profile_looks(main: Main, picker: ProfilePicker, profile: Profile) -> void
 	_check(Style.current == StylePreset.load_by_id("bold"), "reopening loads the saved look")
 	ProfileStore.repo.delete_profile(other.id)
 	_profile_looks_complete = true
+
+## Edit's stage and notes: picking a stage shows its name and model line, Save writes both, reopening reads
+## them back, and Back discards a change.
+func _profile_stage_notes(main: Main, picker: ProfilePicker, profile: Profile) -> void:
+	_label = "profile-stage-notes"
+	var note: String = "Quotes Bluey.\nTry \"Let's go | to the park\" next."
+	main.show_picker()
+	await _settle()
+	var card: Control = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	(card.get_child(1) as SdfButton).pressed.emit()
+	await _settle()
+	var stages: PillBar = picker.get_node("%StageBar") as PillBar
+	var stage_name: Label = picker.get_node("%StageName") as Label
+	var model: Label = picker.get_node("%StageModel") as Label
+	var notes: SdfTextArea = picker.get_node("%NotesEdit") as SdfTextArea
+	_check(stages.items().size() == 7 and stages.active_index() == 0, "Edit offers Not staged and six stages, Not staged first")
+	_check(stage_name.text == NlaStage.label(NlaStage.Stage.UNKNOWN) and not model.text.is_empty(), "Not staged says what a stage is for")
+	_check(notes.text.is_empty(), "a fresh profile has no notes")
+	stages.items()[2].pressed.emit()
+	await _settle()
+	_check(stage_name.text == NlaStage.label(NlaStage.Stage.MITIGATION), "picking a stage shows its name")
+	_check(model.text == NlaStage.models(NlaStage.Stage.MITIGATION), "and what the adults model there")
+	notes.text = note
+	(picker.get_node("%CreateButton") as SdfButton).pressed.emit()
+	await _settle()
+	var saved: Profile = ProfileStore.load_profile(profile.id)
+	_check(saved.stage == NlaStage.Stage.MITIGATION and saved.notes == note, "Save writes the stage and the notes")
+	main.show_picker()
+	await _settle()
+	card = (picker.get_node("%Profiles") as Control).get_child(0) as Control
+	(card.get_child(1) as SdfButton).pressed.emit()
+	await _settle()
+	_check(stages.active_index() == 2 and notes.text == note and stage_name.text == NlaStage.label(NlaStage.Stage.MITIGATION), "reopening Edit reads both back")
+	stages.items()[4].pressed.emit()
+	notes.text = "discarded"
+	(picker.get_node("%BackButton") as SdfButton).pressed.emit()
+	await _settle()
+	saved = ProfileStore.load_profile(profile.id)
+	_check(saved.stage == NlaStage.Stage.MITIGATION and saved.notes == note, "Back discards a changed stage and note")
+	main.open_profile(profile.id)
+	await _settle()
 
 func _short_picker(main: Main, picker: ProfilePicker) -> void:
 	for style: String in ["calm", "bold", "quiet"]:

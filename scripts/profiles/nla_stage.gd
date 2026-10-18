@@ -24,9 +24,24 @@ const _LABELS: Dictionary[int, String] = {
 	Stage.FULL_GRAMMAR: "Stage 6 · Full grammar",
 }
 
+## What the adults model at each stage, one line, from the table in docs/design.md. Empty for UNKNOWN.
+const _MODELS: Dictionary[int, String] = {
+	Stage.UNKNOWN: "",
+	Stage.ECHOLALIA: "Adults model short, mitigable gestalts in a natural voice.",
+	Stage.MITIGATION: "Adults model recombinations of chunks the learner already has.",
+	Stage.SINGLE_WORDS: "Adults model single words in context.",
+	Stage.EARLY_GRAMMAR: "Adults model natural sentences without correction.",
+	Stage.COMPLEX_GRAMMAR: "Adults model longer sentences, still without correction.",
+	Stage.FULL_GRAMMAR: "Adults model conversation.",
+}
+
 ## The adult-facing label for `stage`.
 static func label(stage: Stage) -> String:
 	return _LABELS.get(stage, _LABELS[Stage.UNKNOWN])
+
+## The adult-facing line on what to model at `stage`. Empty for UNKNOWN.
+static func models(stage: Stage) -> String:
+	return _MODELS.get(stage, "")
 
 ## `value` as a Stage, or UNKNOWN for anything outside 1 to 6. Accepts an int or a numeric string, which is
 ## what a JSON file or a form hands back.

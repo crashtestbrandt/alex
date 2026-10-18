@@ -8,6 +8,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/sdf_sheet.gd" id="sheet"]
 [ext_resource type="Script" path="res://scripts/ui/hold_button.gd" id="hold"]
+[ext_resource type="Script" path="res://scripts/ui/sdf_text_area.gd" id="notes"]
 
 [node name="ProfilePicker" type="Control"]
 layout_mode = 3
@@ -109,6 +110,56 @@ text = "Look"
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("5")
+
+[node name="StageSection" type="VBoxContainer" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StageRow" type="BoxContainer" parent="Center/Panel/Column/StageSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StageLabel" type="Label" parent="Center/Panel/Column/StageSection/StageRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Stage"
+
+[node name="StageBar" type="MarginContainer" parent="Center/Panel/Column/StageSection/StageRow"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("5")
+
+[node name="StageName" type="Label" parent="Center/Panel/Column/StageSection"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Not staged"
+autowrap_mode = 3
+
+[node name="StageModel" type="Label" parent="Center/Panel/Column/StageSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "A stage is a note for the adults. It changes nothing the learner sees."
+autowrap_mode = 3
+
+[node name="NotesSection" type="VBoxContainer" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NotesLabel" type="Label" parent="Center/Panel/Column/NotesSection"]
+layout_mode = 2
+text = "Notes"
+
+[node name="NotesEdit" type="TextEdit" parent="Center/Panel/Column/NotesSection"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "For the adults: a show they quote, a phrase to try next, a date."
+script = ExtResource("notes")
 
 [node name="SceneSection" type="VBoxContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true

@@ -132,6 +132,7 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 | `ChunkButton` | `HoldButton` | A chunk the learner taps in Build: a pill in its chunk's color at the tile floor, text in the style's text color. A hold records it. |
 | `TakePill` | `ChunkButton` | A pill on the recording overlay: a chunk in its color, or the whole phrase on the surface. A tap picks it; the picked pill has a thick border; a pill with a take carries a microphone mark. |
 | `SdfField` | `LineEdit` | A text field with an `SdfShape` behind it; focus adds the accent border. |
+| `SdfTextArea` | `TextEdit` | The multi-line partner of `SdfField`: the notes on Edit. It wraps and grows with its text from a few lines. |
 | `HoldButton` | `SdfButton` | Fires only after a hold, so a stray tap does nothing. The caregiver chord cancels a hold in progress. |
 | `ChunkRow` | `HFlowContainer` | A gestalt's chunks as wrapping pills, each an `SdfShape` in its chunk color. `play` marks each chunk in turn. `floating` gives the pills the style's relief. |
 
@@ -173,6 +174,8 @@ three seconds (`CaregiverChord`):
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
+- Edit shows the stage as a pill bar, None then 1 to 6, with the picked stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). None reads Not staged under the bar and says what a stage is for.
+- Edit shows a Notes field, an `SdfTextArea`. Save writes the stage and the notes with the look. Back discards both. Neither reaches the learner's screen.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Caregiver guide opens `GUIDE.md` on a tap. Privacy policy opens `PRIVACY.md` on a tap (`PageText`).
 - `GUIDE.md` is the one place caregiver instructions live. The README lists the first steps and points to it. A change to how a caregiver does something updates `GUIDE.md` in the same PR.

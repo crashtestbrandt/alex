@@ -128,8 +128,10 @@ record a stage for the caregiver's reference. Nothing on the learner's screen sh
 | 2 | Mixes and matches chunks of gestalts. | Recombinations of chunks the learner already has. |
 | 3 | Isolates single words and makes two-word combinations. | Single words in context. |
 | 4 | Builds first original sentences, grammar still rough. | Natural sentences without correction. |
-| 5 | Uses more complex grammar. | |
-| 6 | Uses full, flexible sentences. | |
+| 5 | Uses more complex grammar. | Longer sentences, still without correction. |
+| 6 | Uses full, flexible sentences. | Conversation. |
+
+`NlaStage.models` carries the right-hand column, one line per stage, for Edit.
 
 ## Sources
 

@@ -32,6 +32,13 @@ const PRIVACY_URL: String = "https://github.com/crashtestbrandt/alex/blob/main/P
 @onready var _delete_button: HoldButton = %DeleteButton
 @onready var _scene_section: VBoxContainer = %SceneSection
 @onready var _scene_rows: VBoxContainer = %SceneRows
+@onready var _stage_section: VBoxContainer = %StageSection
+@onready var _stage_row: BoxContainer = %StageRow
+@onready var _stage_bar: PillBar = %StageBar
+@onready var _stage_name: Label = %StageName
+@onready var _stage_model: Label = %StageModel
+@onready var _notes_section: VBoxContainer = %NotesSection
+@onready var _notes_edit: SdfTextArea = %NotesEdit
 @onready var _guide_button: SdfButton = %GuideButton
 @onready var _privacy_button: SdfButton = %PrivacyButton
 @onready var _page: VBoxContainer = %Page
@@ -54,9 +61,11 @@ func _ready() -> void:
 	_name_edit.text_submitted.connect(_on_name_submitted)
 	_fill_starters()
 	_fill_styles()
+	_fill_stages()
 	resized.connect(_layout_profiles)
 	_starter_row.resized.connect(_layout_choices)
 	_style_row.resized.connect(_layout_choices)
+	_stage_row.resized.connect(_layout_choices)
 	_scene_rows.resized.connect(_layout_choices)
 	Style.changed.connect(func(_preset: StylePreset) -> void: _layout_choices.call_deferred())
 	refresh()
@@ -66,7 +75,7 @@ func _layout_profiles() -> void:
 	_layout_choices.call_deferred()
 
 func _layout_choices() -> void:
-	for row: BoxContainer in [_starter_row, _style_row]:
+	for row: BoxContainer in [_starter_row, _style_row, _stage_row]:
 		var label: Control = row.get_child(0) as Control
 		var bar: PillBar = row.get_child(1) as PillBar
 		var natural: float = label.get_combined_minimum_size().x + 12.0 + PillBar.PAD_PX * 2.0
@@ -140,6 +149,29 @@ func _fill_styles() -> void:
 		_style_bar.add_item(button)
 	_style_bar.set_active(_current_style_index())
 
+## One pill per stage, None first, numbered so seven fit one row on a phone. The lines under the bar carry
+## the picked stage's name and what the adults model there. The index is the stage.
+func _fill_stages() -> void:
+	_stage_bar.clear()
+	for stage: NlaStage.Stage in NlaStage.Stage.values():
+		var button: SdfButton = SdfButton.new()
+		button.text = "None" if stage == NlaStage.Stage.UNKNOWN else str(int(stage))
+		button.tooltip_text = NlaStage.label(stage)
+		button.pressed.connect(_on_stage_pressed.bind(stage))
+		_stage_bar.add_item(button)
+	_stage_bar.set_active(0)
+	_show_stage(NlaStage.Stage.UNKNOWN)
+
+func _on_stage_pressed(stage: NlaStage.Stage) -> void:
+	_stage_bar.set_active(int(stage))
+	_show_stage(stage)
+
+## The stage's name and its model line. Not staged says what a stage is for.
+func _show_stage(stage: NlaStage.Stage) -> void:
+	_stage_name.text = NlaStage.label(stage)
+	var line: String = NlaStage.models(stage)
+	_stage_model.text = line if not line.is_empty() else "A stage is a note for the adults. It changes nothing the learner sees."
+
 ## The pill for the style the app is wearing right now, or Calm when the current preset is not one on disk.
 func _current_style_index() -> int:
 	var current: int = _style_ids.find(Style.current.resource_path.get_file().get_basename())
@@ -161,6 +193,8 @@ func _show_mode(mode: Mode) -> void:
 	_actions.visible = mode != Mode.PICK
 	_delete_section.visible = mode == Mode.LOOK
 	_scene_section.visible = mode == Mode.LOOK
+	_stage_section.visible = mode == Mode.LOOK
+	_notes_section.visible = mode == Mode.LOOK
 	var reading: bool = mode == Mode.POLICY or mode == Mode.GUIDE
 	_page.visible = reading
 	_guide_button.visible = mode == Mode.PICK or mode == Mode.CREATE
@@ -195,6 +229,9 @@ func _on_edit_profile(profile_id: String) -> void:
 	_show_mode(Mode.LOOK)
 	_heading.text = "Edit %s" % profile.display_name
 	_fill_scenes(profile)
+	_stage_bar.set_active(int(profile.stage))
+	_show_stage(profile.stage)
+	_notes_edit.text = profile.notes
 	_on_style_pressed(profile.style_id)
 	_style_bar.items()[_current_style_index()].grab_focus()
 
@@ -330,6 +367,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_on_back()
 		get_viewport().set_input_as_handled()
 
+## Save writes the look, the stage and the notes. Scenes were saved as they changed.
 func _save_look(style_id: String) -> void:
 	# Reload before saving so previewing a look cannot overwrite other profile changes.
 	var profile: Profile = ProfileStore.load_profile(_editing_id)
@@ -337,8 +375,10 @@ func _save_look(style_id: String) -> void:
 		_status.text = "Could not open the profile."
 		return
 	profile.style_id = style_id
+	profile.stage = NlaStage.from_value(_stage_bar.active_index())
+	profile.notes = _notes_edit.text
 	if ProfileStore.save_profile(profile) != OK:
-		_status.text = "Could not save the look. Try again."
+		_status.text = "Could not save the changes. Try again."
 		return
 	var profile_id: String = _editing_id
 	refresh()

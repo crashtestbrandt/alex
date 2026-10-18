@@ -44,6 +44,7 @@ func _build_theme(preset: StylePreset) -> Theme:
 	theme.set_color("font_color", "Label", preset.text)
 	theme.set_font_size("font_size", "Button", font_px(_BASE_TILE_FONT))
 	theme.set_font_size("font_size", "LineEdit", font_px(_BASE_LABEL_FONT))
+	theme.set_font_size("font_size", "TextEdit", font_px(_BASE_LABEL_FONT))
 	theme.set_font_size("font_size", "OptionButton", font_px(_BASE_LABEL_FONT))
 	theme.set_font_size("font_size", "ItemList", font_px(_BASE_LABEL_FONT))
 	theme.set_type_variation(&"TitleLabel", &"Label")
@@ -54,6 +55,9 @@ func _build_theme(preset: StylePreset) -> Theme:
 	theme.set_color("font_color", "StampLabel", preset.text.lerp(preset.background, 0.45))
 	theme.set_type_variation(&"SectionLabel", &"Label")
 	theme.set_font_size("font_size", "SectionLabel", font_px(_BASE_SECTION_FONT))
+	# A line under a control that says what the choice means: label size, faded a little toward the page.
+	theme.set_type_variation(&"HintLabel", &"Label")
+	theme.set_color("font_color", "HintLabel", preset.text.lerp(preset.background, 0.3))
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
 		theme.set_stylebox(state, "Button", _button_box(preset, state))
 	theme.set_color("font_color", "Button", preset.text)
