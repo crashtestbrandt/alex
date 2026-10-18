@@ -2,8 +2,8 @@ extends RefCounted
 class_name Starter
 ## A starter pack: a scene, its room, its gestalts and its boards. Shipped as JSON under res://starters/ so a
 ## parent or clinician can write one without touching code (docs/profiles.md). A profile copies the pack at
-## creation (`seed`) or adds it later (`add_to`) and never reads it again, so editing a pack changes nothing
-## for an existing child.
+## creation (`seed`) or adds it later (`add_to`). Only an explicit Update room action reads new geometry
+## into an existing scene; phrase assignments and recordings remain unchanged.
 
 const DIR: String = "res://starters"
 ## Joins a pack id to a local id when a pack is added to a profile. A gestalt id names a recording file, so
@@ -149,3 +149,84 @@ func seed(p: Profile) -> void:
 		if existing_room != null:
 			p.rooms.erase(existing_room)
 		p.rooms.push_back(Room.from_dict(r.to_dict()))
+
+## Whether the profile already uses this pack's current geometry. Phrases and recordings are independent.
+func layout_matches(p: Profile) -> bool:
+	for source: Room in rooms:
+		var own: Room = p.room(_layout_room_id(p, source.id))
+		if own == null or not RoomSpace.dims(own).is_equal_approx(RoomSpace.dims(source)):
+			return false
+		for spot: Spot in source.spots:
+			var found: Spot = _spot_in(own, spot.id)
+			if found == null or found.kind != spot.kind or found.wall != spot.wall:
+				return false
+			if not is_equal_approx(found.size, spot.size) or not RoomSpace.place(found, own).is_equal_approx(RoomSpace.place(spot, source)):
+				return false
+	return true
+
+## An explicit caregiver action updates the furniture while keeping every existing phrase assignment.
+## New spots reuse phrases in the bank, or copy only the phrases they need. Nothing is deleted.
+func update_layout(p: Profile) -> bool:
+	if not p.has_scene(id) or layout_matches(p):
+		return false
+	for source: Room in rooms:
+		var room_id: String = _layout_room_id(p, source.id)
+		var own: Room = p.room(room_id)
+		if own == null:
+			own = Room.new()
+			own.id = room_id
+			own.title = source.title
+			own.camera = source.camera
+			p.rooms.push_back(own)
+		own.width = source.width
+		own.depth = source.depth
+		own.height = source.height
+		for spot: Spot in source.spots:
+			var found: Spot = _spot_in(own, spot.id)
+			if found == null:
+				found = Spot.from_dict(spot.to_dict())
+				var ids: Dictionary[String, String] = {}
+				for gid: String in spot.gestalt_ids():
+					ids[gid] = _layout_phrase(p, gid)
+				found.gestalt_id = _mapped(ids, found.gestalt_id)
+				found.alt_gestalt_id = _mapped(ids, found.alt_gestalt_id)
+				for stage: int in found.stage_gestalts:
+					found.stage_gestalts[stage] = _mapped(ids, found.stage_gestalts[stage])
+				for stage: int in found.stage_alts:
+					found.stage_alts[stage] = _mapped(ids, found.stage_alts[stage])
+				own.spots.push_back(found)
+			found.kind = spot.kind
+			found.wall = spot.wall
+			found.x = spot.x
+			found.y = spot.y
+			found.height = spot.height
+			found.size = spot.size
+			found.rotation_degrees = spot.rotation_degrees
+	return true
+
+## A removed starter is re-added with scoped ids, just like any other scene.
+func _layout_room_id(p: Profile, local_id: String) -> String:
+	if p.room(scoped(local_id)) != null:
+		return scoped(local_id)
+	return local_id if p.starter_id == id else scoped(local_id)
+
+static func _spot_in(room: Room, spot_id: String) -> Spot:
+	for spot: Spot in room.spots:
+		if spot.id == spot_id:
+			return spot
+	return null
+
+func _layout_phrase(p: Profile, gid: String) -> String:
+	for phrase: Gestalt in gestalts:
+		if phrase.id != gid:
+			continue
+		var existing: Gestalt = p.gestalt_by_text(phrase.authored_text())
+		if existing != null:
+			return existing.id
+		var target: String = gid if p.starter_id == id else scoped(gid)
+		if p.gestalt(target) == null:
+			var copy: Gestalt = Gestalt.from_dict(phrase.to_dict())
+			copy.id = target
+			p.put_gestalt(copy)
+		return target
+	return gid

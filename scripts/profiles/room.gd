@@ -19,6 +19,10 @@ const _CAMERA_NAMES: Dictionary[String, int] = {"fixed": Camera.FIXED, "views": 
 var id: String = ""
 var title: String = ""
 var camera: Camera = Camera.VIEWS
+## Interior dimensions in metres. Legacy rooms keep the original box.
+var width: float = 4.0
+var depth: float = 3.0
+var height: float = 2.6
 var spots: Array[Spot] = []
 
 static func camera_name(c: Camera) -> String:
@@ -38,7 +42,7 @@ func to_dict() -> Dictionary:
 	var spot_dicts: Array[Dictionary] = []
 	for s: Spot in spots:
 		spot_dicts.push_back(s.to_dict())
-	return {"id": id, "title": title, "camera": camera_name(camera), "spots": spot_dicts}
+	return {"id": id, "title": title, "camera": camera_name(camera), "spots": spot_dicts, "width": width, "depth": depth, "height": height}
 
 ## A room from a saved dictionary. Returns null for a missing id. A spot that does not parse is skipped.
 static func from_dict(d: Dictionary) -> Room:
@@ -48,9 +52,16 @@ static func from_dict(d: Dictionary) -> Room:
 	var r: Room = Room.new()
 	r.id = room_id
 	r.title = JsonValue.to_text(d.get("title"), room_id)
+	r.width = _dimension(d.get("width"), 4.0, 2.4, 8.0)
+	r.depth = _dimension(d.get("depth"), 3.0, 2.4, 8.0)
+	r.height = _dimension(d.get("height"), 2.6, 2.2, 4.0)
 	r.camera = camera_from_name(JsonValue.to_text(d.get("camera"), "views"))
 	for row: Dictionary in JsonValue.to_dict_rows(d.get("spots")):
 		var s: Spot = Spot.from_dict(row)
 		if s != null:
 			r.spots.push_back(s)
 	return r
+
+static func _dimension(value: Variant, fallback: float, low: float, high: float) -> float:
+	var number: float = JsonValue.to_float(value, fallback)
+	return clampf(number, low, high) if is_finite(number) else fallback

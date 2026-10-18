@@ -219,9 +219,9 @@ func test_shipped_furniture_fits_without_intersections() -> void:
 			for spot: Spot in room.spots:
 				if spot.wall != Spot.Wall.NONE:
 					continue
-				var box: AABB = RoomSpace.place(spot) * ObjectRecipes.make(spot.kind, RoomSpace.spot_size_m(spot), StylePreset.new()).aabb()
-				assert_true(box.position.x >= -RoomSpace.WIDTH / 2.0 and box.end.x <= RoomSpace.WIDTH / 2.0, "%s/%s fits across the room" % [pack.id, spot.id])
-				assert_true(box.position.z >= -RoomSpace.DEPTH / 2.0 and box.end.z <= RoomSpace.DEPTH / 2.0, "%s/%s fits between the walls" % [pack.id, spot.id])
+				var box: AABB = RoomSpace.place(spot, room) * ObjectRecipes.make(spot.kind, RoomSpace.spot_size_m(spot, room), StylePreset.new()).aabb()
+				assert_true(box.position.x >= -room.width / 2.0 and box.end.x <= room.width / 2.0, "%s/%s fits across the room" % [pack.id, spot.id])
+				assert_true(box.position.z >= -room.depth / 2.0 and box.end.z <= room.depth / 2.0, "%s/%s fits between the walls" % [pack.id, spot.id])
 				if spot.kind == Spot.Kind.CIRCLE:
 					continue
 				for other: String in bounds:
@@ -233,3 +233,44 @@ func test_new_kinds_round_trip_without_changing_saved_kind_numbers() -> void:
 	for value: int in Spot.Kind.values():
 		var kind: Spot.Kind = value as Spot.Kind
 		assert_eq(Spot.kind_from_name(Spot.kind_name(kind)), kind, "every recipe has a saved name")
+
+func test_room_update_preserves_voices_phrases_and_stage() -> void:
+	for seeded: bool in [true, false]:
+		var p: Profile = Profile.make("existing", "Sam")
+		var pack: Starter = Starter.find("snack_time")
+		if seeded:
+			pack.seed(p)
+		else:
+			pack.add_to(p)
+		var room: Room = p.rooms[0]
+		room.width = 4.0
+		room.depth = 3.0
+		room.spots.pop_back()
+		p.set_scene_stage(pack.id, NlaStage.Stage.SINGLE_WORDS)
+		var phrase: Gestalt = p.gestalt(room.spots[0].gestalt_id)
+		phrase.recording = "familiar.wav"
+		var phrase_before: Dictionary = phrase.to_dict()
+		var assignment: String = room.spots[0].gestalt_id
+		assert_false(pack.layout_matches(p), "old layout has an update")
+		assert_true(pack.update_layout(p), "layout updates")
+		assert_true(pack.layout_matches(p), "new geometry matches the pack")
+		assert_eq(p.gestalt(assignment).to_dict(), phrase_before, "phrase and recording are unchanged")
+		assert_eq(p.stage_for_scene(pack.id), NlaStage.Stage.SINGLE_WORDS, "scene stage is unchanged")
+		for spot: Spot in room.spots:
+			for gid: String in spot.gestalt_ids():
+				assert_not_null(p.gestalt(gid), "new objects resolve every phrase")
+		var count: int = p.gestalts.size()
+		assert_false(pack.update_layout(p), "a second update does nothing")
+		assert_eq(p.gestalts.size(), count, "phrases are not duplicated")
+
+func test_layout_update_after_readding_original_starter() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	var pack: Starter = Starter.find("home_routines")
+	pack.seed(p)
+	p.remove_scene(pack.id)
+	pack.add_to(p)
+	assert_true(pack.layout_matches(p), "re-added starter already has current geometry")
+	p.rooms[0].depth = 3.0
+	assert_true(pack.update_layout(p), "re-added starter updates in place")
+	assert_eq(p.rooms.size(), 1, "no duplicate unscoped room")
+	assert_true(pack.layout_matches(p), "updated scoped room matches")

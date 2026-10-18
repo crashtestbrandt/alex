@@ -19,6 +19,8 @@ static func make(kind: Spot.Kind, size_m: float, preset: StylePreset) -> Recipe:
 			_door(r, s, preset)
 		Spot.Kind.LIGHT:
 			_light(r, s, preset)
+		Spot.Kind.PRIVACY_WINDOW:
+			_privacy_window(r, s, preset)
 		Spot.Kind.WINDOW:
 			_window(r, s, preset)
 		Spot.Kind.BALL:
@@ -33,6 +35,8 @@ static func make(kind: Spot.Kind, size_m: float, preset: StylePreset) -> Recipe:
 			_tub(r, s, preset)
 		Spot.Kind.STAR:
 			_star(r, s, preset)
+		Spot.Kind.DINING_TABLE:
+			_dining_table(r, s, preset)
 		Spot.Kind.TABLE:
 			_table(r, s, preset)
 		Spot.Kind.SINK:
@@ -62,7 +66,7 @@ static func opening(kind: Spot.Kind, size_m: float) -> Rect2:
 	match kind:
 		Spot.Kind.DOOR:
 			return Rect2(-0.195 * size_m, 0.0, 0.39 * size_m, 0.97 * size_m)
-		Spot.Kind.WINDOW:
+		Spot.Kind.WINDOW, Spot.Kind.PRIVACY_WINDOW:
 			return Rect2(-0.40 * size_m, 0.05 * size_m, 0.80 * size_m, 0.80 * size_m)
 		_:
 			return Rect2()
@@ -357,3 +361,20 @@ static func _wall_light(r: Recipe, s: float, p: StylePreset) -> void:
 	r.add(Primitive.box(Vector3(0.65, 1.0, 0.27) * s, _at(0, 0.50 * s, 0.18 * s), p.surface, 0.06 * s)).in_part("shade")
 	r.glow_parts = PackedStringArray(["shade"])
 	r.height = s
+
+## Opaque frosted glazing with shallow flutes. It never receives the clear window's alpha material.
+static func _privacy_window(r: Recipe, s: float, p: StylePreset) -> void:
+	_window(r, s, p)
+	for i: int in 7:
+		r.add(Primitive.box(Vector3(0.012, 0.76, 0.008) * s, _at((-0.33 + i * 0.11) * s, 0.45 * s, 0.025 * s), p.glass.lightened(0.15))).in_part("pane")
+
+## A dining table has a lower top than the narrow bedside table, at seated elbow height.
+static func _dining_table(r: Recipe, s: float, p: StylePreset) -> void:
+	var top: float = 0.62 * s
+	r.add(Primitive.box(Vector3(1.0, 0.05, 0.70) * s, _at(0, top - 0.025 * s, 0), p.wood, 0.015 * s))
+	for x: int in [-1, 1]:
+		for z: int in [-1, 1]:
+			r.add(Primitive.box(Vector3(0.06 * s, top - 0.05 * s, 0.06 * s), _at(x * 0.43 * s, (top - 0.05 * s) / 2.0, z * 0.28 * s), p.wood.darkened(0.08)))
+	for side: int in [-1, 1]:
+		r.add(Primitive.box(Vector3(0.88, 0.08, 0.04) * s, _at(0, top - 0.09 * s, side * 0.28 * s), p.wood))
+	r.height = top

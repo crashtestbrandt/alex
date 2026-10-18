@@ -6,7 +6,7 @@ class_name Profile
 ## A profile is the unit of configurability (docs/profiles.md). Everything a family or clinician tailors
 ## lives here or in the style preset it names. Nothing about one child is in code.
 
-const SCHEMA_VERSION: int = 8
+const SCHEMA_VERSION: int = 9
 
 var id: String = ""
 var display_name: String = ""
@@ -275,6 +275,8 @@ static func from_dict(d: Dictionary) -> Profile:
 		return from_dict(migrate_v6(d))
 	if schema == 7:
 		return from_dict(migrate_v7(d))
+	if schema == 8:
+		return from_dict(migrate_v8(d))
 	if schema != SCHEMA_VERSION:
 		return null
 	var profile_id: String = JsonValue.to_text(d.get("id")).strip_edges()
@@ -390,4 +392,16 @@ static func migrate_v7(d: Dictionary) -> Dictionary:
 				stages[scene_id] = int(old_stage)
 	migrated["scene_stages"] = stages
 	migrated.erase("stage")
+	return migrated
+
+## Version 9 adds room dimensions and floor-object rotation without moving saved objects.
+static func migrate_v8(d: Dictionary) -> Dictionary:
+	var migrated: Dictionary = d.duplicate(true)
+	migrated["schema"] = 9
+	for room: Dictionary in JsonValue.to_dict_rows(migrated.get("rooms")):
+		room["width"] = 4.0
+		room["depth"] = 3.0
+		room["height"] = 2.6
+		for spot: Dictionary in JsonValue.to_dict_rows(room.get("spots")):
+			spot["rotation"] = 0.0
 	return migrated

@@ -19,6 +19,7 @@ const RADIUS_SCALE: float = 1.6
 var _shape: SdfShape = null
 
 func _init() -> void:
+	mouse_filter = Control.MOUSE_FILTER_PASS
 	var empty: StyleBoxEmpty = StyleBoxEmpty.new()
 	empty.set_content_margin_all(CONTENT_MARGIN_PX)
 	add_theme_stylebox_override("panel", empty)

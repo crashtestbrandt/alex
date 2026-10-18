@@ -94,7 +94,12 @@ func _layout_choices() -> void:
 		var actions: Control = row.get_child(1) as Control
 		var font: Font = title.get_theme_font("font")
 		var title_px: float = font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, title.get_theme_font_size("font_size")).x
-		row.vertical = row.size.x < title_px + 12.0 + actions.get_combined_minimum_size().x
+		var actions_width: float = 0.0
+		for action: Control in actions.get_children():
+			actions_width += action.get_combined_minimum_size().x + 12.0
+		actions_width = maxf(actions_width - 12.0, 0.0)
+		row.vertical = row.size.x < title_px + 12.0 + actions_width
+		actions.custom_minimum_size.x = 0.0 if row.vertical else actions_width
 		if entry.get_child(1) is BoxContainer:
 			_layout_choice_row(entry.get_child(1) as BoxContainer)
 
@@ -311,9 +316,10 @@ func _fill_scenes(profile: Profile) -> void:
 		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(title)
-		var actions: HBoxContainer = HBoxContainer.new()
-		actions.alignment = BoxContainer.ALIGNMENT_END
-		actions.add_theme_constant_override("separation", 12)
+		var actions: HFlowContainer = HFlowContainer.new()
+		actions.alignment = FlowContainer.ALIGNMENT_END
+		actions.add_theme_constant_override("h_separation", 12)
+		actions.add_theme_constant_override("v_separation", 8)
 		row.add_child(actions)
 		if not profile.has_scene(s.id):
 			actions.add_child(_scene_button("Add", false, _on_add_scene.bind(s)))
@@ -321,6 +327,8 @@ func _fill_scenes(profile: Profile) -> void:
 			if profile.scene_has_room(s.id):
 				var here: bool = s.id == entry
 				actions.add_child(_scene_button("Starts here" if here else "Start here", here, _on_entry_scene.bind(s)))
+			if not s.layout_matches(profile):
+				actions.add_child(_scene_button("Update room", false, _on_update_room.bind(s)))
 			actions.add_child(_scene_button("Remove", false, _on_remove_scene.bind(s)))
 		scene_entry.add_child(row)
 		if profile.has_scene(s.id):
@@ -372,11 +380,16 @@ func _scene_button(text: String, done: bool, on_pressed: Callable) -> SdfButton:
 	button.disabled = done
 	button.shape = SdfButton.Shape.PILL
 	button.quiet = done
+	if done:
+		button.add_theme_color_override("font_disabled_color", Style.current.text.lerp(Style.current.surface, 0.25))
 	button.pressed.connect(on_pressed)
 	return button
 
 func scene_rows() -> Array[Node]:
 	return _scene_entries
+
+func _on_update_room(s: Starter) -> void:
+	_change_scene(s.update_layout, "Updated %s." % s.title, "Could not update the room. Try again.")
 
 func _on_add_scene(s: Starter) -> void:
 	_change_scene(s.add_to, "Added %s." % s.title, "Could not save the scene. Try again.")
@@ -399,6 +412,7 @@ func _change_scene(change: Callable, done: String, failed: String) -> void:
 		_status.text = "Could not open the profile."
 		_status.show()
 		return
+	var scroll: int = _sheet.scroll_vertical
 	var changed: bool = change.call(profile)
 	if not changed:
 		_fill_scenes(profile)
@@ -410,6 +424,7 @@ func _change_scene(change: Callable, done: String, failed: String) -> void:
 	_status.text = done
 	_status.show()
 	_fill_scenes(profile)
+	_sheet.restore_scroll_after_layout(scroll)
 
 func _on_back() -> void:
 	if _previous_style != null:
@@ -451,7 +466,7 @@ func _show_page(path: String, mode: Mode) -> void:
 	label.bbcode_enabled = true
 	label.fit_content = true
 	label.scroll_active = false
-	label.selection_enabled = true
+	label.selection_enabled = false
 	label.mouse_filter = Control.MOUSE_FILTER_PASS
 	label.add_theme_color_override("default_color", Style.current.text)
 	label.add_theme_font_size_override("normal_font_size", Style.font_px(22))

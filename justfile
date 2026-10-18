@@ -61,6 +61,10 @@ doc-size-check:
 room-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_probe.tscn
 
+# Pointer routing, text-entry focus, and Markdown drag scrolling in caregiver sheets.
+caregiver-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/caregiver_probe.tscn
+
 # Tap visibility in every shipped room, from Front and Top in every style.
 content-probe:
     "{{godot}}" {{headless}} --path . tools/instr/content_probe.tscn

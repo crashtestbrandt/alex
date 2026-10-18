@@ -64,8 +64,13 @@ func _run() -> void:
 	for b: SpotBody in bodies:
 		var point: Vector2 = room_view.screen_point(b)
 		_check(safe.has_point(point), "%s is inside the band (%s in %s)" % [b.spot.id, point, safe])
-		var picked: SpotBody = room_view.pick_at(point)
-		_check(picked == b, "%s is picked at its own center (got %s)" % [b.spot.id, picked.spot.id if picked != null else "nothing"])
+		# Books can cover a rug's center, just as a cup can cover a table. Require a visible tap surface.
+		var reachable: bool = room_view.pick_at(point) == b
+		var bounds: Rect2 = room_view.screen_bounds(b)
+		for x: int in range(1, 10):
+			for y: int in range(1, 10):
+				reachable = reachable or room_view.pick_at(bounds.position + bounds.size * Vector2(x / 10.0, y / 10.0)) == b
+		_check(reachable, "%s has a reachable surface from the front" % b.spot.id)
 		_check(safe.encloses(room_view.screen_bounds(b)), "%s bounds fit inside the safe band" % b.spot.id)
 	_check(room_view.pick_at(Vector2(2.0, 2.0)) == null, "the top corner picks nothing")
 

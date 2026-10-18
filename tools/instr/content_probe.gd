@@ -18,7 +18,7 @@ func _run() -> void:
 	ProfileStore.repo = repo
 	var main: Main = MAIN.instantiate() as Main
 	add_child(main)
-	get_window().size = Vector2i(1280, 800)
+	get_window().size = Vector2i(390, 844) if OS.get_cmdline_user_args().has("--phone") else Vector2i(1280, 800)
 	for pack: Starter in Starter.list_all():
 		if pack.rooms.is_empty():
 			continue
@@ -35,6 +35,12 @@ func _run() -> void:
 				room.set_view(view, false)
 				await get_tree().process_frame
 				for body: SpotBody in room.bodies():
+					if body.spot.kind == Spot.Kind.PRIVACY_WINDOW:
+						var pane: MeshInstance3D = body.get_node("Object/" + RecipeBuilder.node_name("pane")) as MeshInstance3D
+						var material: StandardMaterial3D = pane.material_override as StandardMaterial3D
+						if material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+							_failed += 1
+							print("FAIL privacy glazing is transparent")
 					var reachable: bool = room.pick_at(room.screen_point(body)) == body
 					var rect: Rect2 = room.screen_bounds(body)
 					for x: int in range(1, 5):

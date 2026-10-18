@@ -170,6 +170,7 @@ three seconds (`CaregiverChord`):
 - New profile opens a separate form. An empty profile list opens that form directly.
 - The name is an `SdfField`. Starter and style choices use pill bars. Create or Save is the form's primary action.
 - Edit also lists every shipped scene. Add copies the scene's room and phrases into the profile and saves it (docs/profiles.md "Adding a scene").
+- A scene with older geometry shows Update room. It updates placement and adds missing objects while preserving phrase assignments and recordings.
 - A scene the profile holds shows Remove (docs/profiles.md "Removing a scene").
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
@@ -242,6 +243,10 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 ## Caregiver surfaces and Markdown
 
 - Caregiver sheets use a subtle top highlight, a fine inner edge, and a soft shadow. Text surfaces stay opaque.
+- Nested panels pass drag input to the sheet. Stage and scene changes retain the current scroll position.
+- Tapping outside a text entry or beginning a sheet scroll dismisses the keyboard. The sheet stays above the mobile keyboard.
+- Markdown text selection is disabled so text drags scroll the page. Each new page starts at the top.
+- `just caregiver-probe` exercises focus dismissal, nested-panel drags, scene updates and Markdown scrolling.
 - Scene entries sit in flat tonal panels. Their descriptions stay visible on touch screens.
 - The Calm page background is cool porcelain (`#ecf1f5`); room materials and chunk identities are unchanged.
 - Guide, glossary and privacy pages use `PageMarkdown` and `RichTextLabel`. Headings, emphasis, lists,

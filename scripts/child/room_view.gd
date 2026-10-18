@@ -120,11 +120,11 @@ func show_room(p: Profile, r: Room) -> void:
 	for s: Spot in r.spots:
 		if p.gestalt(s.gestalt_id) == null:
 			continue
-		var size_m: float = RoomSpace.spot_size_m(s)
+		var size_m: float = RoomSpace.spot_size_m(s, r)
 		var recipe: Recipe = ObjectRecipes.make(s.kind, size_m, Style.current)
 		var body: SpotBody = SpotBody.new()
 		body.setup(s, recipe, size_m, _material)
-		body.set_rest(RoomSpace.place(s))
+		body.set_rest(RoomSpace.place(s, r))
 		_world.add_child(body)
 		_bodies[s.id] = body
 	_tilt_origin = RoomSpace.tilt_origin(r)
@@ -310,7 +310,7 @@ func _clamp_pan(pan_m: Vector2) -> Vector2:
 
 ## The room box on the view plane of the current orbit view, in meters right and up from the target.
 func room_silhouette() -> Rect2:
-	return CameraFraming.room_silhouette(RoomSpace.dims(), _target(), _azimuth, _elevation)
+	return CameraFraming.room_silhouette(RoomSpace.dims(_room), _target(), _azimuth, _elevation)
 
 ## Float `g`'s chunks above spot `s` for about `seconds`, each chunk marked in turn ([ChunkRow]). The pills
 ## float on their own, with the style's relief and no card behind them.
@@ -522,9 +522,9 @@ func _extent_for(azimuth: float, elevation: float) -> float:
 	for body: SpotBody in _bodies.values():
 		var box: AABB = body.bounds()
 		for corner: int in 8:
-			points.push_back(RoomSpace.place(body.spot) * box.get_endpoint(corner))
-	for x: float in [-RoomSpace.WIDTH / 2.0, RoomSpace.WIDTH / 2.0]:
-		for z: float in [-RoomSpace.DEPTH / 2.0, RoomSpace.DEPTH / 2.0]:
+			points.push_back(RoomSpace.place(body.spot, _room) * box.get_endpoint(corner))
+	for x: float in [-RoomSpace.dims(_room).x / 2.0, RoomSpace.dims(_room).x / 2.0]:
+		for z: float in [-RoomSpace.dims(_room).z / 2.0, RoomSpace.dims(_room).z / 2.0]:
 			points.push_back(Vector3(x, 0.0, z))
 	return CameraFraming.points_extent(points, _target(), azimuth, elevation, size, safe_rect().grow(-16.0))
 
@@ -636,9 +636,9 @@ func _apply_tilt_camera() -> void:
 func _update_walls() -> void:
 	for w: int in _walls.keys():
 		var wall: Spot.Wall = w as Spot.Wall
-		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position)
+		_walls[w].visible = not RoomSpace.wall_hidden(wall, _camera.global_position, _room)
 	if _enclosure != null:
-		_enclosure.visible = RoomSpace.inside(_camera.global_position)
+		_enclosure.visible = RoomSpace.inside(_camera.global_position, _room)
 
 ## Whether the front wall and the ceiling show, which they do from inside the box.
 func enclosure_visible() -> bool:
@@ -678,10 +678,13 @@ func _build_shell() -> void:
 	_shell.name = "Shell"
 	_world.add_child(_shell)
 	var shell_room: Room = Room.new()
+	shell_room.width = RoomSpace.dims(_room).x
+	shell_room.height = RoomSpace.dims(_room).y
+	shell_room.depth = RoomSpace.dims(_room).z
 	for body: SpotBody in _bodies.values():
 		shell_room.spots.push_back(body.spot)
-	var w: float = RoomSpace.WIDTH
-	var d: float = RoomSpace.DEPTH + RoomSpace.APRON
+	var w: float = RoomSpace.dims(_room).x
+	var d: float = RoomSpace.dims(_room).z + RoomSpace.APRON
 	var t: float = RoomSpace.WALL
 	_slab(Vector3(w + 2.0 * t, t, d + t), Vector3(0.0, -t / 2.0, RoomSpace.APRON / 2.0 - t / 2.0), Style.current.floor_color, _shell)
 	for wall: Spot.Wall in [Spot.Wall.BACK, Spot.Wall.LEFT, Spot.Wall.RIGHT]:
@@ -692,19 +695,19 @@ func _build_shell() -> void:
 		for section: Rect2 in RoomSpace.wall_sections(wall, shell_room):
 			var mid: Vector2 = section.get_center()
 			if wall == Spot.Wall.BACK:
-				_slab(Vector3(section.size.x, section.size.y, t), Vector3(mid.x - w / 2.0, mid.y, -RoomSpace.DEPTH / 2.0 - t / 2.0), color, group)
+				_slab(Vector3(section.size.x, section.size.y, t), Vector3(mid.x - w / 2.0, mid.y, -RoomSpace.dims(_room).z / 2.0 - t / 2.0), color, group)
 			else:
 				var x: float = (w + t) / 2.0 * (-1.0 if wall == Spot.Wall.LEFT else 1.0)
-				_slab(Vector3(t, section.size.y, section.size.x), Vector3(x, mid.y, mid.x - RoomSpace.DEPTH / 2.0), color, group)
+				_slab(Vector3(t, section.size.y, section.size.x), Vector3(x, mid.y, mid.x - RoomSpace.dims(_room).z / 2.0), color, group)
 			if section.position.y <= 0.001:
 				var trim: Color = Style.current.wood.lightened(0.30)
 				if wall == Spot.Wall.BACK:
-					_slab(Vector3(section.size.x, 0.09, 0.025), Vector3(mid.x - w / 2.0, 0.045, -RoomSpace.DEPTH / 2.0 + 0.0125), trim, group)
+					_slab(Vector3(section.size.x, 0.09, 0.025), Vector3(mid.x - w / 2.0, 0.045, -RoomSpace.dims(_room).z / 2.0 + 0.0125), trim, group)
 				else:
 					var side_x: float = (w / 2.0 - 0.0125) * (-1.0 if wall == Spot.Wall.LEFT else 1.0)
-					_slab(Vector3(0.025, 0.09, section.size.x), Vector3(side_x, 0.045, mid.x - RoomSpace.DEPTH / 2.0), trim, group)
+					_slab(Vector3(0.025, 0.09, section.size.x), Vector3(side_x, 0.045, mid.x - RoomSpace.dims(_room).z / 2.0), trim, group)
 		var upper_size: Vector3 = Vector3(w, 30.0, t) if wall == Spot.Wall.BACK else Vector3(t, 30.0, d)
-		var upper_at: Vector3 = Vector3(0.0, RoomSpace.HEIGHT + RoomSpace.WALL_RISE + 15.0, -RoomSpace.DEPTH / 2.0 - t / 2.0)
+		var upper_at: Vector3 = Vector3(0.0, RoomSpace.dims(_room).y + RoomSpace.WALL_RISE + 15.0, -RoomSpace.dims(_room).z / 2.0 - t / 2.0)
 		if wall != Spot.Wall.BACK:
 			upper_at = Vector3((w + t) / 2.0 * (-1.0 if wall == Spot.Wall.LEFT else 1.0), upper_at.y, RoomSpace.APRON / 2.0)
 		var backing: MeshInstance3D = _slab(upper_size, upper_at, color, group)
@@ -719,9 +722,9 @@ func _build_enclosure(w: float, t: float) -> void:
 	_enclosure.name = "Enclosure"
 	_enclosure.visible = false
 	_shell.add_child(_enclosure)
-	var front: MeshInstance3D = _slab(Vector3(w + 2.0 * t, RoomSpace.HEIGHT + t, t), Vector3(0.0, RoomSpace.HEIGHT / 2.0, RoomSpace.DEPTH / 2.0 + t / 2.0), Style.current.wall_color, _enclosure)
+	var front: MeshInstance3D = _slab(Vector3(w + 2.0 * t, RoomSpace.dims(_room).y + t, t), Vector3(0.0, RoomSpace.dims(_room).y / 2.0, RoomSpace.dims(_room).z / 2.0 + t / 2.0), Style.current.wall_color, _enclosure)
 	front.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var ceiling: MeshInstance3D = _slab(Vector3(w + 2.0 * t, t, RoomSpace.DEPTH + 2.0 * t), Vector3(0.0, RoomSpace.HEIGHT + t / 2.0, 0.0), Style.current.wall_color.lightened(0.12), _enclosure)
+	var ceiling: MeshInstance3D = _slab(Vector3(w + 2.0 * t, t, RoomSpace.dims(_room).z + 2.0 * t), Vector3(0.0, RoomSpace.dims(_room).y + t / 2.0, 0.0), Style.current.wall_color.lightened(0.12), _enclosure)
 	ceiling.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 ## A quiet, deterministic garden gives every aperture real depth from every camera angle.

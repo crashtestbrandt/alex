@@ -315,3 +315,22 @@ func test_set_entry_needs_a_held_scene_with_a_room() -> void:
 	assert_false(p.set_entry("songs"), "a scene with no room is refused")
 	assert_false(p.set_entry("garden"), "a scene the profile does not hold is refused")
 	assert_eq(p.entry, "bath_time", "and neither changes the entry")
+
+func test_v8_migration_preserves_room_placement_and_recordings() -> void:
+	var profile: Profile = Profile.make("legacy", "Sam")
+	Starter.find("home_routines").seed(profile)
+	profile.gestalts[0].recording = "familiar.wav"
+	var old: Dictionary = profile.to_dict()
+	old["schema"] = 8
+	for room: Dictionary in JsonValue.to_dict_rows(old["rooms"]):
+		room.erase("width")
+		room.erase("depth")
+		room.erase("height")
+		for spot: Dictionary in JsonValue.to_dict_rows(room["spots"]):
+			spot.erase("rotation")
+	var migrated: Profile = Profile.from_dict(old)
+	assert_eq(RoomSpace.dims(migrated.rooms[0]), Vector3(4, 2.6, 3), "legacy room keeps its box")
+	assert_eq(migrated.rooms[0].spots[0].rotation_degrees, 0.0, "legacy furniture keeps its orientation")
+	assert_eq(migrated.gestalts[0].recording, "familiar.wav", "voice is preserved")
+	assert_eq(old["schema"], 8, "input is unchanged")
+	assert_false(JsonValue.to_dict_rows(old["rooms"])[0].has("width"), "migration never edits the input room")

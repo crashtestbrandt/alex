@@ -19,7 +19,7 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 7 forward before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 8 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
@@ -45,7 +45,9 @@ A gestalt row:
 | `stage` | The stage the gestalt models, 0 for unstaged. |
 | `recording` | The whole-phrase take, a file under `media/`, or empty. `wav`, `ogg` or `mp3`. |
 
-A room row holds `id`, `title`, `camera` and `spots`. `camera` is `fixed` (no view buttons), `views` (Front
+A room row holds `id`, `title`, `camera`, `spots`, and `width`, `depth`, `height` in metres. Schema 9
+adds these dimensions and spot rotation; migration retains the original 4 × 3 × 2.6 m room. Width and depth
+are bounded to 2.4–8 m, height to 2.2–4 m. Missing or invalid dimensions use the legacy defaults. `camera` is `fixed` (no view buttons), `views` (Front
 and Top, with a pan and a zoom; the default) or `tilt` (adds Tilt, a look around from the room's center).
 `orbit` in an older file reads as `tilt`. A room's and a board's `title` is for the adults. The learner's
 strip reads Explore and Words. A spot row:
@@ -53,12 +55,13 @@ strip reads Explore and Words. A spot row:
 | Field | Meaning |
 | --- | --- |
 | `id` | Unique within the room. |
-| `kind` | What it looks like: `door`, `light`, `window`, `ball`, `bed`, `cup`, `shoes`, `tub`, `star`, `table`, `circle`. Built from primitives (docs/geometry.md). |
+| `kind` | What it looks like: `door`, `light`, `window`, `ball`, `bed`, `cup`, `shoes`, `tub`, `star`, `table`, `circle`, `sink`, `towel`, `shelf`, `book`, `sofa`, `bowl`, `chair`, `plant`, `wall_light`, `privacy_window`, `dining_table`. Built from primitives (docs/geometry.md). |
 | `reaction` | What it does when touched: `bounce`, `open`, `glow`, `spin`, `wobble`, `grow`. |
 | `wall` | `none` for the floor (the default), or `back`, `left`, `right`. |
 | `x` | Across the room for a floor spot, along the wall for a wall spot. 0 to 1. |
 | `y` | Back to front for a floor spot, 0 at the back wall. Ignored on a wall. |
-| `height` | The base of the object as a fraction of the room's height, 0 to 0.9: up a wall, or on top of something on the floor. A table's top is at 0.9 of its `size`. |
+| `height` | The base of the object as a fraction of the room's height, 0 to 0.9: up a wall, or on top of something on the floor. A bedside table's top is at 0.9 of its size in metres; a dining table's is at 0.62. |
+| `rotation` | Floor-object yaw in degrees. Defaults to 0; ignored on walls. |
 | `size` | The object's longest extent as a fraction of the room's width, 0.05 to 0.6. The camera pulls in a little when the smallest spot would fall under the touch floor, and picking honors the floor regardless. |
 | `gestalt` | What it says. `alt_gestalt` is what it says toggled on. The pair every stage falls back to. |
 | `stages` | A pair per stage, keyed `"1"` to `"6"`: `{"3": {"gestalt": "go_out", "alt_gestalt": "come_in"}}`. The spot says the pair written for the nearest stage at or below the scene's (`Spot.gestalt_at`). |
@@ -130,6 +133,14 @@ profile and records its id in `scenes`:
 - A pack is added once. A second Add changes nothing.
 - A pack carries no recordings. A family's recordings never enter the repository.
 - The bank is the union, so every added scene's phrases are in Words and in Build.
+
+### Updating a room
+
+- Edit shows Update room when a held scene differs from its shipped geometry.
+- `Starter.update_layout` replaces room dimensions and existing object placement, size and kind.
+- Missing objects are added. Their phrases reuse the bank when available.
+- Existing phrase assignments, recordings, scene stages and custom objects remain unchanged.
+- Updates are explicit; loading a profile never refreshes its scenes automatically.
 
 ### Removing a scene
 

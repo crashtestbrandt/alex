@@ -114,3 +114,25 @@ func test_overlapping_and_edge_openings_remain_valid() -> void:
 		area += section.get_area()
 	var hole: Rect2 = ObjectRecipes.opening(Spot.Kind.DOOR, 2.0)
 	assert_almost_eq(area, RoomSpace.WIDTH * (RoomSpace.HEIGHT + RoomSpace.WALL_RISE) - hole.get_area() / 2.0, 0.0001, "overlapping holes are removed once")
+
+func test_room_dimensions_and_floor_rotation_drive_geometry() -> void:
+	var room: Room = Room.from_dict({"id": "wide", "width": 6.0, "depth": 4.0, "height": 3.0, "spots": [
+		{"id": "bed", "kind": "bed", "gestalt": "g", "x": 0.75, "y": 0.25, "height": 0.1, "rotation": 90, "size": 0.3}]})
+	assert_eq(RoomSpace.dims(room), Vector3(6, 3, 4), "authored dimensions")
+	var spot: Spot = room.spots[0]
+	var xf: Transform3D = RoomSpace.place(spot, room)
+	assert_true(xf.origin.is_equal_approx(Vector3(1.5, 0.3, -1)), "placement uses the room's own box")
+	assert_true((xf.basis * Vector3.BACK).is_equal_approx(Vector3.RIGHT), "floor furniture turns toward the activity")
+	assert_almost_eq(RoomSpace.spot_size_m(spot, room), 1.8, 0.0001, "size follows the authored width")
+	assert_true(RoomSpace.inside(Vector3(2.5, 2.8, 1.8), room), "inside uses all three dimensions")
+	assert_false(RoomSpace.wall_hidden(Spot.Wall.RIGHT, Vector3(2.5, 1, 0), room), "wall visibility uses authored width")
+	assert_eq(Room.from_dict(room.to_dict()).to_dict(), room.to_dict(), "geometry round-trips")
+
+func test_invalid_dimensions_are_bounded() -> void:
+	var room: Room = Room.from_dict({"id": "bad", "width": -10, "depth": INF, "height": 900})
+	assert_eq(RoomSpace.dims(room), Vector3(2.4, 4, 3), "bad dimensions are bounded or defaulted")
+
+func test_privacy_window_keeps_a_glazed_aperture() -> void:
+	assert_eq(ObjectRecipes.opening(Spot.Kind.PRIVACY_WINDOW, 1), ObjectRecipes.opening(Spot.Kind.WINDOW, 1), "privacy glazing keeps the window opening")
+	var recipe: Recipe = ObjectRecipes.make(Spot.Kind.PRIVACY_WINDOW, 1, StylePreset.new())
+	assert_true(recipe.parts().has("pane"), "the opening has a physical pane")

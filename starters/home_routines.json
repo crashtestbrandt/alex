@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "home_routines",
   "title": "Home",
-  "description": "A bedroom with a reading shelf, an open book, a bedside drink and a clear path from the door to the rug.",
+  "description": "A long bedroom with the bed along a side wall, a bedside drink, a reading shelf and a play rug in the middle.",
   "gestalts": [
     {
       "id": "lets_go_outside",
@@ -280,9 +280,9 @@
           "kind": "door",
           "reaction": "open",
           "wall": "left",
-          "x": 0.25,
+          "x": 0.318182,
           "height": 0.0,
-          "size": 0.5,
+          "size": 0.47619047619047616,
           "gestalt": "lets_go_outside",
           "alt_gestalt": "lets_go_inside",
           "stages": {
@@ -300,10 +300,10 @@
           "id": "window",
           "kind": "window",
           "reaction": "glow",
-          "wall": "back",
-          "x": 0.58,
-          "height": 0.46,
-          "size": 0.28,
+          "wall": "right",
+          "x": 0.295455,
+          "height": 0.5,
+          "size": 0.26666666666666666,
           "gestalt": "look_outside",
           "stages": {
             "3": {
@@ -318,9 +318,9 @@
           "id": "bed",
           "kind": "bed",
           "reaction": "grow",
-          "x": 0.58,
-          "y": 0.23,
-          "size": 0.46,
+          "x": 0.833333,
+          "y": 0.397727,
+          "size": 0.4380952380952381,
           "gestalt": "time_for_bed",
           "stages": {
             "3": {
@@ -329,15 +329,17 @@
             "4": {
               "gestalt": "lets_go_to_bed"
             }
-          }
+          },
+          "rotation": -90,
+          "height": 0.0
         },
         {
           "id": "light",
           "kind": "light",
           "reaction": "glow",
-          "x": 0.29,
-          "y": 0.17,
-          "size": 0.35,
+          "x": 0.892857,
+          "y": 0.090909,
+          "size": 0.3333333333333333,
           "gestalt": "lights_on",
           "alt_gestalt": "lights_off",
           "stages": {
@@ -349,15 +351,17 @@
               "gestalt": "turn_on_the_light",
               "alt_gestalt": "turn_off_the_light"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "table",
           "kind": "table",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.24,
-          "size": 0.14,
+          "x": 0.607143,
+          "y": 0.193182,
+          "size": 0.13333333333333333,
           "gestalt": "time_for_a_snack",
           "stages": {
             "3": {
@@ -366,16 +370,18 @@
             "4": {
               "gestalt": "its_time_to_eat"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "cup",
           "kind": "cup",
           "reaction": "wobble",
-          "x": 0.9,
-          "y": 0.24,
-          "height": 0.1938461538461539,
-          "size": 0.065,
+          "x": 0.607143,
+          "y": 0.193182,
+          "height": 0.19384615384615383,
+          "size": 0.06190476190476191,
           "gestalt": "want_more",
           "stages": {
             "3": {
@@ -384,15 +390,16 @@
             "4": {
               "gestalt": "i_want_more_juice"
             }
-          }
+          },
+          "rotation": 0
         },
         {
           "id": "rug",
           "kind": "circle",
           "reaction": "grow",
-          "x": 0.5,
-          "y": 0.62,
-          "size": 0.35,
+          "x": 0.440476,
+          "y": 0.590909,
+          "size": 0.3333333333333333,
           "gestalt": "its_okay",
           "stages": {
             "3": {
@@ -401,15 +408,17 @@
             "4": {
               "gestalt": "lets_sit_on_the_rug"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "ball",
           "kind": "ball",
           "reaction": "bounce",
-          "x": 0.6,
-          "y": 0.74,
-          "size": 0.105,
+          "x": 0.52381,
+          "y": 0.693182,
+          "size": 0.09999999999999999,
           "gestalt": "lets_play_ball",
           "stages": {
             "3": {
@@ -419,15 +428,16 @@
               "gestalt": "throw_the_ball"
             }
           },
-          "height": 0.007692307692307692
+          "height": 0.007692307692307692,
+          "rotation": 0
         },
         {
           "id": "shoes",
           "kind": "shoes",
           "reaction": "bounce",
-          "x": 0.12,
-          "y": 0.7,
-          "size": 0.13,
+          "x": 0.130952,
+          "y": 0.636364,
+          "size": 0.12380952380952381,
           "gestalt": "lets_get_shoes",
           "stages": {
             "3": {
@@ -436,15 +446,17 @@
             "4": {
               "gestalt": "put_on_your_shoes"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "shelf",
           "kind": "shelf",
           "reaction": "wobble",
-          "x": 0.13,
-          "y": 0.1,
-          "size": 0.19,
+          "x": 0.161905,
+          "y": 0.047727,
+          "size": 0.18095238095238095,
           "gestalt": "shelf_phrase",
           "stages": {
             "3": {
@@ -453,15 +465,17 @@
             "4": {
               "gestalt": "shelf_sentence"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "book",
           "kind": "book",
           "reaction": "wobble",
-          "x": 0.39,
-          "y": 0.63,
-          "size": 0.16,
+          "x": 0.369048,
+          "y": 0.602273,
+          "size": 0.15238095238095237,
           "gestalt": "book_phrase",
           "stages": {
             "3": {
@@ -471,9 +485,13 @@
               "gestalt": "book_sentence"
             }
           },
-          "height": 0.007692307692307692
+          "height": 0.007692307692307692,
+          "rotation": 0
         }
-      ]
+      ],
+      "width": 4.2,
+      "depth": 4.4,
+      "height": 2.6
     }
   ],
   "boards": [

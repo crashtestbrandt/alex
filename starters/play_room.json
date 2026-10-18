@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "play_room",
   "title": "Playroom",
-  "description": "A playroom with a sofa, a bookcase, a reading rug and an open floor for a bouncing ball.",
+  "description": "A wide playroom with a sofa facing the central reading rug, a separate drinks table and open space for a bouncing ball.",
   "gestalts": [
     {
       "id": "lets_go_outside",
@@ -412,9 +412,9 @@
           "kind": "door",
           "reaction": "open",
           "wall": "right",
-          "x": 0.7,
+          "x": 0.619048,
           "height": 0.0,
-          "size": 0.5,
+          "size": 0.3846153846153846,
           "gestalt": "lets_go_outside",
           "alt_gestalt": "lets_go_inside",
           "stages": {
@@ -433,9 +433,9 @@
           "kind": "window",
           "reaction": "glow",
           "wall": "back",
-          "x": 0.31,
-          "height": 0.48,
-          "size": 0.3,
+          "x": 0.480769,
+          "height": 0.45,
+          "size": 0.23076923076923075,
           "gestalt": "look_outside",
           "stages": {
             "3": {
@@ -451,9 +451,9 @@
           "kind": "star",
           "reaction": "spin",
           "wall": "back",
-          "x": 0.75,
-          "height": 0.67,
-          "size": 0.12,
+          "x": 0.7,
+          "height": 0.65,
+          "size": 0.0923076923076923,
           "gestalt": "look_at_the_star",
           "alt_gestalt": "so_pretty",
           "stages": {
@@ -471,9 +471,9 @@
           "id": "light",
           "kind": "light",
           "reaction": "glow",
-          "x": 0.08,
-          "y": 0.23,
-          "size": 0.35,
+          "x": 0.096154,
+          "y": 0.797619,
+          "size": 0.2692307692307692,
           "gestalt": "lights_on",
           "alt_gestalt": "lights_off",
           "stages": {
@@ -485,15 +485,17 @@
               "gestalt": "turn_on_the_light",
               "alt_gestalt": "turn_off_the_light"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "table",
           "kind": "table",
           "reaction": "wobble",
-          "x": 0.82,
-          "y": 0.46,
-          "size": 0.17,
+          "x": 0.826923,
+          "y": 0.345238,
+          "size": 0.13076923076923078,
           "gestalt": "its_time_for_a_snack",
           "stages": {
             "3": {
@@ -502,16 +504,18 @@
             "4": {
               "gestalt": "its_time_to_eat"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "cup",
           "kind": "cup",
           "reaction": "wobble",
-          "x": 0.82,
-          "y": 0.46,
-          "height": 0.23538461538461541,
-          "size": 0.075,
+          "x": 0.826923,
+          "y": 0.345238,
+          "height": 0.21857142857142858,
+          "size": 0.05769230769230769,
           "gestalt": "i_want_more",
           "alt_gestalt": "all_done",
           "stages": {
@@ -523,15 +527,16 @@
               "gestalt": "i_want_more_juice",
               "alt_gestalt": "i_am_all_done"
             }
-          }
+          },
+          "rotation": 0
         },
         {
           "id": "rug",
           "kind": "circle",
           "reaction": "grow",
-          "x": 0.45,
-          "y": 0.7,
-          "size": 0.37,
+          "x": 0.5,
+          "y": 0.607143,
+          "size": 0.34615384615384615,
           "gestalt": "lets_jump",
           "alt_gestalt": "lets_sit",
           "stages": {
@@ -543,15 +548,17 @@
               "gestalt": "jump_on_the_rug",
               "alt_gestalt": "sit_on_the_rug"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "ball",
           "kind": "ball",
           "reaction": "bounce",
-          "x": 0.59,
-          "y": 0.76,
-          "size": 0.12,
+          "x": 0.586538,
+          "y": 0.690476,
+          "size": 0.0923076923076923,
           "gestalt": "lets_play_ball",
           "stages": {
             "3": {
@@ -563,15 +570,16 @@
               "alt_gestalt": "catch_the_ball"
             }
           },
-          "height": 0.007692307692307692
+          "height": 0.0071428571428571435,
+          "rotation": 0
         },
         {
           "id": "shoes",
           "kind": "shoes",
           "reaction": "bounce",
-          "x": 0.88,
-          "y": 0.88,
-          "size": 0.12,
+          "x": 0.884615,
+          "y": 0.845238,
+          "size": 0.0923076923076923,
           "gestalt": "lets_get_your_shoes",
           "alt_gestalt": "off_we_go",
           "stages": {
@@ -583,15 +591,17 @@
               "gestalt": "put_on_your_shoes",
               "alt_gestalt": "lets_go_out_now"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "sofa",
           "kind": "sofa",
           "reaction": "wobble",
-          "x": 0.4,
-          "y": 0.24,
-          "size": 0.46,
+          "x": 0.119231,
+          "y": 0.440476,
+          "size": 0.35384615384615387,
           "gestalt": "sofa_phrase",
           "stages": {
             "3": {
@@ -600,15 +610,17 @@
             "4": {
               "gestalt": "sofa_sentence"
             }
-          }
+          },
+          "rotation": 90,
+          "height": 0.0
         },
         {
           "id": "shelf",
           "kind": "shelf",
           "reaction": "wobble",
-          "x": 0.82,
-          "y": 0.1,
-          "size": 0.23,
+          "x": 0.846154,
+          "y": 0.052381,
+          "size": 0.17692307692307693,
           "gestalt": "shelf_phrase",
           "stages": {
             "3": {
@@ -617,15 +629,17 @@
             "4": {
               "gestalt": "shelf_sentence"
             }
-          }
+          },
+          "rotation": 0,
+          "height": 0.0
         },
         {
           "id": "book",
           "kind": "book",
           "reaction": "wobble",
-          "x": 0.31,
-          "y": 0.64,
-          "size": 0.16,
+          "x": 0.413462,
+          "y": 0.607143,
+          "size": 0.12307692307692307,
           "gestalt": "book_phrase",
           "stages": {
             "3": {
@@ -635,9 +649,13 @@
               "gestalt": "book_sentence"
             }
           },
-          "height": 0.007692307692307692
+          "height": 0.0071428571428571435,
+          "rotation": 0
         }
-      ]
+      ],
+      "width": 5.2,
+      "depth": 4.2,
+      "height": 2.8
     }
   ],
   "boards": [
