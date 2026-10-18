@@ -76,20 +76,28 @@ func _layout_profiles() -> void:
 
 func _layout_choices() -> void:
 	for row: BoxContainer in [_starter_row, _style_row, _stage_row]:
-		var label: Control = row.get_child(0) as Control
-		var bar: PillBar = row.get_child(1) as PillBar
-		var natural: float = label.get_combined_minimum_size().x + 12.0 + PillBar.PAD_PX * 2.0
-		for button: SdfButton in bar.items():
-			natural += button.get_combined_minimum_size().x + PillBar.GAP_PX
-		row.vertical = row.size.x < natural - PillBar.GAP_PX
-		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# A scene row puts its title over its buttons when the two do not fit side by side.
-	for row: BoxContainer in _scene_rows.get_children():
+		_layout_choice_row(row)
+	# A scene row puts its title over its buttons when the two do not fit side by side, and its stage bar
+	# under its label the same way the profile's does.
+	for entry: VBoxContainer in _scene_rows.get_children():
+		var row: BoxContainer = entry.get_child(0) as BoxContainer
 		var title: Label = row.get_child(0) as Label
 		var actions: Control = row.get_child(1) as Control
 		var font: Font = title.get_theme_font("font")
 		var title_px: float = font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, title.get_theme_font_size("font_size")).x
 		row.vertical = row.size.x < title_px + 12.0 + actions.get_combined_minimum_size().x
+		if entry.get_child_count() > 1:
+			_layout_choice_row(entry.get_child(1) as BoxContainer)
+
+## A label beside a pill bar, or over it when the two do not fit side by side.
+func _layout_choice_row(row: BoxContainer) -> void:
+	var label: Control = row.get_child(0) as Control
+	var bar: PillBar = row.get_child(1) as PillBar
+	var natural: float = label.get_combined_minimum_size().x + 12.0 + PillBar.PAD_PX * 2.0
+	for button: SdfButton in bar.items():
+		natural += button.get_combined_minimum_size().x + PillBar.GAP_PX
+	row.vertical = row.size.x < natural - PillBar.GAP_PX
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 ## Re-read the profiles on disk, with separate actions to open each profile or change its look.
 func refresh() -> void:
@@ -166,11 +174,11 @@ func _on_stage_pressed(stage: NlaStage.Stage) -> void:
 	_stage_bar.set_active(int(stage))
 	_show_stage(stage)
 
-## The stage's name and its model line. Not staged says what a stage is for.
+## The stage's name and its model line. Not staged says what the stage does.
 func _show_stage(stage: NlaStage.Stage) -> void:
 	_stage_name.text = NlaStage.label(stage)
 	var line: String = NlaStage.models(stage)
-	_stage_model.text = line if not line.is_empty() else "A stage is a note for the adults. It changes nothing the learner sees."
+	_stage_model.text = line if not line.is_empty() else "Every object says the phrase written for the stage. Not staged says the first one."
 
 ## The pill for the style the app is wearing right now, or Calm when the current preset is not one on disk.
 func _current_style_index() -> int:
@@ -235,8 +243,9 @@ func _on_edit_profile(profile_id: String) -> void:
 	_on_style_pressed(profile.style_id)
 	_style_bar.items()[_current_style_index()].grab_focus()
 
-## One row per shipped scene: its title, then Add, or Start here and Remove for a scene the profile holds.
-## The scene Explore opens on reads Starts here and takes no tap.
+## One entry per shipped scene: its title, then Add, or Start here and Remove for a scene the profile holds.
+## The scene Explore opens on reads Starts here and takes no tap. A held scene also gets a stage bar,
+## Profile's then 1 to 6, that pins the scene to a stage of its own (`Profile.pin_scene_stage`).
 func _fill_scenes(profile: Profile) -> void:
 	for child: Node in _scene_rows.get_children():
 		_scene_rows.remove_child(child)
@@ -246,6 +255,9 @@ func _fill_scenes(profile: Profile) -> void:
 	for s: Starter in _starters:
 		if not s.is_scene():
 			continue
+		var scene_entry: VBoxContainer = VBoxContainer.new()
+		scene_entry.add_theme_constant_override("separation", 8)
+		_scene_rows.add_child(scene_entry)
 		var row: BoxContainer = BoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		var title: Label = Label.new()
@@ -267,8 +279,36 @@ func _fill_scenes(profile: Profile) -> void:
 				var here: bool = s.id == entry
 				actions.add_child(_scene_button("Starts here" if here else "Start here", here, _on_entry_scene.bind(s)))
 			actions.add_child(_scene_button("Remove", false, _on_remove_scene.bind(s)))
-		_scene_rows.add_child(row)
+		scene_entry.add_child(row)
+		if profile.has_scene(s.id):
+			scene_entry.add_child(_scene_stage_row(profile, s))
 	_layout_choices.call_deferred()
+
+## A held scene's stage bar: Profile's, then 1 to 6. The active pill is the scene's pin, or Profile's.
+func _scene_stage_row(profile: Profile, s: Starter) -> BoxContainer:
+	var row: BoxContainer = BoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var label: Label = Label.new()
+	label.text = "Stage"
+	label.custom_minimum_size = Vector2(120, 0)
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(label)
+	var bar: PillBar = PillBar.new()
+	for stage: NlaStage.Stage in NlaStage.Stage.values():
+		var button: SdfButton = SdfButton.new()
+		button.text = "Profile's" if stage == NlaStage.Stage.UNKNOWN else str(int(stage))
+		button.tooltip_text = "Follows the profile's stage" if stage == NlaStage.Stage.UNKNOWN else NlaStage.label(stage)
+		button.pressed.connect(_on_pin_scene.bind(s, stage))
+		bar.add_item(button)
+	var pinned: int = profile.scene_stages.get(s.id, 0)
+	bar.set_active(pinned)
+	row.add_child(bar)
+	return row
+
+func _on_pin_scene(s: Starter, stage: NlaStage.Stage) -> void:
+	var pin: Callable = func(p: Profile) -> bool: return p.pin_scene_stage(s.id, stage)
+	var done: String = "%s follows the profile's stage." % s.title if stage == NlaStage.Stage.UNKNOWN else "%s says its stage %d phrases." % [s.title, stage]
+	_change_scene(pin, done, "Could not save the stage. Try again.")
 
 func _scene_button(text: String, done: bool, on_pressed: Callable) -> SdfButton:
 	var button: SdfButton = SdfButton.new()

@@ -17,6 +17,28 @@ func test_spot_round_trip() -> void:
 	assert_eq(back.wall, Spot.Wall.BACK, "wall")
 	assert_almost_eq(back.height, 0.25, 0.0001, "height")
 
+func test_spot_stage_pairs_round_trip_and_pick_the_nearest_below() -> void:
+	var s: Spot = Spot.from_dict({
+		"id": "door", "kind": "door", "gestalt": "a", "alt_gestalt": "b",
+		"stages": {"3": {"gestalt": "c", "alt_gestalt": "d"}, "5": {"gestalt": "e"}, "x": {"gestalt": "no"}, "4": {"alt_gestalt": "no"}},
+	})
+	assert_not_null(s, "parses")
+	assert_eq(s.stage_gestalts.keys(), [3, 5], "a pair per written stage, a bad key and a pair with no gestalt skipped")
+	assert_eq(s.gestalt_at(NlaStage.Stage.UNKNOWN), "a", "not staged says the base pair")
+	assert_eq(s.gestalt_at(NlaStage.Stage.MITIGATION), "a", "below the first written stage, the base pair")
+	assert_eq(s.alt_gestalt_at(NlaStage.Stage.MITIGATION), "b", "with its alternate")
+	assert_eq(s.gestalt_at(NlaStage.Stage.SINGLE_WORDS), "c", "the written stage")
+	assert_eq(s.alt_gestalt_at(NlaStage.Stage.SINGLE_WORDS), "d", "with its alternate")
+	assert_eq(s.gestalt_at(NlaStage.Stage.EARLY_GRAMMAR), "c", "a stage with no pair uses the nearest below")
+	assert_eq(s.gestalt_at(NlaStage.Stage.FULL_GRAMMAR), "e", "the highest written pair above that")
+	assert_eq(s.alt_gestalt_at(NlaStage.Stage.FULL_GRAMMAR), "", "a pair with no alternate has none")
+	assert_eq(s.gestalt_ids(), PackedStringArray(["a", "b", "c", "d", "e"]), "every id the spot names")
+	var back: Spot = Spot.from_dict(s.to_dict())
+	assert_eq(back.stage_gestalts, s.stage_gestalts, "pairs round-trip")
+	assert_eq(back.stage_alts, s.stage_alts, "and their alternates")
+	var plain: Spot = Spot.from_dict({"id": "ball", "gestalt": "a"})
+	assert_false(plain.to_dict().has("stages"), "a spot with no pairs writes none")
+
 func test_spot_defaults_to_the_floor() -> void:
 	var s: Spot = Spot.from_dict({"id": "x", "gestalt": "a"})
 	assert_eq(s.wall, Spot.Wall.NONE, "no wall named, the floor")

@@ -19,11 +19,12 @@ this repository.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 5 forward before reading. |
+| `schema` | `Profile.SCHEMA_VERSION`. `from_dict` migrates versions 1 to 6 forward before reading. |
 | `id` | Directory name. `ProfileRepo.new_id()` makes one from the time plus a random suffix. |
 | `display_name` | What the child's screen shows. |
 | `name_recording` | Relative audio path for the name, or empty for OS speech. Added in schema 2. |
-| `stage` | `NlaStage`, 0 for not staged. Informs the adults; gates nothing. Edit sets it. |
+| `stage` | `NlaStage`, 0 for not staged. Every object says the phrase pair written for this stage (`Profile.says`). Edit sets it. |
+| `scene_stages` | A scene's own stage, keyed by scene id, for a scene that does not follow the profile's. Edit pins it. Added in schema 7. |
 | `notes` | Free text the adults keep with the profile. Edit sets it. Never on the learner's screen. Added in schema 6. |
 | `style` | A preset id under `styles/`. |
 | `starter` | The pack this profile was seeded from, for the record. |
@@ -60,7 +61,8 @@ strip reads Explore and Words. A spot row:
 | `y` | Back to front for a floor spot, 0 at the back wall. Ignored on a wall. |
 | `height` | The base of the object as a fraction of the room's height, 0 to 0.9: up a wall, or on top of something on the floor. A table's top is at 0.9 of its `size`. |
 | `size` | The object's longest extent as a fraction of the room's width, 0.05 to 0.6. The camera pulls in a little when the smallest spot would fall under the touch floor, and picking honors the floor regardless. |
-| `gestalt` | What it says. |
+| `gestalt` | What it says. `alt_gestalt` is what it says toggled on. The pair every stage falls back to. |
+| `stages` | A pair per stage, keyed `"1"` to `"6"`: `{"3": {"gestalt": "go_out", "alt_gestalt": "come_in"}}`. The spot says the pair written for the nearest stage at or below the scene's (`Spot.gestalt_at`). |
 | `alt_gestalt` | What it says when toggled on (door open, light on). Optional. |
 
 **A bad row is skipped, never fatal.** One malformed gestalt, spot or room does not lose a profile.
@@ -89,12 +91,16 @@ gestalts the pack holds.
 
 `blank` and four scenes ship. A pack with at least one gestalt is a scene the adults' screen offers.
 
-| Pack | Room | Stage |
+| Pack | Room | Starts with |
 | --- | --- | --- |
-| `home_routines` | A bedroom | 1 and 2 |
-| `bath_time` | A bathroom | 1 and 2 |
-| `play_room` | A playroom, single words and pairs | 3 |
-| `snack_time` | A kitchen, short sentences one word to a chunk | 4 |
+| `home_routines` | A bedroom | Everyday routines |
+| `bath_time` | A bathroom | The routine around a bath |
+| `play_room` | A playroom | Playtime, and the single words a child says alone |
+| `snack_time` | A kitchen | Mealtime |
+
+Every spot in every pack carries a phrase pair for stages 3 and 4 beside the pair it starts with, so the
+profile's stage changes what each object says (docs/design.md "Progression"). `starter_test.gd` fails a
+spot without them.
 
 Every row in a scene carries the `stage` of language it models (docs/design.md "Progression"). The stage
 informs the adults and gates nothing. A pack author sets it by this rule, reading the pack in row order:
@@ -109,7 +115,8 @@ informs the adults and gates nothing. A pack author sets it by this rule, readin
 - `starter_test.gd` fails a scene row with no stage, a stage 1 row that reuses a chunk, a stage 2 row that
   reuses nothing, a stage 3 row with more than two chunks or a chunk of several words, and a stage 4 row
   with fewer than three chunks or a chunk of several words.
-- `play_room` is stage 3 throughout and `snack_time` stage 4 throughout, so a title reads as a stage.
+- A pack holds one row per spoken phrase. A stage 3 pair and a stage 4 pair are their own rows, each at
+  that stage.
 
 ### Adding a scene
 
@@ -118,8 +125,9 @@ profile and records its id in `scenes`:
 
 - Every copied gestalt, room and board id is prefixed with the pack id: `bath_time.lets_get_in_the_tub`.
   A gestalt id names a recording file, so the separator is a dot.
-- A phrase the bank already says, by its chunk key, is not copied. The pack's spots and boards point at the
-  bank's own gestalt, so one recording serves every scene that says the phrase.
+- A phrase the bank already says, by its chunk key, is not copied. The pack's spots, at every stage, and
+  its boards point at the bank's own gestalt, so one recording serves every scene that says the phrase.
+- An added scene follows the profile's stage until Edit pins it.
 - A pack is added once. A second Add changes nothing.
 - A pack carries no recordings. A family's recordings never enter the repository.
 - The bank is the union, so every added scene's phrases are in Words and in Build.
@@ -130,6 +138,7 @@ Edit shows Remove beside every scene the profile holds. `Profile.remove_scene` t
 
 - Its rooms and boards are removed.
 - Its phrases are removed unless another scene's room or board names them.
+- Its stage pin is removed.
 - A phrase with a recording stays in the bank. Adding the scene again reuses it, recording and all.
 - The starter is a scene like any other and can be removed.
 - `Profile.scene_of` names the scene behind an id. A scoped id is its pack's. Every other id is the starter's.

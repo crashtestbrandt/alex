@@ -4,6 +4,10 @@ class_name Spot
 ## its gestalt. A spot with an `alt_gestalt_id` alternates between two phrases as its state toggles, so a
 ## door says "Let's go outside" and then "Let's go inside".
 ##
+## A spot can carry a phrase pair per stage (docs/design.md "Progression"). `gestalt_at` picks the pair
+## written for the nearest stage at or below the one asked for, and `gestalt_id` is the pair below them
+## all, what the pack starts with. Nothing here advances on its own; the profile holds the stage.
+##
 ## Positions are fractions of the room box (RoomSpace), so one room fits every screen. A floor spot stands at
 ## `x` across the width and `y` from the back wall; a wall spot hangs at `x` along its wall. Either has its
 ## base at `height`, which is how a cup stands on a table. `size` is the object's longest extent as a fraction of the room's width, and the camera is
@@ -66,6 +70,40 @@ var wall: Wall = Wall.NONE
 var height: float = 0.0
 var gestalt_id: String = ""
 var alt_gestalt_id: String = ""
+## The phrase pair written for a stage, 1 to 6, keyed by that stage. A stage with no pair uses the nearest
+## pair below it, and `gestalt_id` below them all.
+var stage_gestalts: Dictionary[int, String] = {}
+var stage_alts: Dictionary[int, String] = {}
+
+## The gestalt the spot says at `stage`: the pair written for the nearest stage at or below it, else
+## `gestalt_id`.
+func gestalt_at(stage: NlaStage.Stage) -> String:
+	var at: int = _stage_at(stage)
+	return stage_gestalts[at] if at > 0 else gestalt_id
+
+## The alternate at `stage`, from the same pair `gestalt_at` picks. Empty when that pair has none.
+func alt_gestalt_at(stage: NlaStage.Stage) -> String:
+	var at: int = _stage_at(stage)
+	return stage_alts.get(at, "") if at > 0 else alt_gestalt_id
+
+## Every gestalt id the spot names, at any stage, the base pair first.
+func gestalt_ids() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray([gestalt_id])
+	if not alt_gestalt_id.is_empty():
+		out.push_back(alt_gestalt_id)
+	for stage: int in stage_gestalts.keys():
+		out.push_back(stage_gestalts[stage])
+		if stage_alts.has(stage):
+			out.push_back(stage_alts[stage])
+	return out
+
+## The highest written stage at or below `stage`, or 0 for none.
+func _stage_at(stage: NlaStage.Stage) -> int:
+	var best: int = 0
+	for written: int in stage_gestalts.keys():
+		if written <= int(stage) and written > best:
+			best = written
+	return best
 
 static func kind_name(k: Kind) -> String:
 	return _name_of(_KIND_NAMES, k, "circle")
@@ -98,7 +136,7 @@ static func wall_from_name(name: String) -> Wall:
 	return value as Wall
 
 func to_dict() -> Dictionary:
-	return {
+	var d: Dictionary = {
 		"id": id,
 		"kind": kind_name(kind),
 		"reaction": reaction_name(reaction),
@@ -110,6 +148,19 @@ func to_dict() -> Dictionary:
 		"gestalt": gestalt_id,
 		"alt_gestalt": alt_gestalt_id,
 	}
+	if not stage_gestalts.is_empty():
+		var stages: Dictionary = {}
+		var written: Array[int] = []
+		for stage: int in stage_gestalts.keys():
+			written.push_back(stage)
+		written.sort()
+		for stage: int in written:
+			var pair: Dictionary = {"gestalt": stage_gestalts[stage]}
+			if stage_alts.has(stage):
+				pair["alt_gestalt"] = stage_alts[stage]
+			stages[str(stage)] = pair
+		d["stages"] = stages
+	return d
 
 ## A spot from a saved dictionary. Returns null for a missing id or gestalt. Position and size are clamped
 ## into range rather than rejected.
@@ -129,6 +180,19 @@ static func from_dict(d: Dictionary) -> Spot:
 	s.size = clampf(JsonValue.to_float(d.get("size"), 0.18), 0.05, 0.6)
 	s.wall = wall_from_name(JsonValue.to_text(d.get("wall"), "none"))
 	s.height = clampf(JsonValue.to_float(d.get("height"), 0.0), 0.0, 0.9)
+	# A stage pair is keyed by its stage, 1 to 6. A pair with no gestalt, or a key that is not a stage, is
+	# skipped.
+	var stages: Dictionary = JsonValue.to_dict(d.get("stages"))
+	for raw_key: Variant in stages.keys():
+		var stage: NlaStage.Stage = NlaStage.from_value(raw_key)
+		var pair: Dictionary = JsonValue.to_dict(stages[raw_key])
+		var stage_gid: String = JsonValue.to_text(pair.get("gestalt")).strip_edges()
+		if stage == NlaStage.Stage.UNKNOWN or stage_gid.is_empty():
+			continue
+		s.stage_gestalts[int(stage)] = stage_gid
+		var stage_alt: String = JsonValue.to_text(pair.get("alt_gestalt")).strip_edges()
+		if not stage_alt.is_empty():
+			s.stage_alts[int(stage)] = stage_alt
 	return s
 
 static func _name_of(names: Dictionary[String, int], value: int, fallback: String) -> String:

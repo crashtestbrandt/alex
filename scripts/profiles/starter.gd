@@ -101,6 +101,10 @@ func add_to(p: Profile) -> bool:
 			s.gestalt_id = _mapped(ids, s.gestalt_id)
 			if not s.alt_gestalt_id.is_empty():
 				s.alt_gestalt_id = _mapped(ids, s.alt_gestalt_id)
+			for stage: int in s.stage_gestalts.keys():
+				s.stage_gestalts[stage] = _mapped(ids, s.stage_gestalts[stage])
+			for stage: int in s.stage_alts.keys():
+				s.stage_alts[stage] = _mapped(ids, s.stage_alts[stage])
 		var existing_room: Room = p.room(room.id)
 		if existing_room != null:
 			p.rooms.erase(existing_room)

@@ -109,9 +109,13 @@ to break it. These are decisions, and every progression issue cites them.
   nothing (`Starter.add_to`, docs/profiles.md "Adding a scene").
 - **A mixed-stage bank comes from variety across phrases**: `Let's go | outside` beside
   `Let's | go | in the car`. One phrase has one chunking at a time.
-- **The stage on a profile and on a gestalt shapes adult screens only.** It orders and labels. It never
-  hides Explore, Palette or Build, and it never advances on its own. The app cannot hear the child, so it has
-  no basis to change a stage.
+- **The profile's stage picks what every object says.** A spot carries a phrase pair per stage, and says
+  the pair written for the nearest stage at or below the profile's (`Spot.gestalt_at`, `Profile.says`).
+  Not staged says each object's first pair. Every scene follows the profile's stage unless the caregiver
+  pins that scene to a stage of its own (`Profile.scene_stages`).
+- **A stage never advances on its own.** The app cannot hear the child, so it has no basis to change a
+  stage. A stage never hides Explore, Palette or Build, and the learner's screen never shows it. The
+  stage on a gestalt labels the row for the adults.
 - **Sentence-forming is in scope.** Build is the sentence-former at chunk granularity. Later stages mean
   smaller chunks and longer strips, authored by the caregiver.
 

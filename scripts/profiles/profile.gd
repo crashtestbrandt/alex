@@ -6,12 +6,17 @@ class_name Profile
 ## A profile is the unit of configurability (docs/profiles.md). Everything a family or clinician tailors
 ## lives here or in the style preset it names. Nothing about one child is in code.
 
-const SCHEMA_VERSION: int = 6
+const SCHEMA_VERSION: int = 7
 
 var id: String = ""
 var display_name: String = ""
 var name_recording: String = ""
+## The stage every scene says its phrases at (`says`), unless the scene pins its own in `scene_stages`.
+## UNKNOWN says each object's first phrase. Never advances on its own.
 var stage: NlaStage.Stage = NlaStage.Stage.UNKNOWN
+## A scene's own stage, keyed by scene id, for a scene that does not follow the profile's. Added in
+## schema 7.
+var scene_stages: Dictionary[String, int] = {}
 ## Free text the adults keep with the profile: a show the child quotes, a phrase to try next, a date. Never
 ## on the learner's screen. Added in schema 6.
 var notes: String = ""
@@ -121,9 +126,49 @@ func remove_scene(scene_id: String) -> bool:
 	boards = kept_boards
 	gestalts = kept_gestalts
 	scenes.remove_at(scenes.find(scene_id))
+	scene_stages.erase(scene_id)
 	if entry == scene_id:
 		entry = ""
 	return true
+
+## The stage `scene_id` says its phrases at: its own pin, else the profile's stage.
+func stage_for_scene(scene_id: String) -> NlaStage.Stage:
+	if scene_stages.has(scene_id):
+		return NlaStage.from_value(scene_stages[scene_id])
+	return stage
+
+## Pin `scene_id` to `pinned`, or UNKNOWN to follow the profile again. Returns false, changing nothing,
+## for a scene the profile does not hold or a pin it already has.
+func pin_scene_stage(scene_id: String, pinned: NlaStage.Stage) -> bool:
+	if not has_scene(scene_id):
+		return false
+	if pinned == NlaStage.Stage.UNKNOWN:
+		if not scene_stages.has(scene_id):
+			return false
+		scene_stages.erase(scene_id)
+		return true
+	if scene_stages.get(scene_id, 0) == int(pinned):
+		return false
+	scene_stages[scene_id] = int(pinned)
+	return true
+
+## The gestalt spot `s` in room `r` says now: the pair written for the room's scene's stage
+## (`Spot.gestalt_at`), its alternate when `toggled` and the pair has one. A pair naming a phrase the bank
+## lacks falls back to the base pair. Null when even that is missing.
+func says(r: Room, s: Spot, toggled: bool) -> Gestalt:
+	var at: NlaStage.Stage = stage_for_scene(scene_of(r.id))
+	if toggled:
+		var alt: Gestalt = gestalt(s.alt_gestalt_at(at))
+		if alt != null:
+			return alt
+	var g: Gestalt = gestalt(s.gestalt_at(at))
+	if g != null:
+		return g
+	if toggled and not s.alt_gestalt_id.is_empty():
+		var base_alt: Gestalt = gestalt(s.alt_gestalt_id)
+		if base_alt != null:
+			return base_alt
+	return gestalt(s.gestalt_id)
 
 ## A separate utterance; its recording uses media/name/ to avoid bank filename collisions.
 func name_gestalt() -> Gestalt:
@@ -191,12 +236,16 @@ func to_dict() -> Dictionary:
 	var takes: Dictionary = {}
 	for chunk_key: String in chunk_takes.keys():
 		takes[chunk_key] = chunk_takes[chunk_key]
+	var pins: Dictionary = {}
+	for scene_id: String in scene_stages.keys():
+		pins[scene_id] = scene_stages[scene_id]
 	return {
 		"schema": SCHEMA_VERSION,
 		"id": id,
 		"display_name": display_name,
 		"name_recording": name_recording,
 		"stage": int(stage),
+		"scene_stages": pins,
 		"notes": notes,
 		"style": style_id,
 		"starter": starter_id,
@@ -223,6 +272,8 @@ static func from_dict(d: Dictionary) -> Profile:
 		return from_dict(migrate_v4(d))
 	if schema == 5:
 		return from_dict(migrate_v5(d))
+	if schema == 6:
+		return from_dict(migrate_v6(d))
 	if schema != SCHEMA_VERSION:
 		return null
 	var profile_id: String = JsonValue.to_text(d.get("id")).strip_edges()
@@ -246,6 +297,15 @@ static func from_dict(d: Dictionary) -> Profile:
 	var entry_id: String = JsonValue.to_text(d.get("entry")).strip_edges()
 	if entry_id in p.scenes:
 		p.entry = entry_id
+	# A pin names a held scene and a stage 1 to 6. Anything else is skipped.
+	var pins: Dictionary = JsonValue.to_dict(d.get("scene_stages"))
+	for raw_scene: Variant in pins.keys():
+		if not raw_scene is String:
+			continue
+		var pinned_scene: String = raw_scene
+		var pinned: NlaStage.Stage = NlaStage.from_value(pins[raw_scene])
+		if pinned_scene in p.scenes and pinned != NlaStage.Stage.UNKNOWN:
+			p.scene_stages[pinned_scene] = int(pinned)
 	p.created_at = JsonValue.to_int(d.get("created_at"), 0)
 	for row: Dictionary in JsonValue.to_dict_rows(d.get("gestalts")):
 		var g: Gestalt = Gestalt.from_dict(row)
@@ -307,4 +367,11 @@ static func migrate_v5(d: Dictionary) -> Dictionary:
 	var migrated: Dictionary = d.duplicate(true)
 	migrated["schema"] = 6
 	migrated["notes"] = ""
+	return migrated
+
+## Version 6 had no scene pins. Every scene follows the profile's stage, which is what it did.
+static func migrate_v6(d: Dictionary) -> Dictionary:
+	var migrated: Dictionary = d.duplicate(true)
+	migrated["schema"] = 7
+	migrated["scene_stages"] = {}
 	return migrated

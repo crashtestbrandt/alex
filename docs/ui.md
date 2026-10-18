@@ -95,9 +95,9 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 
 | Bank | Beginnings | Endings | Right column on a phone |
 | --- | --- | --- | --- |
-| `home_routines` alone | 11 | 13 | 2 screens |
-| `snack_time` alone | 10 | 28 | 5 screens |
-| Every shipped scene | 40 | 49 | 9 screens |
+| `home_routines` alone | 28 | 32 | 6 screens |
+| `snack_time` alone | 26 | 35 | 6 screens |
+| Every shipped scene | 55 | 65 | 12 screens |
 
 - **Build and the layout editor share the composition model and nothing else.** An object is a union of
   primitives with authored seams, a room is a layout of objects, and a sentence is a union of chunks with
@@ -174,7 +174,8 @@ three seconds (`CaregiverChord`):
 - A held scene with a room shows Start here. The scene Explore opens on reads Starts here and takes no tap.
 - Hold the delete button for three seconds to permanently remove the selected profile and all recordings. Releasing early, scrolling, leaving the button or losing focus cancels the hold.
 - Style pills preview immediately. Back discards the preview. Saving a look changes only the selected profile.
-- Edit shows the stage as a pill bar, None then 1 to 6, with the picked stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). None reads Not staged under the bar and says what a stage is for.
+- Edit shows the stage as a pill bar, None then 1 to 6, with the picked stage's name and what the adults model there under it (`NlaStage.label`, `NlaStage.models`). The stage picks the phrase pair every object says (docs/design.md "Progression"). None reads Not staged under the bar and says each object's first pair.
+- A held scene's row carries its own stage bar, Profile's then 1 to 6. Profile's follows the profile's stage. A number pins the scene to that stage and saves at once (`Profile.pin_scene_stage`).
 - Edit shows a Notes field, an `SdfTextArea`. Save writes the stage and the notes with the look. Back discards both. Neither reaches the learner's screen.
 - Labels sit beside choices when their measured widths fit, and stack otherwise. Tall forms and lists scroll.
 - Caregiver guide opens `GUIDE.md` on a tap. Privacy policy opens `PRIVACY.md` on a tap (`PageText`).

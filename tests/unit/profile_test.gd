@@ -136,6 +136,59 @@ func test_scenes_round_trip_once_each() -> void:
 	d["scenes"] = ["home_routines", "home_routines", "", " "]
 	assert_eq(Profile.from_dict(d).scenes, PackedStringArray(["home_routines"]), "a repeat and a blank are dropped")
 
+func test_v6_migration_adds_no_pins_so_every_scene_follows_the_profile() -> void:
+	var p: Profile = _sample()
+	p.stage = NlaStage.Stage.SINGLE_WORDS
+	var old: Dictionary = p.to_dict()
+	old["schema"] = 6
+	old.erase("scene_stages")
+	var back: Profile = Profile.from_dict(old)
+	assert_not_null(back, "version 6 loads")
+	assert_true(back.scene_stages.is_empty(), "no pins")
+	assert_eq(back.stage_for_scene(back.starter_id), NlaStage.Stage.SINGLE_WORDS, "a scene follows the profile's stage")
+	assert_eq(old["schema"], 6, "migration does not mutate its input")
+	assert_eq(back.to_dict()["schema"], Profile.SCHEMA_VERSION, "next save writes the current version")
+
+func test_scene_pins_round_trip_for_held_scenes_only() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	Starter.find("home_routines").seed(p)
+	p.stage = NlaStage.Stage.MITIGATION
+	assert_false(p.pin_scene_stage("bath_time", NlaStage.Stage.SINGLE_WORDS), "a scene the profile does not hold cannot be pinned")
+	assert_true(p.pin_scene_stage("home_routines", NlaStage.Stage.EARLY_GRAMMAR), "a held scene is pinned")
+	assert_eq(p.stage_for_scene("home_routines"), NlaStage.Stage.EARLY_GRAMMAR, "the pin wins over the profile's stage")
+	assert_false(p.pin_scene_stage("home_routines", NlaStage.Stage.EARLY_GRAMMAR), "the same pin again changes nothing")
+	var d: Dictionary = p.to_dict()
+	d["scene_stages"]["ghost"] = 3
+	d["scene_stages"]["home_routines"] = 4
+	var parsed: Dictionary = JSON.parse_string(JSON.stringify(d))
+	var back: Profile = Profile.from_dict(parsed)
+	assert_eq(back.scene_stages, {"home_routines": 4} as Dictionary[String, int], "a pin on a scene the profile lacks is dropped")
+	assert_true(back.pin_scene_stage("home_routines", NlaStage.Stage.UNKNOWN), "not staged unpins")
+	assert_eq(back.stage_for_scene("home_routines"), NlaStage.Stage.MITIGATION, "and the scene follows the profile again")
+	assert_false(back.pin_scene_stage("home_routines", NlaStage.Stage.UNKNOWN), "unpinning twice changes nothing")
+	assert_true(p.remove_scene("home_routines"), "removed")
+	assert_true(p.scene_stages.is_empty(), "removing a scene drops its pin")
+
+func test_says_follows_the_stage_dial_and_the_pin() -> void:
+	var p: Profile = Profile.make("p", "Sam")
+	Starter.find("home_routines").seed(p)
+	var r: Room = p.rooms[0]
+	var door: Spot = r.spots[0]
+	assert_eq(door.id, "door", "the bedroom's first spot is the door")
+	assert_eq(p.says(r, door, false).id, "lets_go_outside", "not staged says the base pair")
+	assert_eq(p.says(r, door, true).id, "lets_go_inside", "and its alternate when toggled")
+	p.stage = NlaStage.Stage.SINGLE_WORDS
+	assert_eq(p.says(r, door, false).text, "Go out", "stage 3 says the stage 3 pair")
+	assert_eq(p.says(r, door, true).text, "Come in", "with its alternate")
+	p.stage = NlaStage.Stage.COMPLEX_GRAMMAR
+	assert_eq(p.says(r, door, false).text, "Open the door", "stage 5 says the nearest pair below, stage 4")
+	assert_true(p.pin_scene_stage("home_routines", NlaStage.Stage.ECHOLALIA), "pinned to 1")
+	assert_eq(p.says(r, door, false).id, "lets_go_outside", "the pin wins")
+	var window: Spot = r.spots[1]
+	assert_eq(p.says(r, window, true).id, "look_outside", "a pair with no alternate says its phrase when toggled")
+	door.stage_gestalts[1] = "no-such-phrase"
+	assert_eq(p.says(r, door, false).id, "lets_go_outside", "a pair naming a phrase the bank lacks falls back to the base pair")
+
 func test_v5_migration_adds_empty_notes_and_keeps_the_stage() -> void:
 	var p: Profile = _sample()
 	p.stage = NlaStage.Stage.MITIGATION

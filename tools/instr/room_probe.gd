@@ -89,6 +89,17 @@ func _run() -> void:
 		_check(overlay.selected_pill() == pills[0] and pills[0].whole, "the whole is picked on open")
 		_check(overlay.gestalt().id == "lets_go_outside", "Keep targets the displayed phrase")
 		overlay.close()
+		# The profile's stage picks the pair the open door says, a pin on its scene wins, and the bank stays whole.
+		var live: Profile = home._profile
+		var scene_id: String = live.scene_of(live.rooms[0].id)
+		live.stage = NlaStage.Stage.SINGLE_WORDS
+		_check(room_view.gestalt_for(door.spot).text == "Come in", "at stage 3 the open door says its stage 3 alternate")
+		_check(live.words_gestalts().size() == live.gestalts.size(), "Words still offers the whole bank")
+		_check(live.pin_scene_stage(scene_id, NlaStage.Stage.EARLY_GRAMMAR), "the scene is pinned to 4")
+		_check(room_view.gestalt_for(door.spot).text == "Shut the door", "the pin wins over the profile's stage")
+		live.pin_scene_stage(scene_id, NlaStage.Stage.UNKNOWN)
+		live.stage = NlaStage.Stage.UNKNOWN
+		_check(room_view.gestalt_for(door.spot).id == "lets_go_inside", "not staged says the first pair again")
 	var tub: SpotBody = room_view.body("tub")
 	if tub != null:
 		var water: Node = tub.get_node_or_null("Object/water")
@@ -420,7 +431,15 @@ func _check_build(home: ChildHome, p: Profile) -> void:
 	_check(go.custom_minimum_size.y >= Style.current.tile_min_size, "a chunk button honors the touch floor")
 	var go_shape: SdfShape = go.get_node("Shape") as SdfShape
 	_check(go_shape != null and go_shape.fill == ChunkColors.color_for("Let's go", Style.current.chunk_palette), "a chunk button wears its chunk's color")
-	_check(build.lead_buttons().size() == beginnings.size() and go.lead and not outside.lead, "an empty strip borders every beginning and no ending")
+	var begins: Dictionary[String, bool] = {}
+	for button: ChunkButton in beginnings:
+		begins[ChunkColors.key(button.chunk)] = true
+	var empty_leads_right: bool = true
+	for button: ChunkButton in beginnings:
+		empty_leads_right = empty_leads_right and button.lead
+	for button: ChunkButton in endings:
+		empty_leads_right = empty_leads_right and button.lead == begins.has(ChunkColors.key(button.chunk))
+	_check(empty_leads_right and go.lead and not outside.lead, "an empty strip borders every beginning, and an ending only when it also begins a phrase")
 	_check(go_shape != null and go_shape.border_px == ChunkButton.LEAD_BORDER_PX, "the border is the lead mark")
 	var speaker: Speaker = home.get_node("%Speaker") as Speaker
 	var heard: Array[Gestalt] = []

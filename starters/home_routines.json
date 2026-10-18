@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "home_routines",
   "title": "Home",
-  "description": "A bedroom to explore: a door, a lamp, a bed, a ball, a cup on the table. Everyday phrases, each one in chunks an adult can recombine. Replace the words with the ones your child already uses.",
+  "description": "A bedroom to explore: a door, a lamp, a bed, a ball, a cup on the table. Everyday phrases, each one in chunks an adult can recombine, with a pair written for every stage. Replace the words with the ones your child already uses.",
   "gestalts": [
     {
       "id": "lets_go_outside",
@@ -73,7 +73,7 @@
     {
       "id": "all_done",
       "text": "All done",
-      "function": "protest",
+      "function": "comment",
       "stage": 1
     },
     {
@@ -99,6 +99,138 @@
       "text": "See you | later",
       "function": "greeting",
       "stage": 1
+    },
+    {
+      "id": "go_out",
+      "text": "Go | out",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "come_in",
+      "text": "Come | in",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "look_out",
+      "text": "Look | out",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "night_night",
+      "text": "Night | night",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "light_on",
+      "text": "Light | on",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "light_off",
+      "text": "Light | off",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "snack_time",
+      "text": "Snack | time",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "more_juice",
+      "text": "More | juice",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "sit_down",
+      "text": "Sit | down",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "ball_up",
+      "text": "Ball | up",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "shoes_on",
+      "text": "Shoes | on",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "open_the_door",
+      "text": "Open | the | door",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "shut_the_door",
+      "text": "Shut | the | door",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "look_out_the_window",
+      "text": "Look | out | the | window",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "lets_go_to_bed",
+      "text": "Let's | go | to | bed",
+      "function": "routine",
+      "stage": 4
+    },
+    {
+      "id": "turn_on_the_light",
+      "text": "Turn | on | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "turn_off_the_light",
+      "text": "Turn | off | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "its_time_to_eat",
+      "text": "It's | time | to | eat",
+      "function": "routine",
+      "stage": 4
+    },
+    {
+      "id": "i_want_more_juice",
+      "text": "I | want | more | juice",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "lets_sit_on_the_rug",
+      "text": "Let's | sit | on | the | rug",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "throw_the_ball",
+      "text": "Throw | the | ball",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "put_on_your_shoes",
+      "text": "Put | on | your | shoes",
+      "function": "routine",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -116,7 +248,17 @@
           "height": 0.0,
           "size": 0.5,
           "gestalt": "lets_go_outside",
-          "alt_gestalt": "lets_go_inside"
+          "alt_gestalt": "lets_go_inside",
+          "stages": {
+            "3": {
+              "gestalt": "go_out",
+              "alt_gestalt": "come_in"
+            },
+            "4": {
+              "gestalt": "open_the_door",
+              "alt_gestalt": "shut_the_door"
+            }
+          }
         },
         {
           "id": "window",
@@ -126,7 +268,15 @@
           "x": 0.62,
           "height": 0.4,
           "size": 0.3,
-          "gestalt": "look_outside"
+          "gestalt": "look_outside",
+          "stages": {
+            "3": {
+              "gestalt": "look_out"
+            },
+            "4": {
+              "gestalt": "look_out_the_window"
+            }
+          }
         },
         {
           "id": "bed",
@@ -135,7 +285,15 @@
           "x": 0.62,
           "y": 0.2,
           "size": 0.5,
-          "gestalt": "time_for_bed"
+          "gestalt": "time_for_bed",
+          "stages": {
+            "3": {
+              "gestalt": "night_night"
+            },
+            "4": {
+              "gestalt": "lets_go_to_bed"
+            }
+          }
         },
         {
           "id": "light",
@@ -145,7 +303,17 @@
           "y": 0.15,
           "size": 0.4,
           "gestalt": "lights_on",
-          "alt_gestalt": "lights_off"
+          "alt_gestalt": "lights_off",
+          "stages": {
+            "3": {
+              "gestalt": "light_on",
+              "alt_gestalt": "light_off"
+            },
+            "4": {
+              "gestalt": "turn_on_the_light",
+              "alt_gestalt": "turn_off_the_light"
+            }
+          }
         },
         {
           "id": "table",
@@ -154,7 +322,15 @@
           "x": 0.9,
           "y": 0.2,
           "size": 0.16,
-          "gestalt": "time_for_a_snack"
+          "gestalt": "time_for_a_snack",
+          "stages": {
+            "3": {
+              "gestalt": "snack_time"
+            },
+            "4": {
+              "gestalt": "its_time_to_eat"
+            }
+          }
         },
         {
           "id": "cup",
@@ -164,7 +340,15 @@
           "y": 0.2,
           "height": 0.2215384615,
           "size": 0.09,
-          "gestalt": "want_more"
+          "gestalt": "want_more",
+          "stages": {
+            "3": {
+              "gestalt": "more_juice"
+            },
+            "4": {
+              "gestalt": "i_want_more_juice"
+            }
+          }
         },
         {
           "id": "rug",
@@ -173,7 +357,15 @@
           "x": 0.5,
           "y": 0.62,
           "size": 0.35,
-          "gestalt": "its_okay"
+          "gestalt": "its_okay",
+          "stages": {
+            "3": {
+              "gestalt": "sit_down"
+            },
+            "4": {
+              "gestalt": "lets_sit_on_the_rug"
+            }
+          }
         },
         {
           "id": "ball",
@@ -182,7 +374,15 @@
           "x": 0.58,
           "y": 0.72,
           "size": 0.12,
-          "gestalt": "lets_play_ball"
+          "gestalt": "lets_play_ball",
+          "stages": {
+            "3": {
+              "gestalt": "ball_up"
+            },
+            "4": {
+              "gestalt": "throw_the_ball"
+            }
+          }
         },
         {
           "id": "shoes",
@@ -191,22 +391,33 @@
           "x": 0.12,
           "y": 0.6,
           "size": 0.16,
-          "gestalt": "lets_get_shoes"
+          "gestalt": "lets_get_shoes",
+          "stages": {
+            "3": {
+              "gestalt": "shoes_on"
+            },
+            "4": {
+              "gestalt": "put_on_your_shoes"
+            }
+          }
         }
       ]
     }
   ],
   "boards": [
     {
-      "id": "words",
-      "title": "Words",
+      "id": "home",
+      "title": "Home",
       "gestalts": [
+        "lets_go_outside",
+        "lets_go_inside",
         "all_done",
         "want_more",
+        "its_okay",
         "time_for_a_bath",
+        "lets_go_in_the_car",
         "that_was_loud",
-        "see_you_later",
-        "lets_go_in_the_car"
+        "see_you_later"
       ]
     }
   ]

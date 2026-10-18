@@ -135,14 +135,11 @@ func show_room(p: Profile, r: Room) -> void:
 	_cancel_press()
 	set_view(CameraFraming.View.FRONT, false)
 
-## The gestalt a spot says right now: its alternate when toggled on and one exists.
+## The gestalt a spot says right now, at the scene's stage (`Profile.says`): its alternate when toggled on
+## and one exists.
 func gestalt_for(s: Spot) -> Gestalt:
 	var body: SpotBody = _bodies.get(s.id, null)
-	if body != null and body.is_on and not s.alt_gestalt_id.is_empty():
-		var alt: Gestalt = _profile.gestalt(s.alt_gestalt_id)
-		if alt != null:
-			return alt
-	return _profile.gestalt(s.gestalt_id)
+	return _profile.says(_room, s, body != null and body.is_on)
 
 func bodies() -> Array[SpotBody]:
 	var out: Array[SpotBody] = []

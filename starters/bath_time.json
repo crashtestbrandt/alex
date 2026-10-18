@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "bath_time",
   "title": "Bath time",
-  "description": "A bathroom to explore: a tub that fills, a lamp, a window, a star on the wall, a ball, a cup, a rug. Bath-time phrases in chunks. Add it to a profile from the adults' screen, or start with it.",
+  "description": "A bathroom to explore: a door, a tub, a lamp, a window, a star. The routine around a bath, in chunks, with a pair written for every stage. Replace the words with the ones your child already uses.",
   "gestalts": [
     {
       "id": "time_for_a_bath",
@@ -75,6 +75,138 @@
       "text": "Let's get | dry",
       "function": "routine",
       "stage": 2
+    },
+    {
+      "id": "bath_time",
+      "text": "Bath | time",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "all_done",
+      "text": "All | done",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "tap_on",
+      "text": "Tap | on",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "tap_off",
+      "text": "Tap | off",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "light_on",
+      "text": "Light | on",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "light_off",
+      "text": "Light | off",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "warm",
+      "text": "Warm",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "big_star",
+      "text": "Big | star",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "dry_off",
+      "text": "Dry | off",
+      "function": "request",
+      "stage": 3
+    },
+    {
+      "id": "splash",
+      "text": "Splash",
+      "function": "comment",
+      "stage": 3
+    },
+    {
+      "id": "wash_hands",
+      "text": "Wash | hands",
+      "function": "routine",
+      "stage": 3
+    },
+    {
+      "id": "lets_have_a_bath",
+      "text": "Let's | have | a | bath",
+      "function": "routine",
+      "stage": 4
+    },
+    {
+      "id": "i_am_all_clean",
+      "text": "I | am | all | clean",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "turn_on_the_water",
+      "text": "Turn | on | the | water",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "turn_off_the_water",
+      "text": "Turn | off | the | water",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "turn_on_the_light",
+      "text": "Turn | on | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "turn_off_the_light",
+      "text": "Turn | off | the | light",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "it_is_warm_in_here",
+      "text": "It | is | warm | in | here",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "i_see_a_star",
+      "text": "I | see | a | star",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "dry_me_off_please",
+      "text": "Dry | me | off | please",
+      "function": "request",
+      "stage": 4
+    },
+    {
+      "id": "the_ball_goes_splash",
+      "text": "The | ball | goes | splash",
+      "function": "comment",
+      "stage": 4
+    },
+    {
+      "id": "wash_your_hands_please",
+      "text": "Wash | your | hands | please",
+      "function": "routine",
+      "stage": 4
     }
   ],
   "rooms": [
@@ -92,7 +224,17 @@
           "height": 0.0,
           "size": 0.5,
           "gestalt": "time_for_a_bath",
-          "alt_gestalt": "all_clean"
+          "alt_gestalt": "all_clean",
+          "stages": {
+            "3": {
+              "gestalt": "bath_time",
+              "alt_gestalt": "all_done"
+            },
+            "4": {
+              "gestalt": "lets_have_a_bath",
+              "alt_gestalt": "i_am_all_clean"
+            }
+          }
         },
         {
           "id": "tub",
@@ -102,7 +244,17 @@
           "y": 0.25,
           "size": 0.5,
           "gestalt": "water_on",
-          "alt_gestalt": "water_off"
+          "alt_gestalt": "water_off",
+          "stages": {
+            "3": {
+              "gestalt": "tap_on",
+              "alt_gestalt": "tap_off"
+            },
+            "4": {
+              "gestalt": "turn_on_the_water",
+              "alt_gestalt": "turn_off_the_water"
+            }
+          }
         },
         {
           "id": "light",
@@ -112,7 +264,17 @@
           "y": 0.15,
           "size": 0.4,
           "gestalt": "lights_on",
-          "alt_gestalt": "lights_off"
+          "alt_gestalt": "lights_off",
+          "stages": {
+            "3": {
+              "gestalt": "light_on",
+              "alt_gestalt": "light_off"
+            },
+            "4": {
+              "gestalt": "turn_on_the_light",
+              "alt_gestalt": "turn_off_the_light"
+            }
+          }
         },
         {
           "id": "window",
@@ -122,7 +284,15 @@
           "x": 0.7,
           "height": 0.45,
           "size": 0.26,
-          "gestalt": "so_warm"
+          "gestalt": "so_warm",
+          "stages": {
+            "3": {
+              "gestalt": "warm"
+            },
+            "4": {
+              "gestalt": "it_is_warm_in_here"
+            }
+          }
         },
         {
           "id": "star",
@@ -132,7 +302,15 @@
           "x": 0.3,
           "height": 0.65,
           "size": 0.12,
-          "gestalt": "look_at_the_star"
+          "gestalt": "look_at_the_star",
+          "stages": {
+            "3": {
+              "gestalt": "big_star"
+            },
+            "4": {
+              "gestalt": "i_see_a_star"
+            }
+          }
         },
         {
           "id": "rug",
@@ -141,7 +319,15 @@
           "x": 0.5,
           "y": 0.7,
           "size": 0.32,
-          "gestalt": "lets_get_dry"
+          "gestalt": "lets_get_dry",
+          "stages": {
+            "3": {
+              "gestalt": "dry_off"
+            },
+            "4": {
+              "gestalt": "dry_me_off_please"
+            }
+          }
         },
         {
           "id": "ball",
@@ -150,7 +336,15 @@
           "x": 0.58,
           "y": 0.78,
           "size": 0.11,
-          "gestalt": "splash_splash"
+          "gestalt": "splash_splash",
+          "stages": {
+            "3": {
+              "gestalt": "splash"
+            },
+            "4": {
+              "gestalt": "the_ball_goes_splash"
+            }
+          }
         },
         {
           "id": "cup",
@@ -159,7 +353,15 @@
           "x": 0.9,
           "y": 0.7,
           "size": 0.09,
-          "gestalt": "wash_your_hands"
+          "gestalt": "wash_your_hands",
+          "stages": {
+            "3": {
+              "gestalt": "wash_hands"
+            },
+            "4": {
+              "gestalt": "wash_your_hands_please"
+            }
+          }
         }
       ]
     }

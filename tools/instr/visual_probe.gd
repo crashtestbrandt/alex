@@ -488,6 +488,23 @@ func _profile_stage_notes(main: Main, picker: ProfilePicker, profile: Profile) -
 	(card.get_child(1) as SdfButton).pressed.emit()
 	await _settle()
 	_check(stages.active_index() == 2 and notes.text == note and stage_name.text == NlaStage.label(NlaStage.Stage.MITIGATION), "reopening Edit reads both back")
+	# A held scene's stage bar pins the scene at once and shows the pin when the rows are rebuilt.
+	var pins: PillBar = _scene_pins(picker)
+	_check(pins != null and picker.scene_rows().size() >= 4, "a held scene carries a stage bar")
+	if pins != null:
+		_check(pins.items().size() == 7 and pins.active_index() == 0, "the scene follows the profile's stage")
+		pins.items()[4].pressed.emit()
+		await _settle()
+		var pinned: int = ProfileStore.load_profile(profile.id).scene_stages.get("home_routines", 0)
+		_check(pinned == 4, "a pin saves at once")
+		_check((picker.get_node("%Status") as Label).text == "Home says its stage 4 phrases.", "and says so")
+		pins = _scene_pins(picker)
+		_check(pins != null and pins.active_index() == 4, "the rebuilt bar shows the pin")
+		_check(stages.active_index() == 2, "the profile's own stage is untouched")
+		if pins != null:
+			pins.items()[0].pressed.emit()
+			await _settle()
+		_check(ProfileStore.load_profile(profile.id).scene_stages.is_empty(), "Profile's unpins")
 	stages.items()[4].pressed.emit()
 	notes.text = "discarded"
 	(picker.get_node("%BackButton") as SdfButton).pressed.emit()
@@ -496,6 +513,13 @@ func _profile_stage_notes(main: Main, picker: ProfilePicker, profile: Profile) -
 	_check(saved.stage == NlaStage.Stage.MITIGATION and saved.notes == note, "Back discards a changed stage and note")
 	main.open_profile(profile.id)
 	await _settle()
+
+## The stage bar of the one held scene on Edit, or null.
+func _scene_pins(picker: ProfilePicker) -> PillBar:
+	for entry: VBoxContainer in picker.scene_rows():
+		if entry.get_child_count() > 1:
+			return (entry.get_child(1) as BoxContainer).get_child(1) as PillBar
+	return null
 
 func _short_picker(main: Main, picker: ProfilePicker) -> void:
 	for style: String in ["calm", "bold", "quiet"]:
