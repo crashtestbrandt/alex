@@ -46,6 +46,7 @@ func _ready() -> void:
 	_grid.add_theme_constant_override("v_separation", int(GAP))
 	_scroll.add_child(_grid)
 	_scroll.resized.connect(_layout_cards)
+	Style.fonts_changed.connect(_layout_cards)
 	resized.connect(_layout_cards)
 	_layout_cards()
 
@@ -86,13 +87,13 @@ func _layout_cards() -> void:
 	_padding.add_theme_constant_override("margin_right", EDGE + ceili(size.x - safe.end.x))
 	_padding.add_theme_constant_override("margin_top", EDGE + ceili(safe.position.y))
 	_padding.add_theme_constant_override("margin_bottom", EDGE + ceili(size.y - safe.end.y))
-	var target: float = maxf(Style.current.tile_min_size, 260.0)
+	var target: float = maxf(Style.current.tile_min_size, 144.0 * Style.units_per_point)
 	var width: float = maxf(_scroll.size.x - 16.0, target)
 	var columns: int = clampi(floori((width + GAP) / (target + GAP)), 1, 3)
 	var card_width: float = floorf((width - GAP * (columns - 1)) / columns)
 	for card: RoomPreview in _cards:
 		card.custom_minimum_size = Vector2(card_width, maxf(Style.current.tile_min_size, card_width * 0.75))
-	var back_px: float = maxf(Style.current.tile_min_size * GlyphBar.BUTTON_SCALE, GlyphBar.MIN_PX)
+	var back_px: float = maxf(Style.current.tile_min_size * GlyphBar.BUTTON_SCALE, maxf(GlyphBar.MIN_PX, Style.units_per_point * 48.0))
 	_back.custom_minimum_size = Vector2.ONE * back_px
 
 func _refresh() -> void:

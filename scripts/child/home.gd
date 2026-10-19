@@ -242,7 +242,7 @@ func _sync_room_inset() -> void:
 
 func _layout_home() -> void:
 	var available: Vector2 = _safe_rect.size if _safe_rect.has_area() else size
-	var compact: bool = available.x < 740.0 or (available.x < 900.0 and available.y > available.x * 1.2)
+	var compact: bool = available.x / Style.units_per_point < 360.0 or Style.text_scale > 1.25
 	var parent: Node = _column if compact else _top_bar
 	if _strip.get_parent() != parent:
 		_strip.reparent(parent)
@@ -279,7 +279,7 @@ func _layout_name() -> void:
 	_title.position = Vector2(0.0, maxf(0.0, (_name_slot.size.y - _title.size.y) / 2.0))
 
 func _layout_board() -> void:
-	var width: float = clampf(_stage.size.x - 16.0, Style.current.tile_min_size, 320.0 * Style.text_scale)
+	var width: float = clampf(_stage.size.x - 16.0, Style.current.tile_min_size, 160.0 * Style.units_per_point * Style.text_scale)
 	for tile: GestaltTile in _tiles.values():
 		tile.custom_minimum_size.x = width
 

@@ -2,14 +2,14 @@ extends RefCounted
 class_name Typography
 ## Type sizes in logical mobile points/dp, converted to the app's layout canvas by Style.
 ## Apple HIG defaults and Material's body/title hierarchy inform these roles (docs/ui.md).
-const BODY: int = 17
-const SUPPORTING: int = 15
-const CONTROL: int = 17
-const TITLE: int = 28
-const SECTION: int = 22
-const METADATA: int = 12
-const PHRASE: int = 22
-const CAPTION: int = 24
+const BODY: int = 14
+const SUPPORTING: int = 12
+const CONTROL: int = 14
+const TITLE: int = 20
+const SECTION: int = 17
+const METADATA: int = 11
+const PHRASE: int = 16
+const CAPTION: int = 18
 const TEXT_SCALES: Array[float] = [1.0, 1.25, 1.5, 2.0]
 
 static func canvas_units_per_point(window: Vector2i, canvas: Vector2i, density: float) -> float:

@@ -30,6 +30,7 @@ func _ready() -> void:
 	# A container lays its children out inside its margins, the shape included. It is pinned back to the full
 	# rect after every sort, so the drawn panel is the panel and not its content box.
 	sort_children.connect(_place_shape)
+	_row.sort_children.connect(_refresh)
 	Style.changed.connect(_on_style_changed)
 	_refresh()
 
@@ -40,6 +41,7 @@ func _notification(what: int) -> void:
 func _place_shape() -> void:
 	_shape.position = Vector2.ZERO
 	_shape.size = size
+	_refresh()
 
 ## Put a button in the bar as a quiet pill in the bar's toggle group.
 func add_item(button: SdfButton) -> void:
@@ -94,7 +96,11 @@ func clear() -> void:
 func _refresh() -> void:
 	if _shape == null:
 		return
-	_shape.radius_px = UiGeometry.pill_radius(size)
+	var row_height: float = 0.0
+	for button: SdfButton in items():
+		if button.visible:
+			row_height = maxf(row_height, button.size.y)
+	_shape.radius_px = minf(UiGeometry.pill_radius(size), row_height * 0.5 + PAD_PX)
 	_shape.fill = Style.current.surface
 	var inner: float = UiGeometry.concentric(_shape.radius_px, PAD_PX)
 	for button: SdfButton in items():

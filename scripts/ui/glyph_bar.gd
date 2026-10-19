@@ -13,6 +13,7 @@ var _glyph_buttons: Array[GlyphButton] = []
 
 func _ready() -> void:
 	super()
+	Style.fonts_changed.connect(_size_buttons)
 	_size_buttons()
 
 ## Put a glyph button in the bar.
@@ -33,7 +34,7 @@ func show_current(current: GlyphButton) -> void:
 		button.update_glyph()
 
 func _size_buttons() -> void:
-	var px: float = maxf(Style.current.tile_min_size * BUTTON_SCALE, MIN_PX)
+	var px: float = maxf(Style.current.tile_min_size * BUTTON_SCALE, maxf(MIN_PX, Style.units_per_point * 48.0))
 	for button: GlyphButton in _glyph_buttons:
 		button.custom_minimum_size = Vector2(px, px)
 

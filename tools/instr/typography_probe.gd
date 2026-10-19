@@ -23,6 +23,16 @@ func _inspect(node: Node, density: float) -> void:
 		var control: Control = node as Control
 		if not control.is_visible_in_tree():
 			return
+		if control is PillBar:
+			var bar: PillBar = control as PillBar
+			_check(bar._shape.get_global_rect().is_equal_approx(bar.get_global_rect()), str(bar.get_path()) + " background follows the bar: " + str(bar._shape.get_global_rect()) + " / " + str(bar.get_global_rect()))
+			for item: SdfButton in bar.items():
+				if item.is_visible_in_tree():
+					_check(bar.get_global_rect().grow(1.0).encloses(item.get_global_rect()), str(bar.get_path()) + " contains its button: " + str(item.get_global_rect()) + " / " + str(bar.get_global_rect()))
+		if control is GlyphBar.GlyphButton:
+			var glyph_button: GlyphBar.GlyphButton = control as GlyphBar.GlyphButton
+			_check(glyph_button._shape.get_global_rect().is_equal_approx(glyph_button.get_global_rect()), "selected glyph background follows the button")
+			_check(glyph_button._glyph.get_global_rect().is_equal_approx(glyph_button.get_global_rect()), "glyph stays centered over its button")
 		var has_text: bool = false
 		var font_size: int = 0
 		if control is Label:
@@ -33,6 +43,8 @@ func _inspect(node: Node, density: float) -> void:
 			var button: Button = control as Button
 			has_text = not button.text.is_empty()
 			font_size = button.get_theme_font_size("font_size")
+			var hit_size: Vector2 = button.size / Style.units_per_point
+			_check(hit_size.x >= 43.5 and hit_size.y >= 43.5, str(button.get_path()) + " retains a 44-point touch target " + str(hit_size))
 		elif control is LineEdit or control is TextEdit:
 			has_text = true
 			font_size = control.get_theme_font_size("font_size")
@@ -49,6 +61,32 @@ func _inspect(node: Node, density: float) -> void:
 			_check(points >= Typography.METADATA * Style.text_scale - 0.1, "text remains legible in logical points: " + str(points))
 	for child: Node in node.get_children():
 		_inspect(child, density)
+
+func _check_icon_bars() -> void:
+	var bar: GlyphBar = GlyphBar.new()
+	add_child(bar)
+	for figure: SdfGlyph.Figure in [SdfGlyph.Figure.FRONT, SdfGlyph.Figure.TOP, SdfGlyph.Figure.TILT, SdfGlyph.Figure.PALETTE, SdfGlyph.Figure.BUILD]:
+		bar.add_glyph(figure, "")
+	for columns: int in [1, 2, 5]:
+		var side: float = bar.items()[0].get_combined_minimum_size().x
+		bar.fit_width(side * columns + PillBar.GAP_PX * (columns - 1) + PillBar.PAD_PX * 2.0)
+		bar.reset_size()
+		await _settle()
+		for index: int in bar.items().size():
+			bar.show_current(bar.items()[index] as GlyphBar.GlyphButton)
+			await _settle()
+			var button: SdfButton = bar.items()[index]
+			var center: Vector2 = button.get_global_rect().get_center() - bar.global_position
+			var radius: float = minf(button.size.x, button.size.y) * 0.5
+			for step: int in 32:
+				var point: Vector2 = center + Vector2.from_angle(TAU * step / 32.0) * radius
+				var corner: float = bar._shape.radius_px
+				var q: Vector2 = (point - bar.size * 0.5).abs() - bar.size * 0.5 + Vector2.ONE * corner
+				var distance: float = q.max(Vector2.ZERO).length() + minf(maxf(q.x, q.y), 0.0) - corner
+				_check(distance <= 0.5, "selected icon stays on its bar background with %d columns" % columns)
+			_check(button._shape.get_global_rect().is_equal_approx(button.get_global_rect()), "selected icon fill matches its hit target")
+	bar.queue_free()
+	await _settle()
 
 func _reach_action(picker: ProfilePicker, path: String) -> void:
 	var sheet: SdfSheet = picker.get_node("%Center") as SdfSheet
@@ -94,6 +132,8 @@ func _run() -> void:
 			get_window().size = windows[index]
 			main.set_display_density_override(densities[index])
 			main.open_profile(profile.id)
+			if index == 0:
+				await _check_icon_bars()
 			for text_scale: float in [1.0, 2.0]:
 				Style.set_text_scale(text_scale)
 				_label = "%s-%dx%d-%d" % [style_id, windows[index].x, windows[index].y, roundi(text_scale * 100)]
@@ -128,7 +168,7 @@ func _run() -> void:
 				if style_id == "calm" and index == 0:
 					_capture("build")
 				var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
-				overlay.open(profile.gestalts[0], profile)
+				overlay.open(Gestalt.from_text("long", "Let’s go outside together and look at the trees in the garden"), profile)
 				await _settle()
 				_inspect(overlay, densities[index])
 				overlay.close()

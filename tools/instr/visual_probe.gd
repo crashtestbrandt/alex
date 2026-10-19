@@ -184,7 +184,7 @@ func _run() -> void:
 			_check(grid.size.x <= screen.size.x, "board fits horizontally")
 			for child: Node in grid.get_children():
 				var tile: GestaltTile = child as GestaltTile
-				_check(tile.size.x <= 320.0, "Words tiles do not stretch to fill a row")
+				_check(tile.size.x <= 160.0 * Style.units_per_point * Style.text_scale + 1.0, "Words tiles do not stretch to fill a row")
 				_check(tile.size.x >= Style.current.tile_min_size and tile.size.y >= Style.current.tile_min_size, "tile meets touch floor")
 				_inside(tile.get_node("%Chunks") as Control, tile.get_global_rect(), "tile chunks")
 			var modes: PillBar = home.get_node("%ModeStrip") as PillBar

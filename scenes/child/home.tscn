@@ -103,6 +103,7 @@ size_flags_vertical = 0
 mouse_filter = 2
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
+alignment = 1
 
 [node name="BoardSpacer" type="Control" parent="Margin/Column/Stage/Rows"]
 unique_name_in_owner = true

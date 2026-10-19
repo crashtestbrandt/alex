@@ -9,23 +9,26 @@ StyleBoxFlat is drawn anywhere a user looks, and no image is loaded.
 
 - `Typography` defines logical point/dp sizes. `Style` converts them to canvas units before rendering.
 - iOS uses the display scale. Android uses `densityDpi / 160`. Desktop windows use one logical unit per pixel.
-- The layout canvas has a minimum short side of 640 units after density conversion. Rotation preserves the type size.
-- The default body is 17 points. This follows [Apple’s iOS default](https://developer.apple.com/design/human-interface-guidelines/accessibility) and the hierarchy of [Material 3 typography](https://developer.android.com/develop/ui/compose/designsystems/material3).
+- The layout canvas has a minimum short side of 960 units and otherwise uses two canvas units per logical point. Rotation preserves the type size.
+- The compact default body is 14 points. The scale retains [Apple’s minimum text sizes](https://developer.apple.com/design/human-interface-guidelines/accessibility) and the hierarchy of [Material 3 typography](https://developer.android.com/develop/ui/compose/designsystems/material3).
 
 | Role | Logical size |
 | --- | --- |
-| Page title | 28 |
-| Section heading | 22 |
-| Body and controls | 17 |
-| Supporting text | 15 |
-| Build stamp | 12 |
-| Learner phrases | 22 |
-| Spoken caption and Build strip | 24 |
+| Page title | 20 |
+| Section heading | 17 |
+| Body and controls | 14 |
+| Supporting text | 12 |
+| Build stamp | 11 |
+| Learner phrases | 16 |
+| Spoken caption and Build strip | 18 |
 
 - Preset font multipliers remain: Calm 1.0, Bold 1.15, Quiet 1.1.
 - Caregiver **Text size** offers 100%, 125%, 150% and 200%. Selection applies immediately and persists in `user://accessibility.cfg` for every profile on the device.
 - This is an app text-size preference. It does not yet follow iOS Dynamic Type or Android’s system font-size setting.
 - Text enlargement updates the theme, phrase pills and open Markdown pages without resetting learner state.
+- Buttons retain at least 44-point hit targets; icon controls retain 48 points.
+- The name and mode controls share one row on standard-width portrait phones at the default size. Enlarged text moves the mode controls to their own row.
+- Wrapped bars cap their background corner radius at one row’s height. Selected icons stay inside the background on every row.
 - Phrase pills and forms wrap and grow. Markdown headings never fall below body size; line spacing and emphasis scale with text.
 - `just typography-probe` checks all presets at 100% and 200% on a logical phone, a 3× phone in both orientations and a 2× tablet. It covers learner modes, captions, room selection, recording, profile forms and all Markdown pages.
 
@@ -98,6 +101,8 @@ it. Words reopens in the mode the learner last used.
 - The chunks the bank says next carry a border (`ChunkBank.leads`, `ChunkButton.lead`). See "Build with
   longer phrases".
 
+![Words at the default text size on a portrait phone](img/words.png)
+
 ### Build with longer phrases
 
 Build serves a phrase of any length with the same two columns. The layout rule, by bank shape:
@@ -129,7 +134,7 @@ Build serves a phrase of any length with the same two columns. The layout rule, 
 | --- | --- | --- | --- |
 | `home_routines` alone | 28 | 32 | 6 screens |
 | `snack_time` alone | 26 | 35 | 6 screens |
-| Every shipped scene | 65 | 77 | 14 screens |
+| Every shipped scene | 65 | 77 | 8 screens |
 
 - **Build and the layout editor share the composition model and nothing else.** An object is a union of
   primitives with authored seams, a room is a layout of objects, and a sentence is a union of chunks with
@@ -225,7 +230,7 @@ which is where they are checked. The picker image uses the probe's isolated fixt
 
 ## Responsive layout
 
-- `Main` preserves the window's aspect ratio. `UiGeometry.canvas_size` keeps its shorter logical side at least 640 units.
+- `Main` preserves the window's aspect ratio. `UiGeometry.canvas_size` uses two units per logical point with a 960-unit minimum short side.
 - Handheld devices can rotate. Small windows keep large controls without inheriting a landscape layout.
 - Android and iOS use `DisplayServer.get_display_safe_area()`. `SafeArea` converts native window pixels through the inverse canvas transform once.
 - Mobile layouts also reserve 6% of the shorter window side at each edge for rounded corners. Native insets and this minimum overlap; they are not added together.

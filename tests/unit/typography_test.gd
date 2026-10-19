@@ -1,8 +1,8 @@
 extends UnitTest
 
 func test_type_roles_keep_a_readable_hierarchy() -> void:
-	assert_true(Typography.BODY >= 17, "body meets the iOS default and exceeds Material body large")
-	assert_true(Typography.METADATA >= 12, "small text stays above Apple's minimum")
+	assert_true(Typography.BODY == 14, "compact body is the normal baseline")
+	assert_true(Typography.METADATA >= 11, "small text meets Apple's minimum")
 	assert_true(Typography.TITLE > Typography.SECTION and Typography.SECTION > Typography.BODY, "headings have distinct sizes")
 	assert_true(Typography.PHRASE > Typography.BODY, "learner phrases remain prominent")
 
