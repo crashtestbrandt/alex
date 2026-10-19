@@ -37,7 +37,7 @@ const DIR: String = "res://styles"
 @export var floor_color: Color = Color(0.80, 0.72, 0.60)
 @export var wall_color: Color = Color(0.93, 0.91, 0.86)
 @export_group("")
-## Multiplies every font size. 1.0 is a 24 px tile label.
+## Multiplies every font size. 1.0 uses the logical type scale in Typography.
 @export_range(0.5, 3.0, 0.05) var font_scale: float = 1.0
 @export var motion: Motion = Motion.FULL
 @export_range(0, 48, 1) var corner_radius: int = 18

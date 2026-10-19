@@ -69,6 +69,10 @@ caregiver-probe:
 room-switch-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_switch_probe.tscn
 
+# Type size, native pixel density, wrapping and 200% text across learner and caregiver screens.
+typography-probe:
+    "{{godot}}" {{headless}} --path . tools/instr/typography_probe.tscn
+
 # Continuous walls, floor, trim and shadows across phone camera views.
 room-shell-probe:
     "{{godot}}" {{headless}} --path . tools/instr/room_shell_probe.tscn

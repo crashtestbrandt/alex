@@ -82,7 +82,7 @@ func _apply_fit() -> void:
 	var font_px: int = get_theme_font_size("font_size")
 	var text_width: float = ceilf(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_px).x) + 2.0
 	var margins: float = get_theme_stylebox("normal").get_minimum_size().x
-	custom_minimum_size = Vector2(minf(text_width + margins, maxf(_fit, 1.0)), MIN_HEIGHT_PX)
+	custom_minimum_size = Vector2(minf(maxf(text_width + margins, Style.units_per_point * 44.0), maxf(_fit, 1.0)), maxf(MIN_HEIGHT_PX, Style.units_per_point * 44.0))
 
 ## A caregiver's pill: the style's lettering, a height a finger can hit, never the learner's tile floor.
 func _apply_style() -> void:

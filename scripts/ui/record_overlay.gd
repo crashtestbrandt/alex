@@ -55,6 +55,8 @@ func _ready() -> void:
 	_cancel_button.pressed.connect(close)
 	_recorder.permission_answered.connect(_on_permission_answered)
 	_pills.resized.connect(_fit_pills)
+	_sheet.resized.connect(_fit_pills)
+	Style.fonts_changed.connect(_fit_pills.call_deferred)
 	get_window().focus_exited.connect(_cancel_capture)
 	set_process(false)
 
@@ -130,8 +132,10 @@ func _build_pills(with_whole: bool, with_chunks: bool) -> void:
 
 ## Every pill takes its text's width up to the row's width, and wraps past it.
 func _fit_pills() -> void:
+	# A long phrase must not expand the sheet and then use that expanded width as its own cap.
+	var available: float = maxf(_sheet.size.x - 48.0 - SdfPanel.CONTENT_MARGIN_PX * 2.0, 1.0)
 	for pill: TakePill in pills():
-		pill.fit_width(maxf(_pills.size.x, 1.0))
+		pill.fit_width(clampf(_pills.size.x, 1.0, available))
 
 ## Pick `pill` for the big button. A take not yet kept is dropped; it was for the pill picked before.
 func _select(pill: TakePill) -> void:

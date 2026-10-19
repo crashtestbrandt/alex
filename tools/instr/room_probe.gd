@@ -195,8 +195,8 @@ func _run() -> void:
 	var front_button: SdfButton = widget.items()[CameraFraming.View.FRONT]
 	_check(front_button.button_pressed, "front is the pressed pill")
 	var pill_px: Vector2 = front_button.get_global_rect().get_center()
-	get_viewport().push_input(_mouse(pill_px, true))
-	get_viewport().push_input(_mouse(pill_px, false))
+	get_viewport().push_input(_mouse(pill_px, true), true)
+	get_viewport().push_input(_mouse(pill_px, false), true)
 	# The reset is a tween on wall time.
 	await get_tree().create_timer(1.0).timeout
 	await get_tree().process_frame
@@ -280,25 +280,25 @@ func _check_caregiver_chord(main: Main, p: Profile) -> void:
 	var overlay: RecordOverlay = home.get_node("%RecordOverlay") as RecordOverlay
 	var door: Vector2 = room_view.get_global_transform_with_canvas() * room_view.screen_point(room_view.body("door"))
 
-	get_viewport().push_input(_mouse(door, true))
+	get_viewport().push_input(_mouse(door, true), true)
 	var right: InputEventMouseButton = _mouse(door, true)
 	right.button_index = MOUSE_BUTTON_RIGHT
-	get_viewport().push_input(right)
+	get_viewport().push_input(right, true)
 	# Past the record hold, short of the chord.
 	await get_tree().create_timer(RoomView.HOLD_SECONDS + 0.4).timeout
 	_check(home.visible and not overlay.visible, "the chord cancels the record hold under the left button")
 	await get_tree().create_timer(wait - RoomView.HOLD_SECONDS - 0.4).timeout
 	await get_tree().process_frame
 	_check(picker.visible and not home.visible, "left and right held together open the picker")
-	get_viewport().push_input(_mouse(door, false))
+	get_viewport().push_input(_mouse(door, false), true)
 	right.pressed = false
-	get_viewport().push_input(right)
+	get_viewport().push_input(right, true)
 
 	for fingers: int in [2, 3]:
 		main.open_profile(p.id)
 		await get_tree().process_frame
 		for i: int in fingers:
-			get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), true))
+			get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), true), true)
 		await get_tree().create_timer(wait).timeout
 		await get_tree().process_frame
 		if fingers == 2:
@@ -306,7 +306,7 @@ func _check_caregiver_chord(main: Main, p: Profile) -> void:
 		else:
 			_check(picker.visible and not home.visible, "three fingers held open the picker")
 		for i: int in fingers:
-			get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), false))
+			get_viewport().push_input(_touch(i, door + Vector2(60.0 * i, 0.0), false), true)
 
 	main.open_profile(p.id)
 	await get_tree().process_frame
@@ -314,7 +314,7 @@ func _check_caregiver_chord(main: Main, p: Profile) -> void:
 	var fingers_at: Array[Vector2] = []
 	for i: int in 3:
 		fingers_at.push_back(door + Vector2(60.0 * i, 0.0))
-		get_viewport().push_input(_touch(i, fingers_at[i], true))
+		get_viewport().push_input(_touch(i, fingers_at[i], true), true)
 	await get_tree().process_frame
 	_check(not bar.visible, "a brief three-finger touch shows no bar")
 	await get_tree().create_timer(CaregiverChord.SHOW_AFTER + 0.3).timeout
@@ -326,7 +326,7 @@ func _check_caregiver_chord(main: Main, p: Profile) -> void:
 		var drag: InputEventScreenDrag = InputEventScreenDrag.new()
 		drag.index = i
 		drag.position = fingers_at[i] + shift
-		get_viewport().push_input(drag)
+		get_viewport().push_input(drag, true)
 	# process_frame fires before the gate's _process, so the second one follows a pass that read the drag.
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -337,19 +337,19 @@ func _check_caregiver_chord(main: Main, p: Profile) -> void:
 	await get_tree().process_frame
 	_check(picker.visible and not home.visible and not bar.visible, "and opens the picker once still for the hold")
 	for i: int in 3:
-		get_viewport().push_input(_touch(i, fingers_at[i] + shift, false))
+		get_viewport().push_input(_touch(i, fingers_at[i] + shift, false), true)
 	main.open_profile(p.id)
 	await get_tree().process_frame
 
 	var escape: InputEventKey = InputEventKey.new()
 	escape.keycode = KEY_ESCAPE
 	escape.pressed = true
-	get_viewport().push_input(escape)
+	get_viewport().push_input(escape, true)
 	await get_tree().create_timer(wait).timeout
 	await get_tree().process_frame
 	_check(picker.visible and not home.visible, "Escape held opens the picker")
 	escape.pressed = false
-	get_viewport().push_input(escape)
+	get_viewport().push_input(escape, true)
 	_check(ProfileStore.last_id() == p.id, "the picker keeps the profile remembered")
 
 func _touch(index: int, at: Vector2, pressed: bool) -> InputEventScreenTouch:
@@ -412,8 +412,8 @@ func _check_build(home: ChildHome, p: Profile) -> void:
 	_check(widget.visible, "the Words widget shows in Words")
 	var build_button: SdfButton = widget.items()[WordsWidget.Mode.BUILD]
 	var pill_px: Vector2 = build_button.get_global_rect().get_center()
-	get_viewport().push_input(_mouse(pill_px, true))
-	get_viewport().push_input(_mouse(pill_px, false))
+	get_viewport().push_input(_mouse(pill_px, true), true)
+	get_viewport().push_input(_mouse(pill_px, false), true)
 	await get_tree().process_frame
 	_check(home.words_mode() == WordsWidget.Mode.BUILD and home.build_view().visible, "a tap on Build shows the strip")
 	var build: BuildView = home.build_view()

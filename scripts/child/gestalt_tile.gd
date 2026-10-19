@@ -7,7 +7,7 @@ class_name GestaltTile
 
 signal tapped(gestalt: Gestalt)
 
-const _FONT_BASE: int = 24
+const _FONT_BASE: int = Typography.PHRASE
 const _MARGIN_PX: float = 20.0
 
 var gestalt: Gestalt = null

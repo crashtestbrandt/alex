@@ -144,6 +144,21 @@ theme_type_variation = &"HintLabel"
 text = "Adults model short, mitigable gestalts in a natural voice."
 autowrap_mode = 3
 
+[node name="TextSizeRow" type="BoxContainer" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TextSizeLabel" type="Label" parent="Center/Panel/Column/TextSizeRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Text size"
+
+[node name="TextSizeBar" type="MarginContainer" parent="Center/Panel/Column/TextSizeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("5")
+
 [node name="StyleRow" type="BoxContainer" parent="Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2

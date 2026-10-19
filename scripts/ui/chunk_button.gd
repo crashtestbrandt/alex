@@ -7,7 +7,7 @@ class_name ChunkButton
 ## A `lead` chunk, one the bank says next (ChunkBank.leads), carries a border in the style's text color. The
 ## border is the cue because every preset shows it; the quiet preset's relief is near flat.
 
-const FONT_BASE: int = 24
+const FONT_BASE: int = Typography.PHRASE
 const LEAD_BORDER_PX: float = 5.0
 
 var chunk: String = "":
@@ -30,6 +30,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	super()
+	Style.fonts_changed.connect(_apply_style)
 	_apply_style()
 
 func refresh() -> void:

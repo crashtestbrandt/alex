@@ -41,6 +41,8 @@ const DANGER_FILL: Color = Color("b4232d")
 		radius_px = value
 		refresh()
 
+var _declared_min_size: Vector2 = Vector2.ZERO
+var _touch_min_size: Vector2 = -Vector2.ONE
 var _shape: SdfShape = null
 var _hover: bool = false
 var _down: bool = false
@@ -53,6 +55,9 @@ func _init() -> void:
 		add_theme_stylebox_override(state, empty)
 
 func _ready() -> void:
+	_declared_min_size = custom_minimum_size
+	Style.fonts_changed.connect(_fit_touch_size)
+	_fit_touch_size()
 	# A swipe beginning on a button must reach its enclosing scroll container.
 	var ancestor: Node = get_parent()
 	while ancestor != null:
@@ -75,6 +80,13 @@ func _ready() -> void:
 	focus_exited.connect(refresh)
 	Style.changed.connect(_on_style_changed)
 	refresh()
+
+func _fit_touch_size() -> void:
+	for axis: int in 2:
+		if not is_equal_approx(custom_minimum_size[axis], _touch_min_size[axis]):
+			_declared_min_size[axis] = custom_minimum_size[axis]
+	_touch_min_size = _declared_min_size.max(Vector2.ONE * Style.units_per_point * 44.0)
+	custom_minimum_size = _touch_min_size
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:

@@ -21,6 +21,7 @@ func _ready() -> void:
 	_panel.reparent(_content)
 	_panel.custom_minimum_size.x = 0.0
 	resized.connect(_schedule_layout)
+	Style.fonts_changed.connect(_schedule_layout)
 	visibility_changed.connect(_schedule_layout)
 	_content.resized.connect(_schedule_layout)
 	_panel.minimum_size_changed.connect(_schedule_layout)
@@ -32,7 +33,7 @@ func _schedule_layout() -> void:
 func _layout_sheet() -> void:
 	if not is_visible_in_tree():
 		return
-	var width: float = minf(panel_width, maxf(_content.size.x - 48.0, 1.0))
+	var width: float = minf(maxf(panel_width, 520.0 * Style.units_per_point), maxf(_content.size.x - 48.0, 1.0))
 	_panel.size.x = width
 	_panel.size.y = _panel.get_combined_minimum_size().y
 	_content.custom_minimum_size.y = _panel.size.y + 48.0

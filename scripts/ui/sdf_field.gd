@@ -16,6 +16,8 @@ func _init() -> void:
 		add_theme_stylebox_override(state, empty)
 
 func _ready() -> void:
+	Style.fonts_changed.connect(_fit_touch_height)
+	_fit_touch_height()
 	_shape = SdfShape.new()
 	_shape.name = "Shape"
 	_shape.show_behind_parent = true
@@ -26,6 +28,9 @@ func _ready() -> void:
 	focus_exited.connect(refresh)
 	Style.changed.connect(_on_style_changed)
 	refresh()
+
+func _fit_touch_height() -> void:
+	custom_minimum_size.y = Style.units_per_point * 44.0
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:

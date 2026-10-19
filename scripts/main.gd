@@ -17,12 +17,13 @@ var _mobile: bool = false
 var _safe_poll: float = 0.0
 var _override_safe_area: bool = false
 var _safe_pixels: Rect2 = Rect2()
+var _density_override: float = 0.0
 var _gate: CaregiverGate = CaregiverGate.new()
 
 func _ready() -> void:
 	_mobile = DisplayServer.get_name() in ["Android", "iOS"]
 	get_window().size_changed.connect(_update_canvas)
-	get_window().focus_entered.connect(_update_safe_area)
+	get_window().focus_entered.connect(_update_canvas)
 	resized.connect(_update_safe_area.call_deferred)
 	_update_canvas()
 	_picker.profile_chosen.connect(open_profile)
@@ -123,10 +124,29 @@ func _on_profile_deleted(profile_id: String) -> void:
 	_home.set_safe_area(_safe_rect)
 
 func _update_canvas() -> void:
-	var canvas: Vector2i = UiGeometry.canvas_size(get_window().size)
+	var density: float = _display_density()
+	var canvas: Vector2i = UiGeometry.canvas_size(get_window().size, density)
 	if get_window().content_scale_size != canvas:
 		get_window().content_scale_size = canvas
+	Style.set_display_metrics(get_window().size, canvas, density)
 	_update_safe_area.call_deferred()
+
+## Render probes supply the same pixel density as the target phone or tablet.
+func set_display_density_override(density: float) -> void:
+	_density_override = density
+	_update_canvas()
+
+func _display_density() -> float:
+	if _density_override > 0.0:
+		return _density_override
+	match DisplayServer.get_name():
+		"iOS":
+			return maxf(DisplayServer.screen_get_scale(), 1.0)
+		"Android":
+			# Android screen_get_scale buckets and caps density; DPI exposes densityDpi directly.
+			return maxf(DisplayServer.screen_get_dpi() / 160.0, 0.75)
+		_:
+			return 1.0
 
 static func _profile_arg() -> String:
 	for arg: String in OS.get_cmdline_user_args():

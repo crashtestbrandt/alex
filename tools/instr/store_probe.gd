@@ -86,6 +86,7 @@ func _screenshots() -> Error:
 		Input.warp_mouse(Vector2(4.0, 4.0))
 		var main: Main = _MAIN.instantiate() as Main
 		add_child(main)
+		main.set_display_density_override(2.0 if i == 2 else 3.0)
 		await get_tree().create_timer(0.3).timeout
 		err = await _home_shots(main, home_profile)
 		if err == OK:

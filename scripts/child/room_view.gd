@@ -23,7 +23,7 @@ const VIEW_TWEEN_SECONDS: float = 0.7
 const WIDGET_MARGIN: float = 10.0
 ## How long a moved view stays, with nothing touched, before it returns to the front.
 const IDLE_RESET_SECONDS: float = 120.0
-const CAPTION_FONT_BASE: int = 28
+const CAPTION_FONT_BASE: int = Typography.CAPTION
 const CAPTION_MAX_PX: float = 504.0
 
 ## The idle period in use. A probe shortens it.

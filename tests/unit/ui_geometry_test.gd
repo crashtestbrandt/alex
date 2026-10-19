@@ -17,9 +17,9 @@ func test_rounded_radius_is_capped_by_the_short_side() -> void:
 func test_canvas_preserves_aspect_and_legibility() -> void:
 	for viewport: Vector2i in [Vector2i(320, 568), Vector2i(390, 844), Vector2i(844, 390), Vector2i(768, 1024), Vector2i(1280, 800), Vector2i(2560, 1080)]:
 		var canvas: Vector2i = UiGeometry.canvas_size(viewport)
-		assert_true(mini(canvas.x, canvas.y) >= 639, "short side remains legible %s" % viewport)
+		assert_true(mini(canvas.x, canvas.y) >= 959, "short side remains legible %s" % viewport)
 		assert_almost_eq(float(canvas.x) / canvas.y, float(viewport.x) / viewport.y, 0.002, "aspect is preserved")
-	assert_eq(UiGeometry.canvas_size(Vector2i(1280, 800)), Vector2i(1280, 800), "desktop retains its density")
+	assert_eq(UiGeometry.canvas_size(Vector2i(1280, 800)), Vector2i(2560, 1600), "layout uses two canvas units per logical point")
 
 func test_columns_fit_without_shrinking_touch_targets() -> void:
 	for width: float in [320.0, 592.0, 720.0, 1232.0, 2500.0]:

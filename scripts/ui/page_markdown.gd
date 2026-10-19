@@ -8,7 +8,7 @@ static var _item_pattern: RegEx = RegEx.create_from_string("^(?:([-+*])|([0-9]+)
 static var _table_pattern: RegEx = RegEx.create_from_string("^:?-{3,}:?$")
 static var _unsafe_link_pattern: RegEx = RegEx.create_from_string("[\\s\\[\\]<>\"']")
 
-static func render(markdown: String, heading_size: int = 28) -> String:
+static func render(markdown: String, heading_size: int = 28, body_size: int = 20) -> String:
 	var lines: PackedStringArray = markdown.replace("\r\n", "\n").split("\n")
 	var out: PackedStringArray = []
 	var paragraph: PackedStringArray = []
@@ -42,7 +42,7 @@ static func render(markdown: String, heading_size: int = 28) -> String:
 			# The page already has its title in the caregiver sheet.
 			var level: int = heading.get_string(1).length()
 			if level > 1:
-				out.push_back("[font_size=%d][b]%s[/b][/font_size]\n\n" % [maxi(heading_size - (level - 2) * 2, 20), inline_text(heading.get_string(2))])
+				out.push_back("[font_size=%d][b]%s[/b][/font_size]\n\n" % [maxi(roundi(heading_size * pow(0.9, level - 2)), body_size), inline_text(heading.get_string(2))])
 		elif table:
 			var header: PackedStringArray = cells(line)
 			out.push_back("[table=%d]" % header.size())
